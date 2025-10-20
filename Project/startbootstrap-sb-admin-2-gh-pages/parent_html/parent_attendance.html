@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Attendance - Parent Panel</title>
+    <link href="../vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="../css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="../vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <style>
+        .chart-container{height:300px}
+        /* Ensure the DataTables "show entries" length control isn't truncated when centered */
+        #table-length-container .dataTables_length { display: inline-flex; align-items: center; gap: .5rem; }
+        #table-length-container .dataTables_length label { white-space: nowrap; margin: 0; }
+        #table-length-container .dataTables_length select { margin-left: .25rem; }
+        /* Allow the responsive table wrapper to show overflow so the length control isn't clipped */
+        .card-body .table-responsive { overflow: visible; }
+    </style>
+</head>
+<body id="page-top">
+    <div id="wrapper">
+        <!-- reuse sidebar from dashboard -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="parent_dashboard.html"><div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-heart"></i></div><div class="sidebar-brand-text mx-3">Parent Panel</div></a>
+            <hr class="sidebar-divider my-0">
+            <li class="nav-item"><a class="nav-link" href="parent_dashboard.html"><i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+            <hr class="sidebar-divider"><div class="sidebar-heading">Features</div>
+            <li class="nav-item active"><a class="nav-link" href="parent_attendance.html"><i class="fas fa-fw fa-clipboard-check"></i><span>Attendance</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="parent_activities.html"><i class="fas fa-fw fa-calendar-alt"></i><span>Activities</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="parent_messages.html"><i class="fas fa-fw fa-comments"></i><span>Messages</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="parent_notifications.html"><i class="fas fa-fw fa-bell"></i><span>Notifications</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="parent_profile.html"><i class="fas fa-fw fa-user"></i><span>Profile</span></a></li>
+            <hr class="sidebar-divider d-none d-md-block"><div class="text-center d-none d-md-inline"><button class="rounded-circle border-0" id="sidebarToggle"></button></div>
+        </ul>
+        <div id="content-wrapper" class="d-flex flex-column"><div id="content">
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow"><button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3"><i class="fa fa-bars"></i></button><ul class="navbar-nav ml-auto"><li class="nav-item dropdown no-arrow mx-1"><a class="nav-link" href="#"><i class="fas fa-bell fa-fw"></i><span class="badge badge-danger badge-counter">1</span></a></li><li class="nav-item dropdown no-arrow mx-1"><a class="nav-link" href="#"><i class="fas fa-envelope fa-fw"></i><span class="badge badge-danger badge-counter">3</span></a></li><div class="topbar-divider d-none d-sm-block"></div><li class="nav-item dropdown no-arrow"><a class="nav-link" href="#"><span class="mr-2 d-none d-lg-inline text-gray-600 small">Parent Name</span><img class="img-profile rounded-circle" src="../img/undraw_profile.svg"></a></li></ul></nav>
+            <div class="container-fluid">
+                <h1 class="h3 mb-2 text-gray-800">Attendance</h1>
+                <p class="mb-4">View your child's attendance history and monthly summary.</p>
+                <!-- date input moved down into Daily Records section -->
+                <div class="card shadow mb-4"><div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Attendance Summary</h6></div><div class="card-body"><div class="chart-container"><canvas id="attendancePie"></canvas></div><p class="small text-muted mt-2">Shows percentage of days present vs absent for the selected month.</p></div></div>
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Daily Records</h6>
+                        <div class="form-inline">
+                            <label for="attendanceDate" class="mr-2 mb-0">Select Date:</label>
+                            <input type="date" id="attendanceDate" class="form-control" value="2025-10-19">
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="attendanceTable" width="100%">
+                                <thead><tr><th>Date</th><th>Status</th><th>Notes</th></tr></thead>
+                                <tbody>
+                                    <tr><td>2025-10-19</td><td>Present</td><td>-</td></tr>
+                                    <tr><td>2025-10-18</td><td>Absent</td><td>Family trip</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- length control placement note: DataTables will render controls below as configured -->
+                        <div class="d-flex justify-content-center mt-3" id="table-length-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="sticky-footer bg-white"><div class="container my-auto"><div class="copyright text-center my-auto"><span>Copyright &copy; Nursery 2025</span></div></div></footer>
+    </div>
+    <a class="scroll-to-top rounded" href="#page-top"><i class="fas fa-angle-up"></i></a>
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="../vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="../js/sb-admin-2.min.js"></script>
+    <script src="../vendor/chart.js/Chart.min.js"></script>
+    <script src="../vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="../vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script>
+        // Simple pie chart: Present vs Absent (example static values)
+        var pieCtx = document.getElementById('attendancePie').getContext('2d');
+        var present = 22; // example: 22 days present
+        var absent = 2; // example: 2 days absent
+        var total = present + absent;
+        var presentPct = Math.round((present / total) * 100);
+        var absentPct = 100 - presentPct;
+        var pieChart = new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Present ('+presentPct+'%)', 'Absent ('+absentPct+'%)'],
+                datasets: [{
+                    data: [present, absent],
+                    backgroundColor: ['#1cc88a','#e74a3b']
+                }]
+            },
+            options: {
+                responsive:true,
+                maintainAspectRatio:false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context){
+                                var value = context.parsed || 0;
+                                var pct = Math.round((value/total)*100);
+                                return context.label + ': ' + value + ' (' + pct + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Initialize DataTable for daily records with pagination
+        $(document).ready(function(){
+            // Use a DOM layout without the default length control location, we'll move it below the table
+            var table = $('#attendanceTable').DataTable({
+                "pageLength": 5,
+                // Standard layout: table, info and pagination below; we'll center the length control separately
+                dom: "<'table-wrapper'tr><'row mt-2'<'col-sm-6'i><'col-sm-6'p>>",
+                initComplete: function(settings, json){
+                    // move the length control into our centered container to keep it visually separate
+                    var lengthEl = $('.dataTables_length');
+                    $('#table-length-container').append(lengthEl);
+                }
+            });
+
+            // Filter table by selected date (exact match on first column)
+            $('#attendanceDate').on('change', function(){
+                var val = $(this).val();
+                if(!val){ table.columns(0).search('').draw(); return; }
+                table.columns(0).search('^'+val+'$', true, false).draw();
+            });
+        });
+    </script>
+</body>
+</html>
