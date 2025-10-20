@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Control de Pagos - Maestras</title>
+    <link href="../vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link href="../css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="../vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+</head>
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-success sidebar sidebar-dark accordion" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="directora_dashboard.html">
+                <div class="sidebar-brand-icon rotate-n-15">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">Panel Directora</div>
+            </a>
+            <hr class="sidebar-divider my-0">
+            <li class="nav-item">
+                <a class="nav-link" href="directora_dashboard.html">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Gestión Financiera</div>
+            <li class="nav-item active">
+                <a class="nav-link" href="directora_pagos_maestras.html">
+                    <i class="fas fa-fw fa-money-bill-wave"></i>
+                    <span>Pagos a Maestras</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="directora_pagos_estudiantes.html">
+                    <i class="fas fa-fw fa-dollar-sign"></i>
+                    <span>Pagos Estudiantes</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Administración</div>
+            <li class="nav-item">
+                <a class="nav-link" href="directora_comunicacion.html">
+                    <i class="fas fa-fw fa-comments"></i>
+                    <span>Comunicación</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="directora_usuarios.html">
+                    <i class="fas fa-fw fa-users-cog"></i>
+                    <span>Gestión de Usuarios</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Acceso Maestras</div>
+            <li class="nav-item">
+                <a class="nav-link" href="teacher_dashboard.html">
+                    <i class="fas fa-fw fa-chalkboard-teacher"></i>
+                    <span>Panel de Maestras</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider d-none d-md-block">
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Directora</span>
+                                <img class="img-profile rounded-circle" src="img/undraw_profile.svg">
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Perfil
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Cerrar Sesión
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+                <!-- Page Content -->
+                <div class="container-fluid">
+                    <h1 class="h3 mb-2 text-gray-800">Control de Pagos a Maestras</h1>
+                    <p class="mb-4">Gestión de salarios y pagos del personal docente.</p>
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-success">Registro de Pagos - Maestras</h6>
+                            <button class="btn btn-success btn-sm float-right" data-toggle="modal" data-target="#addPaymentModal">
+                                <i class="fas fa-plus"></i> Registrar Pago
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Salario Mensual</th>
+                                            <th>Último Pago</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>001</td>
+                                            <td>Valerie Luna</td>
+                                            <td>$2,500</td>
+                                            <td>2023-11-01</td>
+                                            <td><span class="badge badge-success">Pagado</span></td>
+                                            <td>
+                                                <button class="btn btn-info btn-sm"><i class="fas fa-eye"></i> Ver</button>
+                                                <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Editar</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>002</td>
+                                            <td>María García</td>
+                                            <td>$2,300</td>
+                                            <td>2023-11-01</td>
+                                            <td><span class="badge badge-success">Pagado</span></td>
+                                            <td>
+                                                <button class="btn btn-info btn-sm"><i class="fas fa-eye"></i> Ver</button>
+                                                <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Editar</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>003</td>
+                                            <td>Ana Rodríguez</td>
+                                            <td>$2,400</td>
+                                            <td>2023-10-01</td>
+                                            <td><span class="badge badge-danger">Pendiente</span></td>
+                                            <td>
+                                                <button class="btn btn-info btn-sm"><i class="fas fa-eye"></i> Ver</button>
+                                                <button class="btn btn-success btn-sm"><i class="fas fa-check"></i> Pagar</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; Daycare Center 2023</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    <!-- Modals -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">¿Listo para salir?</h5>
+                    <button class="close" type="button" data-dismiss="modal"><span>×</span></button>
+                </div>
+                <div class="modal-body">Seleccione "Cerrar Sesión" para finalizar su sesión actual.</div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                    <a class="btn btn-primary" href="login.html">Cerrar Sesión</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="addPaymentModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registrar Pago a Maestra</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>×</span></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label>Maestra</label>
+                            <select class="form-control">
+                                <option>Valerie Luna</option>
+                                <option>María García</option>
+                                <option>Ana Rodríguez</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Monto</label>
+                            <input type="number" class="form-control" placeholder="Ingrese monto">
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha de Pago</label>
+                            <input type="date" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Método de Pago</label>
+                            <select class="form-control">
+                                <option>Transferencia Bancaria</option>
+                                <option>Efectivo</option>
+                                <option>Cheque</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success">Guardar Pago</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="../vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="../js/sb-admin-2.min.js"></script>
+    <script src="../vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="../vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="../js/demo/datatables-demo.js"></script>
+</body>
+</html>

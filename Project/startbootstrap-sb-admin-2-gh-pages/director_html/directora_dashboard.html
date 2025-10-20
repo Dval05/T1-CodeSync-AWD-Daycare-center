@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Dashboard - Directora</title>
+    <link href="../vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <link href="../css/sb-admin-2.min.css" rel="stylesheet">
+</head>
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-success sidebar sidebar-dark accordion" id="accordionSidebar">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="directora_dashboard.html">
+                <div class="sidebar-brand-icon rotate-n-15">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">Panel Directora</div>
+            </a>
+            <hr class="sidebar-divider my-0">
+            <li class="nav-item active">
+                <a class="nav-link" href="directora_dashboard.html">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Gestión Financiera</div>
+            <li class="nav-item">
+                <a class="nav-link" href="directora_pagos_maestras.html">
+                    <i class="fas fa-fw fa-money-bill-wave"></i>
+                    <span>Pagos a Maestras</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="directora_pagos_estudiantes.html">
+                    <i class="fas fa-fw fa-dollar-sign"></i>
+                    <span>Pagos Estudiantes</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Administración</div>
+            <li class="nav-item">
+                <a class="nav-link" href="directora_comunicacion.html">
+                    <i class="fas fa-fw fa-comments"></i>
+                    <span>Comunicación</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="directora_usuarios.html">
+                    <i class="fas fa-fw fa-users-cog"></i>
+                    <span>Gestión de Usuarios</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Acceso Maestras</div>
+            <li class="nav-item">
+                <a class="nav-link" href="../HTML/teacher_dashboard.html">
+                    <i class="fas fa-fw fa-chalkboard-teacher"></i>
+                    <span>Panel de Maestras</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Acceso Padres</div>
+            <li class="nav-item">
+                <a class="nav-link" href="../parent_html/parent_dashboard.html">
+                    <i class="fas fa-fw fa-user-friends"></i>
+                    <span>Panel de Padres</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider d-none d-md-block">
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Directora</span>
+                                <img class="img-profile rounded-circle" src="img/undraw_profile.svg">
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Perfil
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Cerrar Sesión
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+                <!-- Page Content -->
+                <div class="container-fluid">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Dashboard - Directora</h1>
+                    </div>
+                    <div class="row">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Maestras</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">12</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Estudiantes</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">150</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Pagos Pendientes</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">23</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Ingresos del Mes</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">$45,000</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; Daycare Center 2023</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">¿Listo para salir?</h5>
+                    <button class="close" type="button" data-dismiss="modal">
+                        <span>×</span>
+                    </button>
+                </div>
+                <div class="modal-body">Seleccione "Cerrar Sesión" para finalizar su sesión actual.</div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                    <a class="btn btn-primary" href="login.html">Cerrar Sesión</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="../vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="../js/sb-admin-2.min.js"></script>
+</body>
+</html>
