@@ -126,10 +126,11 @@
                                             <td>Valerie Luna</td>
                                             <td>$2,500</td>
                                             <td>2023-11-01</td>
-                                            <td><span class="badge badge-success">Pagado</span></td>
+                                            <td><span class="badge status-badge badge-success" data-id="001">Pagado</span></td>
                                             <td>
-                                                <button class="btn btn-info btn-sm"><i class="fas fa-eye"></i> Ver</button>
-                                                <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Editar</button>
+                                                <button class="btn btn-info btn-sm btn-view" data-id="001" disabled><i class="fas fa-eye"></i> Ver</button>
+                                                <button class="btn btn-secondary btn-sm btn-upload" data-id="001"><i class="fas fa-upload"></i> Subir Archivo</button>
+                                                <button class="btn btn-danger btn-sm btn-delete" data-id="001" disabled><i class="fas fa-trash"></i> Eliminar Archivo</button>
                                             </td>
                                         </tr>
                                         <tr>
@@ -137,10 +138,11 @@
                                             <td>María García</td>
                                             <td>$2,300</td>
                                             <td>2023-11-01</td>
-                                            <td><span class="badge badge-success">Pagado</span></td>
+                                            <td><span class="badge status-badge badge-success" data-id="002">Pagado</span></td>
                                             <td>
-                                                <button class="btn btn-info btn-sm"><i class="fas fa-eye"></i> Ver</button>
-                                                <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Editar</button>
+                                                <button class="btn btn-info btn-sm btn-view" data-id="002" disabled><i class="fas fa-eye"></i> Ver</button>
+                                                <button class="btn btn-secondary btn-sm btn-upload" data-id="002"><i class="fas fa-upload"></i> Subir Archivo</button>
+                                                <button class="btn btn-danger btn-sm btn-delete" data-id="002" disabled><i class="fas fa-trash"></i> Eliminar Archivo</button>
                                             </td>
                                         </tr>
                                         <tr>
@@ -148,10 +150,11 @@
                                             <td>Ana Rodríguez</td>
                                             <td>$2,400</td>
                                             <td>2023-10-01</td>
-                                            <td><span class="badge badge-danger">Pendiente</span></td>
+                                            <td><span class="badge status-badge badge-danger" data-id="003">Pendiente</span></td>
                                             <td>
-                                                <button class="btn btn-info btn-sm"><i class="fas fa-eye"></i> Ver</button>
-                                                <button class="btn btn-success btn-sm"><i class="fas fa-check"></i> Pagar</button>
+                                                <button class="btn btn-info btn-sm btn-view" data-id="003" disabled><i class="fas fa-eye"></i> Ver</button>
+                                                <button class="btn btn-secondary btn-sm btn-upload" data-id="003"><i class="fas fa-upload"></i> Subir Archivo</button>
+                                                <button class="btn btn-danger btn-sm btn-delete" data-id="003" disabled><i class="fas fa-trash"></i> Eliminar Archivo</button>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -228,6 +231,27 @@
             </div>
         </div>
     </div>
+
+    <!-- input file oculto y modal para ver imagen -->
+    <input type="file" id="teacherFileInput" accept="image/*" style="display:none" />
+
+    <div class="modal fade" id="viewImageModal" tabindex="-1" role="dialog" aria-labelledby="viewImageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="viewImageModalLabel" class="modal-title">Imagen</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>×</span></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="previewImage" src="" alt="Preview" class="img-fluid" style="max-height:60vh;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="../vendor/jquery/jquery.min.js"></script>
     <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="../vendor/jquery-easing/jquery.easing.min.js"></script>
@@ -235,5 +259,138 @@
     <script src="../vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="../vendor/datatables/dataTables.bootstrap4.min.js"></script>
     <script src="../js/demo/datatables-demo.js"></script>
+
+    <script>
+        // Manejo de subida, vista y eliminación de imágenes por ID (persistente en localStorage)
+        (function($){
+            var STORAGE_KEY = 'directora_pagos_images_v1';
+            var uploadedImages = {}; // almacena dataURLs por ID
+            var $fileInput = $('#teacherFileInput');
+
+            function loadFromStorage(){
+                try {
+                    var raw = localStorage.getItem(STORAGE_KEY);
+                    if(raw){
+                        uploadedImages = JSON.parse(raw) || {};
+                    }
+                } catch (e) {
+                    console.warn('No se pudo cargar imágenes desde localStorage', e);
+                    uploadedImages = {};
+                }
+            }
+
+            function saveToStorage(){
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(uploadedImages));
+                } catch (e) {
+                    console.warn('No se pudo guardar imagen en localStorage', e);
+                }
+            }
+
+            // sincronizar estado inicial según presencia de imagen en memoria
+            function syncInitialState(){
+                $('.status-badge').each(function(){
+                    var id = $(this).data('id');
+                    var $viewBtn = $('.btn-view[data-id="'+id+'"]');
+                    var $uploadBtn = $('.btn-upload[data-id="'+id+'"]');
+                    var $deleteBtn = $('.btn-delete[data-id="'+id+'"]');
+                    if(uploadedImages[id]){
+                        $viewBtn.prop('disabled', false);
+                        $deleteBtn.prop('disabled', false);
+                        $uploadBtn.removeClass('btn-secondary').addClass('btn-success').html('<i class="fas fa-check"></i> Archivo Subido');
+                        $(this).removeClass('badge-danger badge-warning').addClass('badge-success').text('Pagado');
+                    } else {
+                        $viewBtn.prop('disabled', true);
+                        $deleteBtn.prop('disabled', true);
+                        $uploadBtn.removeClass('btn-success').addClass('btn-secondary').html('<i class="fas fa-upload"></i> Subir Archivo');
+                        $(this).removeClass('badge-success badge-warning').addClass('badge-danger').text('Pendiente');
+                    }
+                });
+            }
+
+            // Al hacer click en Subir Archivo -> abrir selector
+            $(document).on('click', '.btn-upload', function(e){
+                e.preventDefault();
+                var id = $(this).data('id');
+                $fileInput.data('id', id);
+                $fileInput.val('');
+                $fileInput.trigger('click');
+            });
+
+            // Cuando se selecciona archivo
+            $fileInput.on('change', function(e){
+                var file = this.files && this.files[0];
+                var id = $(this).data('id');
+                if(!file || !id) return;
+                if(!file.type.match('image.*')){
+                    alert('Por favor seleccione una imagen.');
+                    return;
+                }
+                var reader = new FileReader();
+                reader.onload = function(evt){
+                    uploadedImages[id] = evt.target.result; // dataURL
+                    saveToStorage();
+                    var $viewBtn = $('.btn-view[data-id="'+id+'"]');
+                    var $uploadBtn = $('.btn-upload[data-id="'+id+'"]');
+                    var $deleteBtn = $('.btn-delete[data-id="'+id+'"]');
+                    var $status = $('.status-badge[data-id="'+id+'"]');
+
+                    $viewBtn.prop('disabled', false);
+                    $deleteBtn.prop('disabled', false);
+                    $uploadBtn.removeClass('btn-secondary').addClass('btn-success');
+                    $uploadBtn.html('<i class="fas fa-check"></i> Archivo Subido');
+                    $status.removeClass('badge-danger badge-warning').addClass('badge-success').text('Pagado');
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Ver imagen
+            $(document).on('click', '.btn-view', function(e){
+                e.preventDefault();
+                var id = $(this).data('id');
+                var dataURL = uploadedImages[id];
+                if(!dataURL){
+                    alert('No hay archivo subido para este registro.');
+                    return;
+                }
+                $('#previewImage').attr('src', dataURL);
+                $('#viewImageModal').modal('show');
+            });
+
+            // Eliminar imagen
+            $(document).on('click', '.btn-delete', function(e){
+                e.preventDefault();
+                var id = $(this).data('id');
+                if(!uploadedImages[id]){
+                    alert('No hay archivo para eliminar.');
+                    return;
+                }
+                if(!confirm('¿Eliminar la imagen para el registro ' + id + '? Esta acción no se puede deshacer en esta sesión.')) return;
+                delete uploadedImages[id];
+                saveToStorage();
+                var $viewBtn = $('.btn-view[data-id="'+id+'"]');
+                var $uploadBtn = $('.btn-upload[data-id="'+id+'"]');
+                var $deleteBtn = $('.btn-delete[data-id="'+id+'"]');
+                var $status = $('.status-badge[data-id="'+id+'"]');
+
+                $viewBtn.prop('disabled', true);
+                $deleteBtn.prop('disabled', true);
+                $uploadBtn.removeClass('btn-success').addClass('btn-secondary');
+                $uploadBtn.html('<i class="fas fa-upload"></i> Subir Archivo');
+                $status.removeClass('badge-success badge-warning').addClass('badge-danger').text('Pendiente');
+
+                if($('#viewImageModal').hasClass('show')){
+                    $('#viewImageModal').modal('hide');
+                }
+                $('#previewImage').attr('src','');
+            });
+
+            // Ejecutar carga y sincronización al iniciar
+            $(document).ready(function(){
+                loadFromStorage();
+                syncInitialState();
+            });
+        })(jQuery);
+    </script>
 </body>
 </html>
