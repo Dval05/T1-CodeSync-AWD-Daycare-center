@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Perfil - NICEKIDS</title>
+    <link href="../../vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,700,900&display=swap" rel="stylesheet">
+    <link href="../../css/sb-admin-2.min.css" rel="stylesheet">
+</head>
+<body id="page-top">
+<div id="wrapper">
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar"></ul>
+<div id="content-wrapper" class="d-flex flex-column">
+<div id="content">
+<nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3"><i class="fa fa-bars"></i></button>
+    <ul class="navbar-nav ml-auto"></ul>
+</nav>
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Perfil de Usuario</h1>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Mi Perfil</h6>
+                    <button class="btn btn-sm btn-primary" id="btnEditProfile"><i class="fas fa-edit"></i> Editar</button>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center mb-4">
+                        <div class="col-md-3 text-center">
+                            <img src="../../img/undraw_profile.svg" alt="Imagen de perfil" id="profilePhoto" class="img-profile rounded-circle" style="width:100px;">
+                            <input type="file" id="updatePhotoInput" accept="image/*" style="display:none;">
+                            <button class="btn btn-outline-secondary btn-sm mt-2 d-none" id="btnUploadPhoto"><i class="fas fa-upload"></i> Cambiar Foto</button>
+                        </div>
+                        <div class="col-md-9">
+                            <h4 id="userFullName">Nombre de Usuario</h4>
+                            <span class="badge badge-info" id="userRole">Rol</span>
+                            <p class="text-muted mb-0" id="userEmail">correo@ejemplo.com</p>
+                        </div>
+                    </div>
+                    <div id="profileFields">
+                        <p><strong>Teléfono:</strong> <span id="userPhone">-</span></p>
+                        <p><strong>Dirección:</strong> <span id="userAddress">-</span></p>
+                        <p><strong>Último acceso:</strong> <span id="userLastLogin">-</span></p>
+                    </div>
+                    <hr>
+                    <h6 class="font-weight-bold text-primary">Cambiar Contraseña</h6>
+                    <form id="changePasswordForm">
+                        <div class="form-row">
+                            <div class="col">
+                                <input type="password" class="form-control mb-2" id="currentPassword" placeholder="Contraseña actual" required>
+                            </div>
+                            <div class="col">
+                                <input type="password" class="form-control mb-2" id="newPassword" placeholder="Nueva contraseña" required>
+                            </div>
+                            <div class="col">
+                                <input type="password" class="form-control mb-2" id="confirmNewPassword" placeholder="Confirmar nueva contraseña" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-sm">Actualizar Contraseña</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<footer class="sticky-footer bg-white"><div class="container my-auto">
+    <div class="copyright text-center my-auto">
+        <span>&copy; NICEKIDS 2025</span>
+    </div>
+    </div>
+</footer>
+</div></div>
+<a class="scroll-to-top rounded" href="#page-top"><i class="fas fa-angle-up"></i></a>
+<script src="../../vendor/jquery/jquery.min.js"></script>
+<script src="../../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../../js/sb-admin-2.min.js"></script>
+<script src="../../js/config.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/dynamic-sidebar.js"></script>
+<script src="../../js/profile.js"></script>
+</body>
+</html>

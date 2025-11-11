@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Detalle Factura - NICEKIDS</title>
+    <link href="../../vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,700,900&display=swap" rel="stylesheet">
+    <link href="../../css/sb-admin-2.min.css" rel="stylesheet">
+</head>
+<body id="page-top">
+<div id="wrapper">
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar"></ul>
+<div id="content-wrapper" class="d-flex flex-column">
+<div id="content">
+<nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3"><i class="fa fa-bars"></i></button>
+    <ul class="navbar-nav ml-auto"></ul>
+</nav>
+<div class="container-fluid">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+        <h1 class="h3 mb-0 text-gray-800">
+            <a href="invoices.html" class="btn btn-sm btn-secondary"><i class="fas fa-arrow-left"></i> Volver</a>
+            Detalle de Factura
+        </h1>
+    </div>
+    <form id="invoiceDetailForm">
+        <div class="card shadow mb-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 form-group">
+                        <label for="invoiceNumber">Número de Factura</label>
+                        <input type="text" class="form-control" id="invoiceNumber" required>
+                    </div>
+                    <div class="col-md-4 form-group">
+                        <label for="invoiceType">Tipo</label>
+                        <select class="form-control" id="invoiceType" required>
+                            <option value="Student">Estudiante</option>
+                            <option value="Teacher">Docente</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 form-group">
+                        <label for="referenceId">Referencia</label>
+                        <input type="text" class="form-control" id="referenceId" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 form-group">
+                        <label for="issueDate">Fecha de Emisión</label>
+                        <input type="date" class="form-control" id="issueDate" required>
+                    </div>
+                    <div class="col-md-4 form-group">
+                        <label for="dueDate">Fecha de Vencimiento</label>
+                        <input type="date" class="form-control" id="dueDate">
+                    </div>
+                    <div class="col-md-4 form-group">
+                        <label for="totalAmount">Monto</label>
+                        <input type="number" class="form-control" id="totalAmount" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="description">Descripción</label>
+                    <textarea class="form-control" id="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="status">Estado</label>
+                    <select class="form-control" id="status">
+                        <option value="Draft">Borrador</option>
+                        <option value="Issued">Emitida</option>
+                        <option value="Paid">Pagada</option>
+                        <option value="Cancelled">Cancelada</option>
+                        <option value="Overdue">Vencida</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-footer text-right">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </form>
+</div>
+</div>
+<footer class="sticky-footer bg-white"><div class="container my-auto"><div class="copyright text-center my-auto">
+    <span>&copy; NICEKIDS 2025</span></div></div></footer>
+</div></div>
+<a class="scroll-to-top rounded" href="#page-top"><i class="fas fa-angle-up"></i></a>
+<script src="../../vendor/jquery/jquery.min.js"></script>
+<script src="../../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../../js/sb-admin-2.min.js"></script>
+<script src="../../js/config.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/dynamic-sidebar.js"></script>
+<script src="../../js/invoice-detail.js"></script>
+</body>
+</html>

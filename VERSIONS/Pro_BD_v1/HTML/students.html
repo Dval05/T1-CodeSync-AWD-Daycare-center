@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>Estudiantes</title>
+    <link
+      href="../vendor/fontawesome-free/css/all.min.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link href="../css/sb-admin-2.min.css" rel="stylesheet" />
+    <link
+      href="../vendor/datatables/dataTables.bootstrap4.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body id="page-top">
+    <div id="wrapper">
+      <ul
+        class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion"
+        id="accordionSidebar"
+      ></ul>
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <nav
+            class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow"
+          >
+            <button
+              id="sidebarToggleTop"
+              class="btn btn-link d-md-none rounded-circle mr-3"
+            >
+              <i class="fa fa-bars"></i>
+            </button>
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item dropdown no-arrow mx-1">
+                <a
+                  class="nav-link dropdown-toggle"
+                  href="notifications.html"
+                  id="alertsDropdown"
+                  role="button"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <i class="fas fa-bell fa-fw"></i>
+                  <span
+                    class="badge badge-danger badge-counter"
+                    id="notificationCounter"
+                    >0+</span
+                  >
+                </a>
+                <div
+                  class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                  aria-labelledby="alertsDropdown"
+                  id="notificationDropdown"
+                >
+                  <h6 class="dropdown-header">Centro de Alertas</h6>
+                  <a
+                    class="dropdown-item text-center small text-gray-500"
+                    href="notifications.html"
+                    >Mostrar todas las alertas</a
+                  >
+                </div>
+              </li>
+              <li class="nav-item dropdown no-arrow mx-1">
+                <a
+                  class="nav-link dropdown-toggle"
+                  href="communication.html"
+                  id="messagesDropdown"
+                  role="button"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <i class="fas fa-envelope fa-fw"></i>
+                  <span
+                    class="badge badge-danger badge-counter"
+                    id="messageCounter"
+                    >0</span
+                  >
+                </a>
+                <div
+                  class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                  aria-labelledby="messagesDropdown"
+                  id="messageDropdown"
+                >
+                  <h6 class="dropdown-header">Centro de Mensajes</h6>
+                  <a
+                    class="dropdown-item text-center small text-gray-500"
+                    href="communication.html"
+                    >Leer más mensajes</a
+                  >
+                </div>
+              </li>
+              <div class="topbar-divider d-none d-sm-block"></div>
+              <li class="nav-item dropdown no-arrow">
+                <a
+                  class="nav-link dropdown-toggle"
+                  href="#"
+                  id="userDropdown"
+                  role="button"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <span
+                    class="mr-2 d-none d-lg-inline text-gray-600 small"
+                    id="topbarUsername"
+                  ></span>
+                  <img
+                    class="img-profile rounded-circle"
+                    src="../img/undraw_profile.svg"
+                  />
+                </a>
+                <div
+                  class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                  aria-labelledby="userDropdown"
+                >
+                  <a class="dropdown-item" href="profile.html">
+                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Perfil
+                  </a>
+                  <div class="dropdown-divider"></div>
+                  <a
+                    class="dropdown-item"
+                    href="#"
+                    data-toggle="modal"
+                    data-target="#logoutModal"
+                  >
+                    <i
+                      class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"
+                    ></i>
+                    Cerrar Sesión
+                  </a>
+                </div>
+              </li>
+            </ul>
+          </nav>
+          <div class="container-fluid">
+            <!-- Page Heading -->
+            <div
+              class="d-sm-flex align-items-center justify-content-between mb-4"
+            >
+              <h1 class="h3 mb-0 text-gray-800">Estudiantes</h1>
+              <button
+                class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
+                id="addStudentBtn"
+              >
+                <i class="fas fa-plus fa-sm text-white-50"></i> Añadir Nuevo
+                Estudiante
+              </button>
+            </div>
+
+            <!-- DataTales Example -->
+            <div class="card shadow mb-4">
+              <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                  Listado de Estudiantes
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table
+                    class="table table-bordered"
+                    id="studentsTable"
+                    width="100%"
+                    cellspacing="0"
+                  >
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Grado</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tfoot>
+                      <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Grado</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </tfoot>
+                    <tbody>
+                      <!-- Student data will be loaded here via AJAX -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add/Edit Student Modal -->
+    <div
+      class="modal fade"
+      id="studentModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="studentModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="studentModalLabel">
+              Añadir/Editar Estudiante
+            </h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="studentForm">
+              <input type="hidden" id="studentId" name="StudID" />
+              <div class="form-group">
+                <label for="firstName">Nombre:</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="firstName"
+                  name="FirstName"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="lastName">Apellido:</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="lastName"
+                  name="LastName"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="documentNumber">Número de Cedula:</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="documentNumber"
+                  name="DocumentNumber"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email:</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  name="Email"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="phone">Teléfono:</label>
+                <input
+                  type="tel"
+                  class="form-control"
+                  id="phone"
+                  name="Phone"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="address">Dirección:</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="address"
+                  name="Address"
+                  required
+                />
+              </div>
+
+              <div>
+                <label for="birthDate">Fecha de Nacimiento:</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="birthDate"
+                  name="BirthDate"
+                  required
+                />
+              </div>
+              <div>
+                <label for="gender">Género:</label>
+                <select class="form-control" id="gender" name="Gender" required>
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="gradeId">Grado:</label>
+                <select class="form-control" id="gradeId" name="GradeID">
+                  <!-- Grades will be loaded dynamically -->
+                </select>
+              </div>
+              <hr />
+              <h6 class="text-primary">Padre/Tutor (requerido)</h6>
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="guardianFirstName">Nombre del tutor</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="guardianFirstName"
+                    name="GuardianFirstName"
+                    placeholder="Nombre"
+                    required
+                  />
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="guardianLastName">Apellido del tutor</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="guardianLastName"
+                    name="GuardianLastName"
+                    placeholder="Apellido"
+                    required
+                  />
+                </div>
+                 <div class="form-group col-md-6">
+                   <label for="guardianDocumentNumber">Cédula del tutor</label>
+                   <input
+                     type="text"
+                     class="form-control"
+                     id="guardianDocumentNumber"
+                     name="GuardianDocumentNumber"
+                     placeholder="Cédula"
+                     required
+                   />
+                 </div>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                Guardar Estudiante
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="../vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="../js/sb-admin-2.min.js"></script>
+    <script src="../vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="../vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="../js/dynamic-sidebar.js"></script>
+    <script src="../js/students.js"></script>
+
+    <!-- Logout Modal -->
+    <div
+      class="modal fade"
+      id="logoutModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">
+              ¿Listo para salir?
+            </h5>
+            <button
+              class="close"
+              type="button"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            Selecciona "Cerrar Sesión" para finalizar tu sesión actual.
+          </div>
+          <div class="modal-footer">
+            <button
+              class="btn btn-secondary"
+              type="button"
+              data-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <a class="btn btn-primary" href="#" id="logoutButton"
+              >Cerrar Sesión</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

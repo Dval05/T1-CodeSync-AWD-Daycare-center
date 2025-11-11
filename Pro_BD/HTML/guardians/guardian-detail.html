@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Detalle Tutor - NICEKIDS</title>
+    <link href="../../vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,700,900&display=swap" rel="stylesheet">
+    <link href="../../css/sb-admin-2.min.css" rel="stylesheet">
+</head>
+<body id="page-top">
+<div id="wrapper">
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar"></ul>
+    <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3"><i class="fa fa-bars"></i></button>
+                <ul class="navbar-nav ml-auto"></ul>
+            </nav>
+            <div class="container-fluid">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <a href="parents.html" class="btn btn-sm btn-secondary"><i class="fas fa-arrow-left"></i> Volver</a>
+                        Detalle de Tutor
+                    </h1>
+                </div>
+                <form id="guardianDetailForm">
+                    <div class="card shadow mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 form-group">
+                                    <label for="firstName">Nombre</label>
+                                    <input type="text" class="form-control" id="firstName" required>
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label for="lastName">Apellido</label>
+                                    <input type="text" class="form-control" id="lastName" required>
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label for="relationship">Relación</label>
+                                    <input type="text" class="form-control" id="relationship" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 form-group">
+                                    <label for="documentNumber">Documento</label>
+                                    <input type="text" class="form-control" id="documentNumber">
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label for="phoneNumber">Teléfono</label>
+                                    <input type="tel" class="form-control" id="phoneNumber">
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label for="email">Correo</label>
+                                    <input type="email" class="form-control" id="email">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 form-group">
+                                    <label for="address">Dirección</label>
+                                    <input type="text" class="form-control" id="address">
+                                </div>
+                                <div class="col-md-6 form-group">
+                                    <label for="occupation">Ocupación</label>
+                                    <input type="text" class="form-control" id="occupation">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 form-group">
+                                    <label for="workPhone">Tel. Trabajo</label>
+                                    <input type="tel" class="form-control" id="workPhone">
+                                </div>
+                                <div class="col-md-3 form-check">
+                                    <input class="form-check-input" type="checkbox" value="" id="isEmergencyContact">
+                                    <label class="form-check-label" for="isEmergencyContact">Contacto emergencia</label>
+                                </div>
+                                <div class="col-md-3 form-check">
+                                    <input class="form-check-input" type="checkbox" value="" id="isAuthorizedPickup" checked>
+                                    <label class="form-check-label" for="isAuthorizedPickup">Recoge autorizado</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer text-right">
+                            <button type="submit" class="btn btn-primary">Guardar Tutor</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <footer class="sticky-footer bg-white">
+            <div class="container my-auto"><div class="copyright text-center my-auto">
+                <span>&copy; NICEKIDS 2025</span>
+            </div></div>
+        </footer>
+    </div>
+</div>
+<a class="scroll-to-top rounded" href="#page-top"><i class="fas fa-angle-up"></i></a>
+<script src="../../vendor/jquery/jquery.min.js"></script>
+<script src="../../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../../js/sb-admin-2.min.js"></script>
+<script src="../../js/config.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/dynamic-sidebar.js"></script>
+<script src="../../js/guardian-detail.js"></script>
+</body>
+</html>
