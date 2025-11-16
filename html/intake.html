@@ -1,0 +1,98 @@
+<div class="space-y-6">
+  <div class="bg-white p-6 rounded-lg shadow-md">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-gray-700">Alta rápida</h3>
+    </div>
+    <form id="intakeForm">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Estudiante -->
+        <div class="col-span-1">
+          <h4 class="font-semibold text-gray-700 mb-2"><i class="fas fa-child mr-2"></i>Estudiante</h4>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-sm text-gray-700">Nombre</label>
+              <input id="stuFirst" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-700">Apellido</label>
+              <input id="stuLast" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-700">Fecha Nacimiento</label>
+              <input id="stuBirth" type="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-700">Grado</label>
+              <select id="stuGrade" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select>
+            </div>
+          </div>
+        </div>
+        <!-- Responsable -->
+        <div class="col-span-1">
+          <div class="flex items-center justify-between">
+            <h4 class="font-semibold text-gray-700 mb-2"><i class="fas fa-user-shield mr-2"></i>Responsable</h4>
+            <label class="flex items-center text-sm text-gray-600">
+              <input id="withGuardian" type="checkbox" class="mr-2" checked /> Incluir
+            </label>
+          </div>
+          <div class="space-y-3" id="guardianSection">
+            <div>
+              <label class="block text-sm text-gray-700">Nombre</label>
+              <input id="guaFirst" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-700">Apellido</label>
+              <input id="guaLast" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-700">Email</label>
+              <input id="guaEmail" type="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-700">Teléfono</label>
+              <input id="guaPhone" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-700">Relación</label>
+              <input id="guaRelation" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Padre/Madre/Tutor" />
+            </div>
+          </div>
+        </div>
+        <!-- Empleado -->
+        <div class="col-span-1">
+          <div class="flex items-center justify-between">
+            <h4 class="font-semibold text-gray-700 mb-2"><i class="fas fa-user-tie mr-2"></i>Empleado</h4>
+            <label class="flex items-center text-sm text-gray-600">
+              <input id="withEmployee" type="checkbox" class="mr-2" /> Incluir
+            </label>
+          </div>
+          <div class="space-y-3" id="employeeSection" style="display:none;">
+            <div>
+              <label class="block text-sm text-gray-700">Nombre</label>
+              <input id="empFirst" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-700">Apellido</label>
+              <input id="empLast" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-700">Email</label>
+              <input id="empEmail" type="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-700">Cargo</label>
+              <input id="empPos" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-700">Rol</label>
+              <select id="empRole" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end mt-6">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear</button>
+      </div>
+    </form>
+  </div>
+</div>

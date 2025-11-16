@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NiceKids - Panel de Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+        <script src="/env.js"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.81.1",
+        "supabaseClient": "/supabaseClient.js"
+      }
+    }
+    </script>
+</head>
+<body class="bg-gray-100 font-poppins">
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="fixed top-5 right-5 z-[100] transition-transform duration-300 transform translate-x-full" role="alert">
+        <!-- Content is injected by JS -->
+    </div>
+
+    <div id="sidebarBackdrop" class="hidden"></div>
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <div id="sidebar" class="w-64 bg-gray-800 text-white flex flex-col sidebar-transition lg:sticky lg:top-0 lg:self-start lg:min-h-screen">
+            <div class="px-6 py-4 border-b border-gray-700">
+                <h2 class="text-2xl font-semibold"><i class="fas fa-child text-blue-400"></i> NiceKids</h2>
+            </div>
+            <nav id="sidebar-nav" class="flex-1 px-4 py-4 space-y-2">
+                <!-- Dynamic links will be inserted here by js/dynamic-sidebar.js -->
+            </nav>
+        </div>
+
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+                        <header class="flex justify-between items-center p-4 bg-white border-b relative">
+                <div class="flex items-center gap-3">
+                    <button id="sidebarToggle" aria-label="Menú" class="mobile-only text-gray-600 hover:text-gray-800 focus:outline-none">
+                      <i class="fas fa-bars fa-lg"></i>
+                    </button>
+                    <h1 id="page-title" class="text-2xl font-semibold text-gray-800">Panel de Control</h1>
+                </div>
+                                <div class="flex items-center space-x-4">
+                                        <button id="notifButton" class="relative text-gray-600 hover:text-gray-900" title="Notificaciones">
+                                            <i class="fas fa-bell fa-lg"></i>
+                                            <span id="notifBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full px-1">0</span>
+                                        </button>
+                                        <button id="profileButton" class="text-gray-600 hover:text-gray-900" title="Mi Perfil">
+                                            <i class="fas fa-user-circle fa-lg"></i>
+                                        </button>
+                                        <span id="welcomeBubble" class="hidden desktop-only inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-sm font-medium px-3 py-1 rounded-full">
+                                            <span>👋</span>
+                                            <span>Hola,</span>
+                                            <span id="welcomeName">…</span>
+                                        </span>
+                                        <button id="logoutButton" title="Cerrar Sesión" class="text-gray-500 hover:text-red-600">
+                                                <i class="fas fa-sign-out-alt fa-lg"></i>
+                                        </button>
+                                </div>
+                                <!-- Dropdown Notificaciones -->
+                                <div id="notifDropdown" class="hidden absolute right-4 top-16 w-80 max-h-96 overflow-auto bg-white border rounded-lg shadow-lg z-20">
+                                    <div class="p-3 border-b font-semibold text-gray-700">Notificaciones</div>
+                                    <div id="notifListTop" class="p-2 space-y-2 text-sm"></div>
+                                    <div class="p-2 border-t text-right">
+                                        <a href="#" onclick="loadContent('/html/notifications.html','Notificaciones')" class="text-blue-600 hover:underline text-sm">Ver todas</a>
+                                    </div>
+                                </div>
+            </header>
+            
+            <!-- Content Area -->
+            <main id="main-content" class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                 <div class="bg-white p-8 rounded-lg shadow-md">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">¡Bienvenido a NiceKids!</h2>
+                    <p class="text-gray-600">Usa el menú de la izquierda para navegar por las diferentes secciones del sistema.</p>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script type="module" src="/js/ui.js"></script>
+    <script type="module" src="/js/dashboard.js"></script>
+    <script type="module" src="/js/dynamic-sidebar.js"></script>
+    <script type="module" src="/js/responsive.js"></script>
+    <script type="module" src="/js/topbar-notifications.js"></script>
+</body>
+</html>

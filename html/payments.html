@@ -1,0 +1,96 @@
+<div class="space-y-6">
+	<div class="bg-white p-6 rounded-lg shadow-md">
+		<div class="flex justify-between items-center mb-4">
+			<h3 class="text-xl font-semibold text-gray-700">Pagos de Estudiantes</h3>
+			<button id="addPayBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+				<i class="fas fa-plus mr-2"></i> Nuevo Pago
+			</button>
+		</div>
+		<div class="flex gap-3 mb-3">
+			<div>
+				<label class="block text-sm text-gray-700">Estudiante</label>
+				<select id="payStudentFilter" class="mt-1 block rounded-md border-gray-300 shadow-sm min-w-[220px]"></select>
+			</div>
+			<div>
+				<label class="block text-sm text-gray-700">Estado</label>
+				<select id="payStatusFilter" class="mt-1 block rounded-md border-gray-300 shadow-sm">
+					<option value="">Todos</option>
+					<option value="Pending">Pendiente</option>
+					<option value="Partial">Parcial</option>
+					<option value="Paid">Pagado</option>
+					<option value="Canceled">Cancelado</option>
+				</select>
+			</div>
+			<button id="refreshPays" class="self-end h-10 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-md"><i class="fas fa-rotate"></i></button>
+		</div>
+		<div class="overflow-x-auto">
+			<table class="w-full text-sm text-left text-gray-500">
+				<thead class="text-xs text-gray-700 uppercase bg-gray-50">
+					<tr>
+						<th class="px-6 py-3">Estudiante</th>
+						<th class="px-6 py-3">Monto</th>
+						<th class="px-6 py-3">Pagado</th>
+						<th class="px-6 py-3">Saldo</th>
+						<th class="px-6 py-3">Vence</th>
+						<th class="px-6 py-3">Estado</th>
+						<th class="px-6 py-3">Acciones</th>
+					</tr>
+				</thead>
+				<tbody id="paymentsTableBody"></tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+<!-- Modal Pago -->
+<div id="payModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
+	<div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
+		<h3 id="payModalTitle" class="text-2xl font-semibold mb-4">Añadir Pago</h3>
+		<form id="payForm">
+			<input type="hidden" id="payId" />
+			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Estudiante</label>
+					<select id="payStudent" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></select>
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Monto Total</label>
+					<input id="payTotal" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Monto Pagado</label>
+					<input id="payPaid" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="0" />
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
+					<input id="payDue" type="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Método</label>
+					<select id="payMethod" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+						<option value="Cash">Efectivo</option>
+						<option value="Card">Tarjeta</option>
+						<option value="Transfer">Transferencia</option>
+					</select>
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Estado</label>
+					<select id="payStatus" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+						<option value="Pending">Pendiente</option>
+						<option value="Partial">Parcial</option>
+						<option value="Paid">Pagado</option>
+						<option value="Canceled">Cancelado</option>
+					</select>
+				</div>
+				<div class="sm:col-span-2">
+					<label class="block text-sm font-medium text-gray-700">Notas</label>
+					<textarea id="payNotes" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+				</div>
+			</div>
+			<div class="flex justify-end space-x-3 mt-6">
+				<button type="button" id="cancelPayBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">Cancelar</button>
+				<button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Guardar</button>
+			</div>
+		</form>
+	</div>
+</div>

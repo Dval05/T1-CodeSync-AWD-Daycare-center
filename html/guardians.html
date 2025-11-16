@@ -1,0 +1,84 @@
+<div class="space-y-6">
+	<div class="bg-white p-6 rounded-lg shadow-md">
+		<div class="flex justify-between items-center mb-4">
+			<h3 class="text-xl font-semibold text-gray-700">Responsables / Tutores</h3>
+			<button id="addGuardianBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+				<i class="fas fa-plus mr-2"></i> Nuevo Responsable
+			</button>
+		</div>
+		<div class="overflow-x-auto">
+			<table class="w-full text-sm text-left text-gray-500">
+				<thead class="text-xs text-gray-700 uppercase bg-gray-50">
+					<tr>
+						<th class="px-6 py-3">Nombre</th>
+						<th class="px-6 py-3">Relación</th>
+						<th class="px-6 py-3">Teléfono</th>
+						<th class="px-6 py-3">Correo</th>
+						<th class="px-6 py-3">Acciones</th>
+					</tr>
+				</thead>
+				<tbody id="guardiansTableBody"></tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+<!-- Modal Guardián -->
+<div id="guardianModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
+	<div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
+		<h3 id="guardianModalTitle" class="text-2xl font-semibold mb-4">Añadir Responsable</h3>
+		<form id="guardianForm">
+			<input type="hidden" id="guardianId" />
+			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Nombre</label>
+					<input id="firstName" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Apellido</label>
+					<input id="lastName" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Documento</label>
+					<input id="document" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Relación</label>
+					<input id="relationship" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Teléfono</label>
+					<input id="phone" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Correo</label>
+					<input id="email" type="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+				</div>
+				<div class="sm:col-span-2">
+					<label class="block text-sm font-medium text-gray-700">Dirección</label>
+					<input id="address" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Ocupación</label>
+					<input id="occupation" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700">Tel. Trabajo</label>
+					<input id="workPhone" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+				</div>
+				<div class="flex items-center">
+					<input id="isEmergency" type="checkbox" class="h-4 w-4 text-indigo-600 rounded" />
+					<label class="ml-2 text-sm text-gray-700">Contacto de Emergencia</label>
+				</div>
+				<div class="flex items-center">
+					<input id="isPickup" type="checkbox" class="h-4 w-4 text-indigo-600 rounded" checked />
+					<label class="ml-2 text-sm text-gray-700">Autorizado a Retiro</label>
+				</div>
+			</div>
+			<div class="flex justify-end space-x-3 mt-6">
+				<button type="button" id="cancelGuardianBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">Cancelar</button>
+				<button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Guardar</button>
+			</div>
+		</form>
+	</div>
+</div>
