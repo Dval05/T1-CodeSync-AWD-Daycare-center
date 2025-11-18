@@ -1,5 +1,6 @@
 import supabase from 'supabaseClient';
 import { showToast } from '/js/ui.js';
+import { generateAttendanceReport } from './attendance-pdf.js';
 
 const qs = (s) => document.querySelector(s);
 
@@ -77,6 +78,16 @@ async function loadAttendance() {
 					<td class="px-6 py-4"><button class="att-save bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded">Guardar</button></td>
 				</tr>`;
 		}).join('');
+
+		// Habilitar o deshabilitar el botón de PDF: sólo si hay fecha, grado y todas las asistencias mostradas están guardadas
+		try {
+			const pdfBtn = qs('#generatePdfBtn');
+			const gradeSelected = qs('#gradeFilter')?.value;
+			const allSaved = (students || []).every(st => attMap.has(st.StudentID));
+			if (pdfBtn) {
+				pdfBtn.disabled = !(allSaved && !!gradeSelected && !!getDateValue());
+			}
+		} catch (_) { /* ignore */ }
 	} catch (e) {
 		tbody.innerHTML = `<tr><td class="px-6 py-4 text-red-600" colspan="6">${e.message}</td></tr>`;
 	}
@@ -136,6 +147,8 @@ async function saveRow(tr) {
 		if (error) return showToast({ title: 'Error', message: error.message, type: 'error' });
 	}
 	showToast({ title: 'Asistencia guardada' });
+	// Refrescar lista para actualizar estado del botón de generar PDF
+	await loadAttendance();
 }
 
 function wireEvents() {
@@ -143,6 +156,16 @@ function wireEvents() {
 	document.getElementById('gradeFilter')?.addEventListener('change', loadAttendance);
 	const dateInput = qs('#attDate');
 	if (dateInput) dateInput.addEventListener('change', loadAttendance);
+
+	// Botón generar PDF
+	const pdfBtn = document.getElementById('generatePdfBtn');
+	if (pdfBtn) pdfBtn.addEventListener('click', async () => {
+		try {
+			await generateAttendanceReport();
+		} catch (e) {
+			showToast({ title: 'Error', message: e.message || e, type: 'error' });
+		}
+	});
 
 	document.getElementById('attTableBody')?.addEventListener('click', async (e) => {
 		const btn = e.target.closest('button.att-save');

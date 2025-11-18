@@ -1,3 +1,12 @@
+<script type="importmap">
+{
+	"imports": {
+		"@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.81.1",
+		"supabaseClient": "/supabaseClient.js"
+	}
+}
+</script>
+<script src="/env.js"></script>
 <div class="space-y-6">
 	<div class="bg-white p-6 rounded-lg shadow-md">
 		<div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
@@ -20,7 +29,14 @@
 			</div>
 		</div>
 
-		<div class="overflow-x-auto mt-4">
+		<div class="mt-4">
+			<!-- Botón para generar PDF (por encima de la tabla) -->
+			<div class="mb-3">
+				<button id="generatePdfBtn" disabled class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Generar PDF</button>
+			</div>
+		</div>
+
+		<div class="overflow-x-auto mt-2">
 			<table class="w-full text-sm text-left text-gray-500">
 				<thead class="text-xs text-gray-700 uppercase bg-gray-50">
 					<tr>
@@ -37,3 +53,4 @@
 		</div>
 	</div>
 </div>
+<script type="module" src="/html/attendance.js"></script>

@@ -4,7 +4,15 @@ require_once __DIR__ . '/../config/supabase.php';
 require_once __DIR__ . '/../middleware/auth_middleware.php';
 send_cors_headers();
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
-error_reporting(0);
+
+// Improve error visibility server-side (log errors; don't display to client in production)
+error_reporting(E_ALL);
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+// Ensure a writable error_log is set (can be adjusted to preferred path)
+if (!ini_get('error_log')) ini_set('error_log', sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'php_error.log');
+
+try {
 
 $cfg = supabase_config();
 $AUTH = 'Authorization: Bearer ' . $cfg['service_key'];
@@ -15,6 +23,16 @@ $auth_invite = $cfg['url'] . '/auth/v1/invite';
 
 // Require authenticated caller with Staff or Admin role
 require_auth(['Staff','Admin']);
+
+// Determine debug mode: enable if request includes ?debug=1 (temporary, per user request)
+$debugMode = false;
+$debugRequested = isset($_GET['debug']) && (string)$_GET['debug'] === '1';
+if ($debugRequested) {
+    // Temporarily enable error display and startup errors for debugging remote issue
+    $debugMode = true;
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+}
 
 $input = json_decode(file_get_contents('php://input'), true);
 $type = $input['type'] ?? null; // 'employee' | 'guardian'
@@ -207,15 +225,53 @@ if ($e5 || $c5 >= 400) {
 }
 
 // 6) Optional: assign role
+$assignedRoleInfo = null;
 if ($assignRole) {
-    // get role id
-    [$cr, $rr, $er] = http_json('GET', "$rest/role?RoleName=eq." . rawurlencode($assignRole) . '&select=RoleID', [$AUTH, $APIK]);
-    if (!$er && $cr < 400) {
+    // Determine role by name or id
+    $roleId = null;
+    $roleName = null;
+    if (is_numeric($assignRole)) {
+        $roleId = (int)$assignRole;
+        [$cr, $rr, $er] = http_json('GET', "$rest/role?RoleID=eq.$roleId&select=RoleID,RoleName", [$AUTH, $APIK]);
+    } else {
+        [$cr, $rr, $er] = http_json('GET', "$rest/role?RoleName=eq." . rawurlencode($assignRole) . '&select=RoleID,RoleName', [$AUTH, $APIK]);
+    }
+    if ($er || $cr >= 400) {
+        // Role lookup failed
+        // Do not abort provisioning entirely; return info about missing role
+        $assignedRoleInfo = ['ok' => false, 'error' => 'Role lookup failed', 'detail' => $rr ?: $er];
+    } else {
         $roles = json_decode($rr, true);
-        if (is_array($roles) && count($roles) > 0) {
-            $roleId = $roles[0]['RoleID'];
-            [$crp, $rrp, $erp] = http_json('POST', "$rest/user_role", [$AUTH, $APIK], [[ 'UserID' => $appUserId, 'RoleID' => $roleId ]]);
-            // no fatal si ya existe, ignorar errores aquí
+        if (!is_array($roles) || count($roles) === 0) {
+            $assignedRoleInfo = ['ok' => false, 'error' => 'Role not found'];
+        } else {
+            $role = $roles[0];
+            $roleId = (int)$role['RoleID'];
+            $roleName = $role['RoleName'] ?? null;
+
+            // Check if user_role already exists
+            [$cex, $rex, $eex] = http_json('GET', "$rest/user_role?UserID=eq.$appUserId&RoleID=eq.$roleId&select=UserRoleID", [$AUTH, $APIK]);
+            $exists = false;
+            if (!$eex && $cex < 400) {
+                $items = json_decode($rex, true);
+                if (is_array($items) && count($items) > 0) $exists = true;
+            }
+
+            if ($exists) {
+                $assignedRoleInfo = ['ok' => true, 'message' => 'Role already assigned', 'RoleID' => $roleId, 'RoleName' => $roleName];
+            } else {
+                // AssignedBy => current caller app user id if available
+                $assignedBy = null;
+                try { $caller = validate_supabase_user(); $assignedBy = $caller['app_user_id'] ?? null; } catch (\Throwable $_) { $assignedBy = null; }
+                [$crp, $rrp, $erp] = http_json('POST', "$rest/user_role", [$AUTH, $APIK, 'Prefer: return=representation'], [[ 'UserID' => $appUserId, 'RoleID' => $roleId, 'AssignedBy' => $assignedBy ]]);
+                if ($erp || $crp >= 400) {
+                    // If insert failed because of conflict, try to ignore, otherwise return informative note
+                    $assignedRoleInfo = ['ok' => false, 'error' => 'Assign role failed', 'detail' => $rrp ?: $erp];
+                } else {
+                    $rp = json_decode($rrp, true);
+                    $assignedRoleInfo = ['ok' => true, 'RoleID' => $roleId, 'RoleName' => $roleName, 'UserRole' => $rp[0] ?? null];
+                }
+            }
         }
     }
 }
@@ -229,6 +285,7 @@ echo json_encode([
     ],
     'invited' => $useInvite,
     'temp_password' => $useInvite ? null : $password,
+    'assigned_role' => $assignedRoleInfo,
 ]);
 
 // Fire-and-forget audit log
@@ -255,3 +312,22 @@ try {
         'UserAgent' => $ua
     ]]);
 } catch (\Throwable $e) { /* ignore */ }
+
+} catch (\Throwable $ex) {
+    // Log full exception server-side for debugging
+    error_log("provision_user.php exception: " . $ex->getMessage() . "\n" . $ex->getTraceAsString());
+    http_response_code(500);
+    $payload = [ 'ok' => false, 'error' => 'Internal server error' ];
+    // Include safe detail; if debugMode is active (admin requested), include full trace
+    if (!empty($debugMode)) {
+        $payload['detail'] = $ex->getMessage();
+        $payload['file'] = $ex->getFile();
+        $payload['line'] = $ex->getLine();
+        $payload['trace'] = $ex->getTraceAsString();
+    } else {
+        // minimal detail to help frontend
+        $payload['detail'] = $ex->getMessage();
+    }
+    echo json_encode($payload);
+    exit;
+}
