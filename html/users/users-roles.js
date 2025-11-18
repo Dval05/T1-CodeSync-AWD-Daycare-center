@@ -155,6 +155,31 @@ function wireEvents() {
     openPendingModal();
     await renderPending();
   });
+  document.getElementById('closeErrorModal')?.addEventListener('click', () => {
+    const m = document.getElementById('errorModal'); if (!m) return; m.classList.add('hidden'); m.classList.remove('flex');
+  });
+  document.getElementById('closeErrorBtn')?.addEventListener('click', () => {
+    const m = document.getElementById('errorModal'); if (!m) return; m.classList.add('hidden'); m.classList.remove('flex');
+  });
+  document.getElementById('copyErrorBtn')?.addEventListener('click', async () => {
+    const ta = document.getElementById('errorText'); if (!ta) return showToast({ title: 'Nada que copiar', type: 'warning' });
+    try {
+      await navigator.clipboard.writeText(ta.value || '');
+      showToast({ title: 'Copiado', message: 'Texto copiado al portapapeles', type: 'success' });
+    } catch (e) {
+      showToast({ title: 'Error al copiar', message: e.message || e, type: 'error' });
+    }
+  });
+  document.getElementById('downloadErrorBtn')?.addEventListener('click', () => {
+    const ta = document.getElementById('errorText'); if (!ta) return showToast({ title: 'Nada que descargar', type: 'warning' });
+    const txt = ta.value || '';
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const ts = new Date().toISOString().replace(/[:.]/g,'-');
+    a.href = url; a.download = `error_${ts}.txt`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    showToast({ title: 'Descarga iniciada', type: 'success' });
+  });
   document.getElementById('closePendingBtn')?.addEventListener('click', closePendingModal);
 
   document.getElementById('addRoleBtn')?.addEventListener('click', () => openRoleModal({}));
@@ -207,14 +232,56 @@ function wireEvents() {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
         body: JSON.stringify({ type, id, role, prefer_password: true })
       });
-      const info = await resp.json().catch(() => null);
-      if (!info?.ok) throw new Error(info?.error || 'No se pudo crear la cuenta');
+      // Try parse JSON body; if not JSON, capture raw text
+      let info = null;
+      let raw = '';
+      try {
+        info = await resp.clone().json().catch(() => null);
+      } catch (_) { info = null; }
+      if (!info) {
+        raw = await resp.clone().text().catch(() => '');
+      }
+      if (!info?.ok) {
+        // If server returned no useful body, try to re-request with debug=1 to get full trace (only allowed for admins)
+        if (!info && resp.status >= 500) {
+          try {
+            const debugResp = await fetch(`${PHP_BASE}/php/users/provision_user.php?debug=1`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+              body: JSON.stringify({ type, id, role, prefer_password: true })
+            });
+            let dbgText = await debugResp.text().catch(() => '');
+            // Try parse JSON
+            try { const j = JSON.parse(dbgText); dbgText = JSON.stringify(j, null, 2); } catch(_) {}
+            const ta2 = document.getElementById('errorText'); if (ta2) ta2.value = `HTTP ${debugResp.status} ${debugResp.statusText || ''}\n\n` + dbgText;
+            const m2 = document.getElementById('errorModal'); if (m2) { m2.classList.remove('hidden'); m2.classList.add('flex'); }
+            showToast({ title: 'Error al crear cuenta', message: 'Se ha cargado el log en la ventana emergente (modo debug)', type: 'error', timeout: 7000 });
+            await renderPending(); btn.disabled = false; return;
+          } catch (e) {
+            // fallthrough - will show existing info below
+          }
+        }
+        // Open modal and populate with detailed error (JSON if present, otherwise raw text)
+        const header = `HTTP ${resp.status} ${resp.statusText || ''}`;
+        const body = info ? JSON.stringify(info, null, 2) : raw || (info?.error || 'No se pudo crear la cuenta');
+        const ta = document.getElementById('errorText');
+        if (ta) ta.value = header + "\n\n" + body;
+        const m = document.getElementById('errorModal');
+        if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+        showToast({ title: 'Error al crear cuenta', message: 'Se ha cargado el log en la ventana emergente', type: 'error', timeout: 5000 });
+        await renderPending();
+        btn.disabled = false;
+        return;
+      }
       const temp = info.temp_password || '';
       const msg = temp ? `Usuario: ${info.user?.UserName} | Temporal: ${temp}` : `Usuario: ${info.user?.UserName}`;
       showToast({ title: 'Cuenta creada', message: msg, type: temp ? 'warning' : 'success', timeout: 8000 });
       await renderPending();
     } catch (err) {
-      showToast({ title: 'Error', message: err.message, type: 'error' });
+      // Populate modal with JS error message/stack for diagnosis
+      const ta = document.getElementById('errorText');
+      if (ta) ta.value = (err && err.message ? err.message : String(err)) + (err && err.stack ? '\n\n' + err.stack : '');
+      const m = document.getElementById('errorModal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+      showToast({ title: 'Error', message: 'Se ha cargado el error en la ventana emergente', type: 'error', timeout: 5000 });
     } finally {
       btn.disabled = false;
     }
