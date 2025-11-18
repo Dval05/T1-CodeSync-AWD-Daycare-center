@@ -19,120 +19,136 @@ async function loadStudents(selectEl, includeAll=false) {
 		o.textContent = `${s.FirstName} ${s.LastName}`;
 		selectEl.appendChild(o);
 	});
+
+	if (selectEl && selectEl.id === 'payStudentFilter') {
+		selectEl.addEventListener('change', async () => {
+			const id = selectEl.value ? parseInt(selectEl.value, 10) : null;
+			await showStudentInfo(id, qs('.student-info'));
+			// Mostrar controles de foto si hay estudiante seleccionado
+			const entry = document.querySelector('#paymentEntries .payment-entry');
+			if (entry) togglePhotoControls(entry, !!id);
+		});
+		if (selectEl.value) {
+			const id = selectEl.value ? parseInt(selectEl.value, 10) : null;
+			await showStudentInfo(id, qs('.student-info'));
+			const entry = document.querySelector('#paymentEntries .payment-entry');
+			if (entry) togglePhotoControls(entry, !!id);
+		}
+	}
+	// Permitir que los selects de nuevas entradas también tengan funcionalidad
+	if (selectEl && selectEl.classList && selectEl.classList.contains('entry-student')) {
+		selectEl.addEventListener('change', async () => {
+			const entry = selectEl.closest('.payment-entry');
+			const id = selectEl.value ? parseInt(selectEl.value, 10) : null;
+			await showStudentInfo(id, entry.querySelector('.student-info'));
+			togglePhotoControls(entry, !!id);
+		});
+	}
 }
 
-async function loadPayments() {
-	const tbody = qs('#paymentsTableBody');
-	tbody.innerHTML = '<tr><td class="px-6 py-4" colspan="7">Cargando...</td></tr>';
-	const studentId = qs('#payStudentFilter').value || null;
-	const status = qs('#payStatusFilter').value || null;
-	let q = supabase.from('student_payment').select('StudentPaymentID, StudentID, TotalAmount, PaidAmount, BalanceRemaining, DueDate, Status, student:StudentID(FirstName, LastName)').order('CreatedAt', { ascending: false });
-	if (studentId) q = q.eq('StudentID', parseInt(studentId, 10));
-	if (status) q = q.eq('Status', status);
-	const { data, error } = await q;
-	if (error) {
-		tbody.innerHTML = `<tr><td class="px-6 py-4 text-red-600" colspan="7">${error.message}</td></tr>`;
+async function showStudentInfo(studentId, containerEl) {
+	if (!containerEl) return;
+	containerEl.innerHTML = '<p class="text-sm text-gray-500">Cargando...</p>';
+	const id = studentId ? Number(studentId) : null;
+	if (!id) {
+		containerEl.innerHTML = '<p class="font-medium text-gray-800">Seleccione un estudiante</p>';
 		return;
 	}
-	tbody.innerHTML = (data || []).map(p => {
-		const name = p.student ? `${p.student.FirstName} ${p.student.LastName}` : '';
-		const bal = (p.BalanceRemaining != null) ? p.BalanceRemaining : (Number(p.TotalAmount || 0) - Number(p.PaidAmount || 0));
-		const stBadge = {
-			Pending: 'bg-gray-100 text-gray-800',
-			Partial: 'bg-amber-100 text-amber-800',
-			Paid: 'bg-green-100 text-green-800',
-			Canceled: 'bg-red-100 text-red-800'
-		}[p.Status] || 'bg-gray-100 text-gray-800';
-		return `
-			<tr class="bg-white border-b">
-				<td class="px-6 py-4 font-medium text-gray-900">${name}</td>
-				<td class="px-6 py-4">$${Number(p.TotalAmount || 0).toFixed(2)}</td>
-				<td class="px-6 py-4">$${Number(p.PaidAmount || 0).toFixed(2)}</td>
-				<td class="px-6 py-4">$${Number(bal || 0).toFixed(2)}</td>
-				<td class="px-6 py-4">${p.DueDate || ''}</td>
-				<td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${stBadge}">${p.Status}</span></td>
-				<td class="px-6 py-4 space-x-2">
-					<button data-action="edit" data-id="${p.StudentPaymentID}" class="text-blue-600 hover:text-blue-900" title="Editar"><i class="fas fa-edit"></i></button>
-					<button data-action="delete" data-id="${p.StudentPaymentID}" class="text-red-600 hover:text-red-900" title="Eliminar"><i class="fas fa-trash"></i></button>
-				</td>
-			</tr>`;
-	}).join('');
+	try {
+		const { data, error } = await supabase.from('student').select('*').eq('StudentID', id).single();
+		if (error || !data) {
+			console.error('showStudentInfo error:', error);
+			containerEl.innerHTML = '<p class="text-sm text-red-600">No se pudo cargar la información</p>';
+			return;
+		}
+		const parts = [];
+		parts.push(`<p class="font-medium text-gray-800">${data.FirstName || ''} ${data.LastName || ''}</p>`);
+		if (data.GuardianName) parts.push(`<p>Responsable: ${data.GuardianName}</p>`);
+		if (data.Phone) parts.push(`<p>Tel: ${data.Phone}</p>`);
+		if (data.DOB) parts.push(`<p>FNac: ${data.DOB}</p>`);
+		parts.push(`<p class="text-xs ${data.IsActive ? 'text-green-600' : 'text-gray-500'}">${data.IsActive ? 'Activo' : 'Inactivo'}</p>`);
+		containerEl.innerHTML = parts.join('');
+	} catch (err) {
+		console.error('showStudentInfo exception:', err);
+		containerEl.innerHTML = '<p class="text-sm text-red-600">No se pudo cargar la información</p>';
+	}
 }
 
-function openPayModal(pay) {
-	qs('#payModalTitle').textContent = pay?.StudentPaymentID ? 'Editar Pago' : 'Añadir Pago';
-	qs('#payId').value = pay?.StudentPaymentID || '';
-	qs('#payTotal').value = pay?.TotalAmount ?? '';
-	qs('#payPaid').value = pay?.PaidAmount ?? 0;
-	qs('#payDue').value = pay?.DueDate ?? '';
-	qs('#payMethod').value = pay?.PaymentMethod || 'Cash';
-	qs('#payStatus').value = pay?.Status || 'Pending';
-	qs('#payNotes').value = pay?.Notes || '';
-	loadStudents(qs('#payStudent')).then(() => {
-		if (pay?.StudentID) qs('#payStudent').value = pay.StudentID;
+// NUEVO: Mostrar/ocultar controles de foto según si hay estudiante seleccionado
+function togglePhotoControls(entry, show) {
+	const img = entry.querySelector('.student-photo-preview');
+	const input = entry.querySelector('.student-photo-input');
+	const btn = entry.querySelector('.upload-photo-btn');
+	if (img) img.style.display = show ? '' : 'none';
+	if (input) input.style.display = show ? '' : 'none';
+	if (btn) btn.style.display = show ? '' : 'none';
+	if (!show && img) img.src = '';
+}
+
+// NUEVO: Manejar selección y subida de imagen local
+function wirePhotoEvents(entry) {
+	const img = entry.querySelector('.student-photo-preview');
+	const input = entry.querySelector('.student-photo-input');
+	const btn = entry.querySelector('.upload-photo-btn');
+	if (!img || !input || !btn) return;
+
+	// Al hacer click en la imagen o el botón, abrir el selector de archivos
+	img.addEventListener('click', () => input.click());
+	btn.addEventListener('click', () => input.click());
+
+	// Al seleccionar archivo, mostrar preview
+	input.addEventListener('change', () => {
+		const file = input.files && input.files[0];
+		if (file && file.type.startsWith('image/')) {
+			const reader = new FileReader();
+			reader.onload = () => {
+				img.src = reader.result;
+				img.style.display = '';
+			};
+			reader.readAsDataURL(file);
+		}
 	});
-	const modal = qs('#payModal');
-	modal.classList.remove('hidden');
-	modal.classList.add('flex');
 }
 
-function closePayModal() {
-	const modal = qs('#payModal');
-	modal.classList.add('hidden');
-	modal.classList.remove('flex');
+function createPaymentEntry() {
+	const tpl = document.getElementById('paymentEntryTemplate');
+	if (!tpl) return;
+	const clone = tpl.firstElementChild.cloneNode(true);
+
+	// NUEVO: Agregar un select para estudiante en cada nueva entrada
+	const studentDiv = clone.querySelector('.student-info');
+	if (studentDiv) {
+		// Elimina selects previos si existen
+		const oldSelect = clone.querySelector('.entry-student');
+		if (oldSelect) oldSelect.remove();
+		// Crea un nuevo select
+		const select = document.createElement('select');
+		select.className = 'entry-student mt-2 block rounded-md border-gray-300 shadow-sm min-w-[180px]';
+		studentDiv.insertBefore(select, studentDiv.firstChild.nextSibling);
+		// Carga estudiantes en el nuevo select
+		loadStudents(select, false);
+	}
+
+	document.getElementById('paymentEntries').appendChild(clone);
+	wirePhotoEvents(clone);
 }
 
 function wireEvents() {
-	document.getElementById('addPayBtn')?.addEventListener('click', () => openPayModal({}));
-	document.getElementById('cancelPayBtn')?.addEventListener('click', closePayModal);
-	document.getElementById('refreshPays')?.addEventListener('click', loadPayments);
-	document.getElementById('payStudentFilter')?.addEventListener('change', loadPayments);
-	document.getElementById('payStatusFilter')?.addEventListener('change', loadPayments);
-
-	document.getElementById('payForm')?.addEventListener('submit', async (e) => {
-		e.preventDefault();
-		const id = qs('#payId').value;
-		const payload = {
-			StudentID: qs('#payStudent').value ? parseInt(qs('#payStudent').value, 10) : null,
-			TotalAmount: qs('#payTotal').value ? Number(qs('#payTotal').value) : null,
-			PaidAmount: qs('#payPaid').value ? Number(qs('#payPaid').value) : 0,
-			BalanceRemaining: null, // se calcula si no se proporciona
-			DueDate: qs('#payDue').value || null,
-			PaymentMethod: qs('#payMethod').value || null,
-			Status: qs('#payStatus').value || 'Pending',
-			Notes: qs('#payNotes').value || null,
-		};
-		if (payload.BalanceRemaining == null && payload.TotalAmount != null) {
-			payload.BalanceRemaining = Number(payload.TotalAmount) - Number(payload.PaidAmount || 0);
-		}
-		let res;
-		if (id) res = await supabase.from('student_payment').update(payload).eq('StudentPaymentID', parseInt(id, 10));
-		else res = await supabase.from('student_payment').insert(payload);
-		if (res.error) return showToast({ title: 'Error', message: res.error.message, type: 'error' });
-		showToast({ title: 'Pago guardado' });
-		closePayModal();
-		loadPayments();
+	document.getElementById('addPayBtn')?.addEventListener('click', () => {
+		createPaymentEntry();
 	});
 
-	document.getElementById('paymentsTableBody')?.addEventListener('click', async (e) => {
-		const btn = e.target.closest('button');
-		if (!btn) return;
-		const id = parseInt(btn.getAttribute('data-id'), 10);
-		const action = btn.getAttribute('data-action');
-		if (action === 'edit') {
-			const { data } = await supabase.from('student_payment').select('*').eq('StudentPaymentID', id).single();
-			openPayModal(data);
-		} else if (action === 'delete') {
-			const { error } = await supabase.from('student_payment').delete().eq('StudentPaymentID', id);
-			if (error) return showToast({ title: 'Error', message: error.message, type: 'error' });
-			showToast({ title: 'Pago eliminado' });
-			loadPayments();
-		}
+	document.getElementById('refreshPays')?.addEventListener('click', () => {
+		// Refresh functionality can be added here
+		console.log('Refresh clicked');
 	});
+
+	// NUEVO: Inicializar eventos de foto en la entrada principal
+	const firstEntry = document.querySelector('#paymentEntries .payment-entry');
+	if (firstEntry) wirePhotoEvents(firstEntry);
 }
 
 (async function init() {
 	await loadStudents(qs('#payStudentFilter'), true);
-	await loadPayments();
 	wireEvents();
 })();
