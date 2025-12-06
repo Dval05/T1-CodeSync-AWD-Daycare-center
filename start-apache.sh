@@ -21,6 +21,7 @@ fi
 # Arrancar servidor Node (API)
 export SUPABASE_URL=${SUPABASE_URL:-}
 export SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY:-$SUPABASE_SERVICE_ROLE_KEY}
+export API_PORT=3001
 node /var/www/html/server.js &
 
 exec apache2-foreground

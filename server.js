@@ -10,7 +10,8 @@ import usersRouter from './routes/users.js';
 import attendanceRouter from './routes/attendance.js';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+// Use a dedicated API_PORT to avoid clashing with Apache's PORT
+const PORT = process.env.API_PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
