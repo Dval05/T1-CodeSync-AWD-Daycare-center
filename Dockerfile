@@ -1,7 +1,7 @@
 FROM php:8.2-apache
 
 # Enable useful Apache modules
-RUN a2enmod rewrite headers expires
+RUN a2enmod rewrite headers expires proxy proxy_http
 
 # Configure Apache: disable directory listing and enable compression/cache headers (basic)
 RUN printf '%s\n' \
@@ -30,6 +30,9 @@ COPY . /var/www/html/
 
 # Health endpoint (serves index.html by default)
 EXPOSE 80
+
+# Install Node.js and npm for API server
+RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
 
 # Render uses PORT env var when present; map Apache to it
 ENV APACHE_RUN_USER www-data
