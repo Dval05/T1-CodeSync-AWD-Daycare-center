@@ -13,6 +13,11 @@ if ! grep -q "ProxyPass /api/ http://127.0.0.1:3001/" /etc/apache2/sites-availab
   printf '\n# Proxy API to Node server\nProxyPass /api/ http://127.0.0.1:3001/\nProxyPassReverse /api/ http://127.0.0.1:3001/\n' >> /etc/apache2/sites-available/000-default.conf
 fi
 
+# Añadir proxy para /health hacia Node en localhost:3001
+if ! grep -q "ProxyPass /health http://127.0.0.1:3001/health" /etc/apache2/sites-available/000-default.conf; then
+  printf '\n# Proxy Health to Node server\nProxyPass /health http://127.0.0.1:3001/health\nProxyPassReverse /health http://127.0.0.1:3001/health\n' >> /etc/apache2/sites-available/000-default.conf
+fi
+
 # Arrancar servidor Node (API)
 export SUPABASE_URL=${SUPABASE_URL:-}
 export SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY:-$SUPABASE_SERVICE_ROLE_KEY}

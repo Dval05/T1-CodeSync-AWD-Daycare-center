@@ -33,6 +33,7 @@ EXPOSE 80
 
 # Install Node.js and npm for API server
 RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
+RUN cd /var/www/html && npm ci --omit=dev
 
 # Render uses PORT env var when present; map Apache to it
 ENV APACHE_RUN_USER www-data
