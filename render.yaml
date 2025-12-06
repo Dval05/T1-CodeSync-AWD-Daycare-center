@@ -14,3 +14,16 @@ services:
       - key: NODE_VERSION
         value: "20"
     healthCheckPath: /
+  - type: web
+    name: kids-api
+    runtime: node
+    plan: free
+    autoDeploy: true
+    buildCommand: "npm ci"
+    startCommand: "node server.js"
+    envVars:
+      - key: SUPABASE_URL
+        value: "<set-in-render-dashboard>"
+      - key: SUPABASE_SERVICE_KEY
+        value: "<set-in-render-dashboard>"
+    healthCheckPath: /api/health
