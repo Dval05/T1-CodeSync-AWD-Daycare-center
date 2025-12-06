@@ -9,8 +9,8 @@ if [ "$PORT_TO_USE" != "80" ]; then
 fi
 
 # Añadir proxy para /api hacia Node en localhost:3001
-if ! grep -q "ProxyPass /api/ http://127.0.0.1:3001/" /etc/apache2/sites-available/000-default.conf; then
-  printf '\n# Proxy API to Node server\nProxyPass /api/ http://127.0.0.1:3001/\nProxyPassReverse /api/ http://127.0.0.1:3001/\n' >> /etc/apache2/sites-available/000-default.conf
+if ! grep -q "ProxyPass /api/ http://127.0.0.1:3001/api/" /etc/apache2/sites-available/000-default.conf; then
+  printf '\n# Proxy API to Node server (preserve /api prefix)\nProxyPass /api/ http://127.0.0.1:3001/api/\nProxyPassReverse /api/ http://127.0.0.1:3001/api/\n' >> /etc/apache2/sites-available/000-default.conf
 fi
 
 # Añadir proxy para /health hacia Node en localhost:3001
