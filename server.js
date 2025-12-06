@@ -1,0 +1,38 @@
+import express from 'express';
+import cors from 'cors';
+import studentsRouter from './routes/students.js';
+import guardiansRouter from './routes/guardians.js';
+import staffRouter from './routes/staff.js';
+import accessRoutes from './routes/accessRoutes.js';
+import gradesRouter from './routes/grades.js';
+import activitiesRouter from './routes/activities.js';
+import usersRouter from './routes/users.js';
+import attendanceRouter from './routes/attendance.js';
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+app.use(cors());
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
+// Alias under /api for consistency with frontend calls
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
+
+// Mount module routes
+app.use('/api/students', studentsRouter);
+app.use('/api/guardians', guardiansRouter);
+app.use('/api/staff', staffRouter);
+app.use('/api/access', accessRoutes);
+app.use('/api/grades', gradesRouter);
+app.use('/api/activities', activitiesRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/attendance', attendanceRouter);
+
+app.listen(PORT, () => {
+  console.log(`API server listening on port ${PORT}`);
+});
