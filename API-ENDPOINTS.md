@@ -76,21 +76,21 @@
 - `PUT /api/attendance/:id`: actualiza por `AttendanceID`.
 - `DELETE /api/attendance/:id`: elimina por `AttendanceID`.
 
-**Employee Tasks - Falta Realizar**
+**Employee Tasks**
 - `GET /api/employee-tasks`: lista tareas.
 - `GET /api/employee-tasks/:id`: obtiene por `TaskID`.
 - `POST /api/employee-tasks`: crea tarea.
 - `PUT /api/employee-tasks/:id`: actualiza por `TaskID`.
 - `DELETE /api/employee-tasks/:id`: elimina por `TaskID`.
 
-**Invoices  - Falta Realizar**
+**Invoices**
 - `GET /api/invoices`: lista facturas.
 - `GET /api/invoices/:id`: obtiene por `InvoiceID`.
 - `POST /api/invoices`: crea factura.
 - `PUT /api/invoices/:id`: actualiza por `InvoiceID`.
 - `DELETE /api/invoices/:id`: elimina por `InvoiceID`.
 
-**Notifications  - Falta Realizar**
+**Notifications**
 - `GET /api/notifications`: lista notificaciones.
 - `GET /api/notifications/:id`: obtiene por `NotificationID`.
 - `POST /api/notifications`: crea notificación.
@@ -118,7 +118,7 @@
 - `PUT /api/student-guardians/:id`: actualiza por `StudentGuardianID`.
 - `DELETE /api/student-guardians/:id`: elimina por `StudentGuardianID`.
 
-**Student Observations - Falta Realizar**
+**Student Observations**
 - `GET /api/student-observations`: lista observaciones.
 - `GET /api/student-observations/:id`: obtiene por `ObservationID`.
 - `POST /api/student-observations`: crea observación.
@@ -139,7 +139,7 @@
 - `PUT /api/teacher-payments/:id`: actualiza por `TeacherPaymentID`.
 - `DELETE /api/teacher-payments/:id`: elimina por `TeacherPaymentID`.
 
-**Sessions  - Falta Realizar**
+**Sessions**
 - `GET /api/sessions`: lista sesiones.
 - `GET /api/sessions/:id`: obtiene por `SessionID`.
 - `POST /api/sessions`: crea sesión.

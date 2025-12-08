@@ -13,6 +13,11 @@ import userRolesRouter from './routes/userRoles.js';
 import attendanceRouter from './routes/attendance.js';
 import studentPaymentRouter from './routes/studentPayment.js';
 import teacherPaymentRouter from './routes/teacherPayment.js';
+import sessionRoutes from './routes/sessionRoutes.js';
+import employeeTaskRoutes from './routes/employeeTaskRoutes.js';
+import invoiceRoutes from './routes/invoiceRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import studentObservationRoutes from './routes/studentObservationRoutes.js';
 
 const app = express();
 // Use a dedicated API_PORT to avoid clashing with Apache's PORT
@@ -43,6 +48,11 @@ app.use('/api/user-roles', userRolesRouter);
 app.use('/api/attendance', attendanceRouter);
 app.use('/api/student-payments', studentPaymentRouter);
 app.use('/api/teacher-payments', teacherPaymentRouter);
+app.use('/api/sessions', sessionRoutes);
+app.use('/api/employee-tasks', employeeTaskRoutes);
+app.use('/api/invoices', invoiceRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/student-observations', studentObservationRoutes);
 
 app.listen(PORT, () => {
   console.log(`API server listening on port ${PORT}`);
