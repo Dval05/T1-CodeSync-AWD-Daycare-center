@@ -62,7 +62,7 @@
 - `PUT /api/activities/:id`: actualiza por `ActivityID`.
 - `DELETE /api/activities/:id`: desactiva lógico (`IsActive=0`).
 
-**Activity Media - Falta Realizar** 
+**Activity Media** 
 - `GET /api/activity-media`: lista media.
 - `GET /api/activity-media/:id`: obtiene media por `MediaID`.
 - `POST /api/activity-media`: crea media.
@@ -104,14 +104,14 @@
 - `PUT /api/users/:id`: actualiza por `UserID`.
 - `DELETE /api/users/:id`: desactiva lógico (`IsActive=0`).
 
-**User Roles - Falta Realizar**
+**User Roles**
 - `GET /api/user-roles`: lista asignaciones usuario-rol.
 - `GET /api/user-roles/:id`: obtiene por `UserRoleID`.
 - `POST /api/user-roles`: crea asignación.
 - `PUT /api/user-roles/:id`: actualiza por `UserRoleID`.
 - `DELETE /api/user-roles/:id`: elimina por `UserRoleID`.
 
-**Student-Guardian  - Falta Realizar**
+**Student-Guardian**
 - `GET /api/student-guardians`: lista vínculos.
 - `GET /api/student-guardians/:id`: obtiene por `StudentGuardianID`.
 - `POST /api/student-guardians`: crea vínculo.
@@ -125,14 +125,14 @@
 - `PUT /api/student-observations/:id`: actualiza por `ObservationID`.
 - `DELETE /api/student-observations/:id`: elimina por `ObservationID`.
 
-**Student Payments  - Falta Realizar**
+**Student Payments**
 - `GET /api/student-payments`: lista pagos estudiante.
 - `GET /api/student-payments/:id`: obtiene por `StudentPaymentID`.
 - `POST /api/student-payments`: crea pago.
 - `PUT /api/student-payments/:id`: actualiza por `StudentPaymentID`.
 - `DELETE /api/student-payments/:id`: elimina por `StudentPaymentID`.
 
-**Teacher Payments  - Falta Realizar**
+**Teacher Payments**
 - `GET /api/teacher-payments`: lista pagos docente.
 - `GET /api/teacher-payments/:id`: obtiene por `TeacherPaymentID`.
 - `POST /api/teacher-payments`: crea pago.
