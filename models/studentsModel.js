@@ -15,21 +15,21 @@ export async function listStudents() {
 
 export async function getStudent(id) {
   if (!supabase) return null;
-  const { data, error } = await supabase.from(table).select('*').eq('StudentID', id).single();
+  const { data, error } = await supabase.from(table).select('*').eq('StudentID', id).maybeSingle();
   if (error) throw error;
   return data;
 }
 
 export async function createStudent(payload) {
   if (!supabase) return null;
-  const { data, error } = await supabase.from(table).insert(payload).select('*').single();
+  const { data, error } = await supabase.from(table).insert(payload).select('*').maybeSingle();
   if (error) throw error;
   return data;
 }
 
 export async function updateStudent(id, payload) {
   if (!supabase) return null;
-  const { data, error } = await supabase.from(table).update(payload).eq('StudentID', id).select('*').single();
+  const { data, error } = await supabase.from(table).update(payload).eq('StudentID', id).select('*').maybeSingle();
   if (error) throw error;
   return data;
 }
@@ -47,3 +47,5 @@ export async function deleteStudent(id) {
 export async function deactivateStudent(id) {
   return deleteStudent(id);
 }
+
+

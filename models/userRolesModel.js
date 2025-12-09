@@ -37,7 +37,7 @@ export async function updateUserRole(id, payload) {
     .update(payload)
     .eq('UserRoleID', id)
     .select('*')
-    .single();
+    .maybeSingle();
   if (error) throw error;
   return data;
 }

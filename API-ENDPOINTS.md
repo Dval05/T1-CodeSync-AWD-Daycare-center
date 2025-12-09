@@ -13,6 +13,10 @@
 - `PUT /api/students/:id`: actualiza por `StudentID`.
 - `DELETE /api/students/:id`: desactiva lógico (`IsActive=0`).
 - `PUT /api/students/:id/deactivate`: desactiva lógico.
+**Student Rules**
+- `GET /api/students/:id/study-time` : study time
+- `GET /api/students/1/birthday-countdown` : Birthday Countdown
+- `GET /api/students/1/age` : Age of student
 
 **Guardians**
 - `GET /api/guardians`: lista responsables activos (`IsActive=1`).
