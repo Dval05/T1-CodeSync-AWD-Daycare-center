@@ -139,3 +139,45 @@ export async function deleteAttendance(id) {
   if (error) throw error;
   return true;
 }
+
+export async function getMonthlyAttendanceSummary(studentId, year, month) {
+  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+
+  // Fin del mes (último día)
+  const endDateObj = new Date(Date.UTC(year, month, 0));
+  const endDate = endDateObj.toISOString().slice(0, 10);
+
+  const { data, error } = await supabase
+    .from("attendance")
+    .select("Status, IsLate")
+    .eq("StudentID", studentId)
+    .gte("Date", startDate)
+    .lte("Date", endDate);
+
+  if (error) throw error;
+
+  let present = 0;
+  let absent = 0;
+  let late = 0;
+
+  data.forEach((row) => {
+    if (row.Status === "Present") present++;
+    if (row.Status === "Absent") absent++;
+    if (row.IsLate === 1) late++;
+  });
+
+  const total = present + absent;
+
+  const percentPresent = total > 0 ? ((present / total) * 100).toFixed(2) : 0;
+
+  return {
+    studentId,
+    year,
+    month,
+    present,
+    absent,
+    late,
+    percentPresent,
+    totalRecords: total
+  };
+}

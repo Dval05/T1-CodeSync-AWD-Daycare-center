@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { listStudents, getStudent, createStudent, updateStudent, deleteStudent, deactivateStudent, studentProgressReport } from '../models/studentsModel.js';
 import { calculateStudyTime, calculateAge, daysUntilBirthday } from '../utils/studentCalculations.js';
 import { listGuardiansForStudent, listAttendanceForStudent, listPaymentsForStudent, paymentsSummaryForStudent } from '../models/studentsModel.js';
+import { getMonthlyAttendanceSummary } from "../models/attendanceModel.js";
+
 
 const router = Router();
 
@@ -152,6 +154,24 @@ router.get('/:id/progress-report', async (req, res) => {
     const report = await studentProgressReport(Number(req.params.id), from, to);
     if (!report) return res.status(404).json({ error: 'Student not found or no data' });
     res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get("/:id/monthly-attendance-summary", async (req, res) => {
+  try {
+    const studentId = Number(req.params.id);
+
+    const year = Number(req.query.year);
+    const month = Number(req.query.month);
+
+    if (!year || !month)
+      return res.status(400).json({ error: "Debe enviar year y month. Ej: ?year=2025&month=1" });
+
+    const summary = await getMonthlyAttendanceSummary(studentId, year, month);
+    res.json(summary);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
