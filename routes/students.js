@@ -16,6 +16,24 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get("/:id/monthly-attendance-summary", async (req, res) => {
+  try {
+    const studentId = Number(req.params.id);
+
+    const year = Number(req.query.year);
+    const month = Number(req.query.month);
+
+    if (!year || !month)
+      return res.status(400).json({ error: "Debe enviar year y month. Ej: ?year=2025&month=1" });
+
+    const summary = await getMonthlyAttendanceSummary(studentId, year, month);
+    res.json(summary);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const row = await getStudent(Number(req.params.id));
@@ -159,22 +177,6 @@ router.get('/:id/progress-report', async (req, res) => {
   }
 });
 
-router.get("/:id/monthly-attendance-summary", async (req, res) => {
-  try {
-    const studentId = Number(req.params.id);
 
-    const year = Number(req.query.year);
-    const month = Number(req.query.month);
-
-    if (!year || !month)
-      return res.status(400).json({ error: "Debe enviar year y month. Ej: ?year=2025&month=1" });
-
-    const summary = await getMonthlyAttendanceSummary(studentId, year, month);
-    res.json(summary);
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 export default router;
