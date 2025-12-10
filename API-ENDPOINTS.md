@@ -1,3 +1,102 @@
+# API Endpoints
+
+Base URL examples:
+- `http://localhost:3001`
+- `https://nicekidscenter.onrender.com`
+
+## Health
+- `GET /health` - API health
+- `GET /api/health` - alias
+
+## Students
+- `GET /api/students` - list active students (`IsActive=1`)
+- `GET /api/students/:id` - get student by `StudentID`
+- `POST /api/students` - create student
+- `PUT /api/students/:id` - update student
+- `DELETE /api/students/:id` - logical delete (sets `IsActive=0`)
+- `PUT /api/students/:id/deactivate` - logical deactivate
+
+### Student related endpoints
+- `GET /api/students/:id/study-time` - study time since `EnrollmentDate`
+	- Response: `{ studentId, years, months, days, totalDays, since, asOf }`
+- `GET /api/students/:id/age` - age based on `BirthDate`
+	- Response: `{ studentId, years, months, days, totalDays, birthDate, asOf }`
+- `GET /api/students/:id/birthday-countdown` - days until next birthday
+	- Response: `{ studentId, daysUntil, nextBirthday, asOf }`
+- `GET /api/students/:id/guardians` - list guardians for a student
+
+	Response fields: array of objects with `GuardianID`, `FirstName`, `LastName`, `Relationship` (from `student_guardian.Relationship`).
+
+- `GET /api/students/:id/attendance?from=YYYY-MM-DD&to=YYYY-MM-DD` - attendance records and summary
+	- Response: `{ total, present, records: [...] }`
+ - `GET /api/attendance/report?from=YYYY-MM-DD&to=YYYY-MM-DD&groupBy=student|class` - attendance report
+ 	- Response: `{ summary: [...], records: [...] }` where `summary` is either per-student objects (`StudentID, FirstName, LastName, totalDays, presentDays, absentDays, percentPresent`) or per-class objects (`GradeID, totalDays, presentDays, absentDays, percentPresent`) when `groupBy=class`.
+- `GET /api/students/:id/payments` - payments list for student
+- `GET /api/students/:id/payments/summary` - payments summary `{ total }`
+ - `GET /api/students/:id/payments/summary` - payments summary
+ 	- Response: `{ totalPaid, totalDue, balance, lastPayments: [...] }` where `lastPayments` is an array of recent payments (`StudentPaymentID, PaymentDate, PaidAmount, TotalAmount, Status`).
+
+- `GET /api/students/:id/progress-report` - student progress report (attendance + observations)
+	- Query Params: optional `from=YYYY-MM-DD`, `to=YYYY-MM-DD`
+	- Response: `{ StudentID, totalDays, presentDays, absentDays, percentPresent, observations: [...] }`
+
+## Guardians
+- `GET /api/guardians` - list guardians
+- `GET /api/guardians/:id` - guardian detail
+- `POST /api/guardians` - create guardian
+- `PUT /api/guardians/:id` - update guardian
+- `DELETE /api/guardians/:id` - logical delete
+- `PUT /api/guardians/:id/deactivate` - logical deactivate
+- `GET /api/guardians/:id/students` - list students for guardian
+
+## Staff
+- `GET /api/staff` - list staff
+- `GET /api/staff/:id` - staff detail
+- `POST /api/staff` - create staff
+- `PUT /api/staff/:id` - update staff
+- `DELETE /api/staff/:id` - logical delete
+- `PUT /api/staff/:id/deactivate` - logical deactivate
+
+## Users
+- `GET /api/users` - list users
+- `GET /api/users/:id` - user detail
+- `POST /api/users` - create user
+- `PUT /api/users/:id` - update user
+- `DELETE /api/users/:id` - logical delete
+
+## Student-Guardian relations
+- `GET /api/student-guardians` - list links
+- `GET /api/student-guardians/:id` - link detail
+- `POST /api/student-guardians` - create link
+- `PUT /api/student-guardians/:id` - update link
+- `DELETE /api/student-guardians/:id` - delete link
+
+**Relation endpoints (convenience)**
+- `GET /api/guardians/:id/students` - list students linked to a guardian
+	- Response fields: array with `StudentID`, `FirstName`, `LastName`, `Relationship` (from `student_guardian.Relationship`).
+
+**Bulk import (optional)**
+- `POST /api/students/import` - import CSV/JSON multipart for batch student creation (recommended validation and dry-run option).
+
+## Attendance
+- `GET /api/attendance` - list attendance
+- `GET /api/attendance/:id` - detail
+- `POST /api/attendance` - create
+- `PUT /api/attendance/:id` - update
+- `DELETE /api/attendance/:id` - delete
+
+- `GET /api/attendance/late?date=YYYY-MM-DD&thresholdMinutes=15` - list late arrivals for a date (or for all dates when omitted). Uses `IsLate` / `LateMinutes` fields if present.
+
+## Payments
+- `GET /api/student-payments` - list student payments
+- `GET /api/student-payments/:id` - payment detail
+- `POST /api/student-payments` - create payment
+- `PUT /api/student-payments/:id` - update payment
+- `DELETE /api/student-payments/:id` - delete payment
+
+## Notes
+- Ensure `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` are set in server environment.
+
 **Base URL**
 - `http://localhost:3001`
 - `https://nicekidscenter.onrender.com`
@@ -65,6 +164,8 @@
 - `POST /api/activities`: crea actividad.
 - `PUT /api/activities/:id`: actualiza por `ActivityID`.
 - `DELETE /api/activities/:id`: desactiva lógico (`IsActive=0`).
+
+- `GET /api/activities/staff/:id` - list activities assigned to a staff/teacher by `EmpID` (filter by `EmpID`).
 
 **Activity Media** 
 - `GET /api/activity-media`: lista media.

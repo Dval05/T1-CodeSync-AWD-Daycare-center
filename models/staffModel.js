@@ -15,21 +15,21 @@ export async function listStaff() {
 
 export async function getStaff(id) {
   if (!supabase) return null;
-  const { data, error } = await supabase.from(table).select('*').eq('EmpID', id).single();
+  const { data, error } = await supabase.from(table).select('*').eq('EmpID', id).maybeSingle();
   if (error) throw error;
   return data;
 }
 
 export async function createStaff(payload) {
   if (!supabase) return null;
-  const { data, error } = await supabase.from(table).insert(payload).select('*').single();
+  const { data, error } = await supabase.from(table).insert(payload).select('*').maybeSingle();
   if (error) throw error;
   return data;
 }
 
 export async function updateStaff(id, payload) {
   if (!supabase) return null;
-  const { data, error } = await supabase.from(table).update(payload).eq('EmpID', id).select('*').single();
+  const { data, error } = await supabase.from(table).update(payload).eq('EmpID', id).select('*').maybeSingle();
   if (error) throw error;
   return data;
 }

@@ -1,7 +1,17 @@
 import { Router } from 'express';
-import { listAttendance, getAttendance, createAttendance, updateAttendance, deleteAttendance } from '../models/attendanceModel.js';
+import { listAttendance, getAttendance, createAttendance, updateAttendance, deleteAttendance, listAttendanceRecords, reportAttendance, listLateArrivals } from '../models/attendanceModel.js';
 
 const router = Router();
+// List late arrivals: optional query `date=YYYY-MM-DD` and `thresholdMinutes` (default 0)
+router.get('/late', async (req, res) => {
+  try {
+    const { date, thresholdMinutes } = req.query;
+    const rows = await listLateArrivals(date, thresholdMinutes ? Number(thresholdMinutes) : 0);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 router.get('/', async (req, res) => {
   try {
@@ -44,6 +54,17 @@ router.delete('/:id', async (req, res) => {
   try {
     const ok = await deleteAttendance(Number(req.params.id));
     res.json({ success: ok });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Attendance report endpoint
+router.get('/report', async (req, res) => {
+  try {
+    const { from, to, groupBy } = req.query;
+    const result = await reportAttendance(from, to, groupBy || 'student');
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

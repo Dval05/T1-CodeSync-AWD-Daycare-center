@@ -3,6 +3,7 @@ import supabase from './supabaseServerClient.js';
 const table = 'user';
 
 export async function listUsers() {
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from(table)
     .select('*')
@@ -17,7 +18,7 @@ export async function getUser(id) {
     .from(table)
     .select('*')
     .eq('UserID', id)
-    .single();
+    .maybeSingle();
   if (error) throw error;
   return data;
 }
@@ -27,7 +28,7 @@ export async function createUser(payload) {
     .from(table)
     .insert(payload)
     .select('*')
-    .single();
+    .maybeSingle();
   if (error) throw error;
   return data;
 }
@@ -38,7 +39,7 @@ export async function updateUser(id, payload) {
     .update(payload)
     .eq('UserID', id)
     .select('*')
-    .single();
+    .maybeSingle();
   if (error) throw error;
   return data;
 }

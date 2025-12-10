@@ -1,11 +1,21 @@
 import { Router } from 'express';
-import { listActivities, getActivity, createActivity, updateActivity, deleteActivity } from '../models/activitiesModel.js';
+import { listActivities, getActivity, createActivity, updateActivity, deleteActivity, listActivitiesByEmp } from '../models/activitiesModel.js';
 
 const router = Router();
 
 router.get('/', async (req, res) => {
   try {
     const rows = await listActivities();
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Activities for a specific staff/teacher by EmpID
+router.get('/staff/:id', async (req, res) => {
+  try {
+    const rows = await listActivitiesByEmp(Number(req.params.id));
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -1,5 +1,12 @@
 import { Router } from 'express';
-import { listGuardians, getGuardian, createGuardian, updateGuardian, deleteGuardian, deactivateGuardian } from '../models/guardiansModel.js';
+import { 
+        listGuardians,
+        getGuardian, 
+        createGuardian, 
+        updateGuardian, 
+        deleteGuardian, 
+        deactivateGuardian,
+        listStudentsForGuardian } from '../models/guardiansModel.js';
 
 const router = Router();
 
@@ -53,6 +60,15 @@ router.put('/:id/deactivate', async (req, res) => {
   try {
     const ok = await deactivateGuardian(Number(req.params.id));
     res.json({ success: ok, message: 'Guardian logically deactivated' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/:id/students', async (req, res) => {
+  try {
+    const rows = await listStudentsForGuardian(Number(req.params.id));
+    res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

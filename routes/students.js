@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { listStudents, getStudent, createStudent, updateStudent, deleteStudent, deactivateStudent } from '../models/studentsModel.js';
+import { listStudents, getStudent, createStudent, updateStudent, deleteStudent, deactivateStudent, studentProgressReport } from '../models/studentsModel.js';
 import { calculateStudyTime, calculateAge, daysUntilBirthday } from '../utils/studentCalculations.js';
+import { listGuardiansForStudent, listAttendanceForStudent, listPaymentsForStudent, paymentsSummaryForStudent } from '../models/studentsModel.js';
 
 const router = Router();
 
@@ -95,6 +96,64 @@ router.get('/:id/birthday-countdown', async (req, res) => {
   } catch (err) {
     const status = err.message.toLowerCase().includes('invalid') ? 400 : 500;
     res.status(status).json({ error: err.message });
+  }
+});
+
+// List guardians of a student
+router.get('/:id/guardians', async (req, res) => {
+  try {
+    const rows = await listGuardiansForStudent(Number(req.params.id));
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Attendance for a student with optional date range
+router.get('/:id/attendance', async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const rows = await listAttendanceForStudent(Number(req.params.id), from, to);
+    // basic summary
+    const present = (rows || []).filter(r => {
+      const status = (r.Status || '').toString().toLowerCase();
+      return status === 'present' || r.CheckInTime != null;
+    }).length;
+    const total = (rows || []).length;
+    res.json({ total, present, records: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Payments list and summary
+router.get('/:id/payments', async (req, res) => {
+  try {
+    const rows = await listPaymentsForStudent(Number(req.params.id));
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/:id/payments/summary', async (req, res) => {
+  try {
+    const summary = await paymentsSummaryForStudent(Number(req.params.id));
+    res.json(summary);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Student progress report: aggregates attendance and observations
+router.get('/:id/progress-report', async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const report = await studentProgressReport(Number(req.params.id), from, to);
+    if (!report) return res.status(404).json({ error: 'Student not found or no data' });
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

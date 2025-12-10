@@ -12,6 +12,18 @@ export async function listActivities() {
   return data;
 }
 
+export async function listActivitiesByEmp(empId) {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from(table)
+    .select('*')
+    .eq('EmpID', empId)
+    .eq('IsActive', 1)
+    .order('ScheduledDate', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
 export async function getActivity(id) {
   const { data, error } = await supabase
     .from(table)
