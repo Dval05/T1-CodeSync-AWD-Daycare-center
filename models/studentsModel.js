@@ -44,7 +44,7 @@ export async function deleteStudent(id) {
   return true;
 }
 
-export async function deactivateStudent(id) {
+export async function desactivateStudent(id) {
   return deleteStudent(id);
 }
 
@@ -162,5 +162,42 @@ export async function studentProgressReport(studentId, fromDate, toDate) {
     observations: obsRows || []
   };
 }
+
+export async function canDesactivateStudent(studentId) {
+  if (!supabase) return { allowed: false };
+
+  // Check attendance
+  const { count: attendanceCount, error: attErr } = await supabase
+    .from('attendance')
+    .select('*', { count: 'exact', head: true })
+    .eq('StudentID', studentId);
+
+  if (attErr) throw attErr;
+
+  if ((attendanceCount || 0) > 0) {
+    return {
+      allowed: false,
+      reason: 'Student has attendance records'
+    };
+  }
+
+  // Check payments
+  const { count: paymentCount, error: payErr } = await supabase
+    .from('student_payment')
+    .select('*', { count: 'exact', head: true })
+    .eq('StudentID', studentId);
+
+  if (payErr) throw payErr;
+
+  if ((paymentCount || 0) > 0) {
+    return {
+      allowed: false,
+      reason: 'Student has payment records'
+    };
+  }
+
+  return { allowed: true };
+}
+
 
 

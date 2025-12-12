@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listStudents, getStudent, createStudent, updateStudent, deleteStudent, deactivateStudent, studentProgressReport } from '../models/studentsModel.js';
+import { listStudents, getStudent, createStudent, updateStudent, deleteStudent, desactivateStudent, studentProgressReport } from '../models/studentsModel.js';
 import { calculateStudyTime, calculateAge, daysUntilBirthday } from '../utils/studentCalculations.js';
 import { listGuardiansForStudent, listAttendanceForStudent, listPaymentsForStudent, paymentsSummaryForStudent } from '../models/studentsModel.js';
 import { getMonthlyAttendanceSummary } from "../models/attendanceModel.js";
@@ -65,16 +65,16 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const ok = await deleteStudent(Number(req.params.id));
-    res.json({ success: ok, message: 'Student logically deactivated' });
+    res.json({ success: ok, message: 'Student logically desactivated' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.put('/:id/deactivate', async (req, res) => {
+router.put('/:id/desactivate', async (req, res) => {
   try {
-    const ok = await deactivateStudent(Number(req.params.id));
-    res.json({ success: ok, message: 'Student logically deactivated' });
+    const ok = await desactivateStudent(Number(req.params.id));
+    res.json({ success: ok, message: 'Student logically desactivated' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
