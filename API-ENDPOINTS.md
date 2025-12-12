@@ -14,7 +14,7 @@ Base URL examples:
 - `POST /api/students` - create student
 - `PUT /api/students/:id` - update student
 - `DELETE /api/students/:id` - logical delete (sets `IsActive=0`)
-- `PUT /api/students/:id/deactivate` - logical deactivate
+- `PUT /api/students/:id/desactivate` - logical deactivate
 
 ### Student related endpoints
 - `GET /api/students/:id/study-time` - study time since `EnrollmentDate`
