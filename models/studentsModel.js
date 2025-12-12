@@ -141,7 +141,7 @@ export async function studentProgressReport(studentId, fromDate, toDate) {
   const totalDays = rows.length;
   const presentDays = rows.filter(r => {
     const status = (r.Status || '').toString().toLowerCase();
-    return status === 'present' || r.CheckInTime != null;
+    return status === 'Present' || r.CheckInTime != null;
   }).length;
   const absentDays = totalDays - presentDays;
   const percentPresent = totalDays === 0 ? 0 : Math.round((presentDays / totalDays) * 10000) / 100;

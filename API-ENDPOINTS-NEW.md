@@ -81,95 +81,15 @@ Incluye:
   ```
 
 ### GET /api/guardians/:id/students
-- Descripción: lista los estudiantes vinculados a un tutor.
-- Respuesta (200): array con `StudentID`, `FirstName`, `LastName`, `Relationship`.
-- Ejemplo:
-  ```json
-  [
-    { "StudentID": 123, "FirstName": "Juan", "LastName": "Gomez", "Relationship": "Uncle" }
-  ]
+# API-ENDPOINTS-NEW
+
+This file is deprecated. All API URIs and documentation have been consolidated into `API-ENDPOINTS.md`.
+
+Please refer to `API-ENDPOINTS.md` at the project root for the canonical list of endpoints and examples.
+
+If you need a short list of newly added endpoints only, add them there and open a PR to include them in the main doc.
   ```
+
+
 
 Motivación: mejora la navegación y generación de reportes (FR-2).
-
----
-
-## Asistencia / Reportes
-
-### GET /api/students/:id/attendance?from=YYYY-MM-DD&to=YYYY-MM-DD
-- Descripción: devuelve registros de asistencia del estudiante en el rango y un resumen simple.
-- Query Params opcionales: `from`, `to` (fechas ISO YYYY-MM-DD).
-- Respuesta (200):
-  ```json
-  {
-    "total": 20,
-    "present": 18,
-    "records": [
-      { "AttendanceID": 1, "StudentID": 123, "Date": "2025-11-01", "CheckInTime": "08:05:00", "CheckOutTime": "15:00:00", "Status": "Present" },
-      ...
-    ]
-  }
-  ```
-- Notas: la lógica considera `Status === 'Present'` (case-insensitive) o `CheckInTime != null` como presente.
-
-### GET /api/students/:id/progress-report
-- Descripción: reporta resumen de asistencia y observaciones para el estudiante en un rango opcional `from`/`to`.
-- Query Params: optional `from=YYYY-MM-DD`, `to=YYYY-MM-DD`.
-- Respuesta: `{ StudentID, totalDays, presentDays, absentDays, percentPresent, observations: [...] }`
-
-### GET /api/attendance/report?from=YYYY-MM-DD&to=YYYY-MM-DD&groupBy=student|class
-- Descripción: reporte agregado de asistencia en un rango. `groupBy` determina el agrupamiento.
-- Parámetros:
-  - `from`, `to`: rango de fechas (opcionales, si se omiten se devuelve todo).
-  - `groupBy`: `student` (por defecto) o `class`.
-- Respuesta (200):
-  ```json
-  {
-    "summary": [ /* array con aggregate por student o por class */ ],
-    "records": [ /* registros individuales retornados por el rango */ ]
-  }
-  ```
-- Formato `summary` cuando `groupBy=student`:
-  ```json
-  [{ "StudentID": 123, "FirstName": "Juan", "LastName": "Gomez", "totalDays": 20, "presentDays": 18, "absentDays": 2, "percentPresent": 90 }]
-  ```
-- Formato `summary` cuando `groupBy=class`:
-  ```json
-  [{ "GradeID": 3, "totalDays": 200, "presentDays": 180, "absentDays": 20, "percentPresent": 90 }]
-  ```
-
-Uso: necesario para generar PDFs y reportes agregados (FR-2).
-
-### GET /api/attendance/late?date=YYYY-MM-DD&thresholdMinutes=15
-- Descripción: lista llegadas tarde para una fecha (si se omite `date` devuelve registros marcados como tarde en la tabla). Usa campos `IsLate` y `LateMinutes` del esquema.
-
-
----
-
-## Pagos
-
-### GET /api/students/:id/payments
-- Descripción: lista de pagos del estudiante (tabla `student_payment`).
-- Respuesta: array de registros de pago con campos como `StudentPaymentID`, `PaymentDate`, `PaidAmount`, `TotalAmount`, `Status`, etc.
-
-### GET /api/students/:id/payments/summary
-- Descripción: resumen consolidado de pagos para el estudiante.
-- Respuesta (200):
-  ```json
-  {
-    "totalPaid": 320.00,
-    "totalDue": 400.00,
-    "balance": 80.00,
-    "lastPayments": [
-      { "StudentPaymentID": 55, "PaymentDate": "2025-11-10", "PaidAmount": 100.00, "TotalAmount": 100.00, "Status": "Paid" },
-      ... up to 5
-    ]
-  }
-  ```
-- Notas: campos respetan el esquema `student_payment` (`PaidAmount`, `TotalAmount`, `PaymentDate`).
-
-### GET /api/activities/staff/:id
-- Descripción: lista actividades asignadas a un profesor/empleado (`EmpID`).
-- Respuesta: array de actividades con campos `ActivityID, Name, ScheduledDate, StartTime, EndTime, GradeID, EmpID, ...`.
-
-

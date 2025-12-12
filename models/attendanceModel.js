@@ -28,18 +28,29 @@ export async function reportAttendance(fromDate, toDate, groupBy = 'student') {
 
   if (groupBy === 'class') {
     // need student GradeID
-    const studentIds = Array.from(new Set(rows.map(r => r.StudentID).filter(Boolean)));
-    const { data: students } = await supabase.from('student').select('StudentID, GradeID').in('StudentID', studentIds || []);
+    // sanitize StudentID values (convert to numbers and drop non-finite)
+    const studentIds = Array.from(new Set(
+      rows
+        .map(r => Number(r.StudentID))
+        .filter(n => Number.isFinite(n) && n > 0)
+    ));
+
+    let students = [];
+    if (studentIds.length > 0) {
+      const resp = await supabase.from('student').select('StudentID, GradeID').in('StudentID', studentIds);
+      students = resp.data || [];
+    }
     const gradeByStudent = (students || []).reduce((acc, s) => { acc[s.StudentID] = s.GradeID; return acc; }, {});
 
     const groups = {};
     rows.forEach(r => {
-      const gid = gradeByStudent[r.StudentID] || null;
+      const sidNum = Number(r.StudentID);
+      const gid = Number.isFinite(sidNum) ? (gradeByStudent[sidNum] || null) : null;
       const key = gid === null ? 'unknown' : `grade_${gid}`;
       groups[key] = groups[key] || { GradeID: gid, total: 0, present: 0 };
       groups[key].total += 1;
       const status = (r.Status || '').toString().toLowerCase();
-      const present = status === 'Present' || r.CheckInTime != null;
+      const present = status === 'resent' || r.CheckInTime != null;
       if (present) groups[key].present += 1;
     });
 
@@ -55,24 +66,32 @@ export async function reportAttendance(fromDate, toDate, groupBy = 'student') {
 
   // default: groupBy student
   const byStudent = {};
+  // group rows by sanitized student id (or 'unknown')
   rows.forEach(r => {
-    const sid = r.StudentID;
-    if (!byStudent[sid]) byStudent[sid] = { StudentID: sid, total: 0, present: 0 };
-    byStudent[sid].total += 1;
+    const sidNum = Number(r.StudentID);
+    const key = Number.isFinite(sidNum) ? sidNum : 'unknown';
+    if (!byStudent[key]) byStudent[key] = { StudentID: Number.isFinite(sidNum) ? sidNum : null, total: 0, present: 0 };
+    byStudent[key].total += 1;
     const status = (r.Status || '').toString().toLowerCase();
-    const present = status === 'Present' || r.CheckInTime != null;
-    if (present) byStudent[sid].present += 1;
+    const present = status === 'present' || r.CheckInTime != null;
+    if (present) byStudent[key].present += 1;
   });
 
-  const studentIds = Object.keys(byStudent).map((s) => Number(s)).filter(Boolean);
+  // build numeric studentIds only (exclude 'unknown')
+  const studentIds = Object.keys(byStudent)
+    .filter(k => k !== 'unknown')
+    .map(k => Number(k))
+    .filter(n => Number.isFinite(n) && n > 0);
+
   let studentsMap = {};
   if (studentIds.length > 0) {
-    const { data: students } = await supabase.from('student').select('StudentID, FirstName, LastName').in('StudentID', studentIds);
-    studentsMap = (students || []).reduce((acc, s) => { acc[s.StudentID] = s; return acc; }, {});
+    const resp = await supabase.from('student').select('StudentID, FirstName, LastName').in('StudentID', studentIds);
+    const students = resp.data || [];
+    studentsMap = students.reduce((acc, s) => { acc[s.StudentID] = s; return acc; }, {});
   }
 
   const summary = Object.values(byStudent).map(g => {
-    const s = studentsMap[g.StudentID] || {};
+    const s = g.StudentID ? (studentsMap[g.StudentID] || {}) : {};
     return {
       StudentID: g.StudentID,
       FirstName: s.FirstName || null,
@@ -83,6 +102,43 @@ export async function reportAttendance(fromDate, toDate, groupBy = 'student') {
       percentPresent: g.total === 0 ? 0 : Math.round((g.present / g.total) * 10000) / 100
     };
   });
+
+  return { summary, records: rows };
+}
+
+// Safer: report grouped by class (GradeID) without using `.in()` to avoid passing invalid arrays
+export async function reportAttendanceByClass(fromDate, toDate) {
+  if (!supabase) return { summary: [], records: [] };
+  const rows = await listAttendanceRecords(fromDate, toDate);
+
+  // Fetch all students' GradeID mapping (avoids .in() which may receive invalid arrays)
+  const resp = await supabase.from('student').select('StudentID, GradeID');
+  const students = resp.data || [];
+  const gradeByStudent = students.reduce((acc, s) => {
+    const id = Number(s.StudentID);
+    if (Number.isFinite(id)) acc[id] = s.GradeID;
+    return acc;
+  }, {});
+
+  const groups = {};
+  rows.forEach(r => {
+    const sidNum = Number(r.StudentID);
+    const gid = Number.isFinite(sidNum) ? (gradeByStudent[sidNum] || null) : null;
+    const key = gid === null ? 'unknown' : `grade_${gid}`;
+    groups[key] = groups[key] || { GradeID: gid, total: 0, present: 0 };
+    groups[key].total += 1;
+    const status = (r.Status || '').toString().toLowerCase();
+    const present = status === 'present' || r.CheckInTime != null;
+    if (present) groups[key].present += 1;
+  });
+
+  const summary = Object.values(groups).map(g => ({
+    GradeID: g.GradeID,
+    totalDays: g.total,
+    presentDays: g.present,
+    absentDays: g.total - g.present,
+    percentPresent: g.total === 0 ? 0 : Math.round((g.present / g.total) * 10000) / 100
+  }));
 
   return { summary, records: rows };
 }

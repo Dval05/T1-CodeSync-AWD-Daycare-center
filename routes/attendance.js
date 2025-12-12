@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listAttendance, getAttendance, createAttendance, updateAttendance, deleteAttendance, listAttendanceRecords, reportAttendance, listLateArrivals } from '../models/attendanceModel.js';
+import { listAttendance, getAttendance, createAttendance, updateAttendance, deleteAttendance, listAttendanceRecords, reportAttendance, reportAttendanceByClass, listLateArrivals } from '../models/attendanceModel.js';
 
 const router = Router();
 // List late arrivals: optional query `date=YYYY-MM-DD` and `thresholdMinutes` (default 0)
@@ -64,6 +64,17 @@ router.get('/report', async (req, res) => {
   try {
     const { from, to, groupBy } = req.query;
     const result = await reportAttendance(from, to, groupBy || 'student');
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// New: report grouped by class (avoids student-level .in() queries)
+router.get('/report/class', async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const result = await reportAttendanceByClass(from, to);
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });

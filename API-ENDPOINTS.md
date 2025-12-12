@@ -4,6 +4,176 @@ Base URL examples:
 - `http://localhost:3001`
 - `https://nicekidscenter.onrender.com`
 
+---
+
+## Health
+- `GET /health` - API status
+- `GET /api/health` - alias under `/api`
+
+---
+
+## Students
+Core CRUD and student-specific utilities.
+
+- `GET /api/students` - list active students (`IsActive=1`)
+- `GET /api/students/:id` - get student by `StudentID`
+- `POST /api/students` - create student
+- `PUT /api/students/:id` - update student
+- `DELETE /api/students/:id` - logical delete (sets `IsActive=0`)
+- `PUT /api/students/:id/deactivate` - logical deactivate (alias)
+
+Student utility endpoints:
+- `GET /api/students/:id/study-time` - study time since `EnrollmentDate`
+  - Response: `{ studentId, years, months, days, totalDays, since, asOf }`
+- `GET /api/students/:id/age` - compute age from `BirthDate`
+  - Response: `{ studentId, years, months, days, totalDays, birthDate, asOf }`
+- `GET /api/students/:id/birthday-countdown` - days until next birthday
+  - Response: `{ studentId, daysUntil, nextBirthday, asOf }`
+
+Student relationships and reports:
+- `GET /api/students/:id/guardians` - list guardians linked to the student
+  - Response: array of `{ GuardianID, FirstName, LastName, Relationship }`
+- `GET /api/students/:id/attendance?from=YYYY-MM-DD&to=YYYY-MM-DD` - attendance records and summary for a student
+  - Response: `{ total, present, records: [...] }`
+- `GET /api/students/:id/progress-report?from=YYYY-MM-DD&to=YYYY-MM-DD` - progress report (attendance + observations)
+  - Response: `{ StudentID, totalDays, presentDays, absentDays, percentPresent, observations: [...] }`
+
+Payments for a student:
+- `GET /api/students/:id/payments` - list payments for a student
+- `GET /api/students/:id/payments/summary` - consolidated payments summary
+  - Response: `{ totalPaid, totalDue, balance, lastPayments: [...] }`
+
+---
+
+## Guardians
+Manage guardians (parents/legal tutors) and convenience relations.
+
+- `GET /api/guardians` - list guardians
+- `GET /api/guardians/:id` - guardian detail
+- `POST /api/guardians` - create guardian
+- `PUT /api/guardians/:id` - update guardian
+- `DELETE /api/guardians/:id` - logical delete
+- `PUT /api/guardians/:id/deactivate` - logical deactivate (alias)
+- `GET /api/guardians/:id/students` - list students linked to this guardian
+  - Response: array of `{ StudentID, FirstName, LastName, Relationship }`
+
+---
+
+## Attendance
+Attendance management and reports.
+
+- `GET /api/attendance` - list attendance records
+- `GET /api/attendance/:id` - attendance detail by `AttendanceID`
+- `POST /api/attendance` - create attendance record
+- `PUT /api/attendance/:id` - update attendance record
+- `DELETE /api/attendance/:id` - delete attendance record
+- `GET /api/attendance/late?date=YYYY-MM-DD&thresholdMinutes=15` - list late arrivals for a specific date (or all marked late if `date` omitted)
+
+Reports (class-level):
+- `GET /api/attendance/report/class?from=YYYY-MM-DD&to=YYYY-MM-DD` - aggregated attendance report grouped by `GradeID`
+  - Response: `{ summary: [{ GradeID, totalDays, presentDays, absentDays, percentPresent }], records: [...] }`
+
+Notes: the server also provides `reportAttendanceByClass` implementation to avoid passing invalid `StudentID` arrays to the DB.
+
+---
+
+## Activities
+Manage and query activities assigned to classes or staff.
+
+- `GET /api/activities` - list activities
+- `GET /api/activities/:id` - activity detail
+- `POST /api/activities` - create activity
+- `PUT /api/activities/:id` - update activity
+- `DELETE /api/activities/:id` - logical delete
+- `GET /api/activities/staff/:id` - list activities assigned to a staff/teacher by `EmpID`
+
+---
+
+## Payments & Invoices
+Student and teacher payment endpoints.
+
+- `GET /api/student-payments` - list student payments
+- `GET /api/student-payments/:id` - payment detail (`StudentPaymentID`)
+- `POST /api/student-payments` - create student payment
+- `PUT /api/student-payments/:id` - update payment
+- `DELETE /api/student-payments/:id` - delete payment
+
+- `GET /api/teacher-payments` - list teacher payments
+- `GET /api/teacher-payments/:id` - teacher payment detail
+- `POST /api/teacher-payments` - create teacher payment
+- `PUT /api/teacher-payments/:id` - update teacher payment
+- `DELETE /api/teacher-payments/:id` - delete teacher payment
+
+---
+
+## Staff
+Manage staff (employees).
+
+- `GET /api/staff` - list staff
+- `GET /api/staff/:id` - staff detail (`EmpID`)
+- `POST /api/staff` - create staff
+- `PUT /api/staff/:id` - update staff
+- `DELETE /api/staff/:id` - logical delete
+- `PUT /api/staff/:id/deactivate` - logical deactivate (alias)
+
+---
+
+## User & Access
+Users, sessions and access control.
+
+- `GET /api/users` - list users
+- `GET /api/users/:id` - user detail
+- `POST /api/users` - create user
+- `PUT /api/users/:id` - update user
+- `DELETE /api/users/:id` - logical delete
+
+Access control endpoints:
+- `GET /api/access/permission`
+- `GET /api/access/permission/:id`
+- `POST /api/access/permission`
+- `PUT /api/access/permission/:id`
+- `GET /api/access/role`
+- `GET /api/access/role/:id`
+- `POST /api/access/role`
+- `PUT /api/access/role/:id`
+- `PUT /api/access/role/:id/deactivate`
+- `GET /api/access/role-permission`
+- `POST /api/access/role-permission`
+- `DELETE /api/access/role-permission/:id`
+
+---
+
+## Student-Guardian Relations (link table)
+- `GET /api/student-guardians` - list relation links
+- `GET /api/student-guardians/:id` - link detail (`StudentGuardianID`)
+- `POST /api/student-guardians` - create link
+- `PUT /api/student-guardians/:id` - update link
+- `DELETE /api/student-guardians/:id` - delete link
+
+---
+
+## Reports & Utilities (proposed POST endpoints)
+These endpoints support richer payloads or asynchronous jobs (PDF/CSV export).
+
+- `POST /api/attendance/report/class` - request class-level report (supports JSON or export to PDF/CSV)
+  - Payload example: `{ "from":"2025-11-01", "to":"2025-11-30", "output":"json" }`
+- `POST /api/attendance/report/student` - request student-level report for one or more students
+  - Payload example: `{ "studentIds": [123,456], "from":"2025-11-01", "to":"2025-11-30", "output":"pdf" }`
+- `POST /api/reports` - generic report scheduler/creator (supports immediate or scheduled jobs)
+  - Payload example: `{ "type":"attendance_by_class", "filters":{...}, "output":"pdf", "notify":{...} }`
+- `POST /api/students/import` - multipart import for CSV/JSON with `dryRun` option
+
+---
+
+## Notes
+- Ensure `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` are set in the server environment.
+- All endpoints that change data or export reports should require authentication and appropriate authorization scopes.
+# API Endpoints
+
+Base URL examples:
+- `http://localhost:3001`
+- `https://nicekidscenter.onrender.com`
+
 ## Health
 - `GET /health` - API health
 - `GET /api/health` - alias
@@ -29,8 +199,8 @@ Base URL examples:
 
 - `GET /api/students/:id/attendance?from=YYYY-MM-DD&to=YYYY-MM-DD` - attendance records and summary
 	- Response: `{ total, present, records: [...] }`
- - `GET /api/attendance/report?from=YYYY-MM-DD&to=YYYY-MM-DD&groupBy=student|class` - attendance report
- 	- Response: `{ summary: [...], records: [...] }` where `summary` is either per-student objects (`StudentID, FirstName, LastName, totalDays, presentDays, absentDays, percentPresent`) or per-class objects (`GradeID, totalDays, presentDays, absentDays, percentPresent`) when `groupBy=class`.
+ - `GET /api/attendance/report/class?from=YYYY-MM-DD&to=YYYY-MM-DD` - attendance report grouped by class (GradeID)
+ 	- Response: `{ summary: [...], records: [...] }` where `summary` contains per-class objects (`GradeID, totalDays, presentDays, absentDays, percentPresent`).
 - `GET /api/students/:id/payments` - payments list for student
 - `GET /api/students/:id/payments/summary` - payments summary `{ total }`
  - `GET /api/students/:id/payments/summary` - payments summary
