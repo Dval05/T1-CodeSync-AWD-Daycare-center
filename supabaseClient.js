@@ -10,4 +10,10 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Exponer globalmente para debugging en consola
+if (typeof window !== 'undefined') {
+  window.supabase = supabase;
+}
+
 export default supabase;

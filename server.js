@@ -18,6 +18,7 @@ import employeeTaskRoutes from './routes/employeeTaskRoutes.js';
 import invoiceRoutes from './routes/invoiceRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import studentObservationRoutes from './routes/studentObservationRoutes.js';
+import { requireAuth } from './middleware/requireAuth.js';
 
 const app = express();
 // Use a dedicated API_PORT to avoid clashing with Apache's PORT
@@ -29,9 +30,11 @@ app.use(express.json());
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
-// Alias under /api for consistency with frontend calls
+// Protect all /api routes with auth (Supabase or Google)
+app.use('/api', requireAuth);
+// Alias under /api for consistency with frontend calls (protected)
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString() });
+  res.json({ status: 'ok', time: new Date().toISOString(), user: req.user });
 });
 
 // Mount module routes

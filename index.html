@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
     <script src="/env.js"></script>
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script type="importmap">
 {
   "imports": {
@@ -91,11 +93,17 @@
                             <i class="fas fa-spinner fa-spin mr-2"></i> Ingresando...
                         </span>
                     </button>
+
+                    <div class="mt-4 text-center">
+                        <div id="googleSignIn" class="flex justify-center"></div>
+                        <p class="text-xs text-gray-500 mt-2">o ingresa con Google</p>
+                    </div>
                 </form>
 
             </div>
         </div>
     </div>
     <script type="module" src="/index.js"></script>
+    <script type="module" src="/js/google-auth.js"></script>
 </body>
 </html>

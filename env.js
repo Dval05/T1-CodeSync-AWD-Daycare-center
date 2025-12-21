@@ -4,4 +4,5 @@ window.__ENV = {
   API_KEY: "AIzaSyBR7d7PlUJrGpVfUXHhd37s-qMebcUHKOc",
   // Usar siempre mismo origen. En desarrollo, Vite proxyará las rutas '/php' al backend.
   PHP_BASE_URL: ""
+  ,GOOGLE_CLIENT_ID: "132351690242-pu2s0jq83q1oodg677g5tdl4jijrn8vt.apps.googleusercontent.com"
 };

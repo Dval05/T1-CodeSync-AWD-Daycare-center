@@ -40,11 +40,61 @@ npm run dev
 ```
 - Abre `http://localhost:3000` para ver el login. Tras iniciar sesión te lleva al dashboard.
 
-### Despliegue
-- Opción recomendada (Render con Docker): despliega frontend estático y endpoints PHP juntos.
-   1) Ya incluimos `Dockerfile` y `render.yaml`.
-   2) En Render, crea un servicio desde repo, selecciona "Blueprint" y apunta a `render.yaml`.
-   3) Define variables de entorno en Render:
+### Protección de APIs con Google / Supabase
+- El servidor Express protege todas las rutas bajo `/api/**` usando un middleware que acepta:
+   - Tokens de sesión de Supabase (password/OAuth en Supabase), o
+   - ID tokens de Google (Google Identity Services).
+- Frontend:
+   - `index.html` incluye un botón de Google; al autenticarse, se guarda `google_id_token` y se redirige al dashboard.
+   - Usa `js/api.js` para llamar al backend: añade `Authorization: Bearer <token>` automáticamente (prefiere Google y cae a Supabase).
+- Variables necesarias en backend (copia `.env.example` a `.env` o usa PowerShell):
+  - `SUPABASE_URL`, `SUPABASE_ANON_KEY` (para validar tokens de Supabase).
+  - `SUPABASE_SERVICE_KEY` (para modelos backend con privilegios admin).
+  - `GOOGLE_CLIENT_ID` (para validar ID tokens de Google).
+
+#### Flujo rápido (Windows PowerShell)
+1. **Configurar variables de entorno** (en la misma ventana PowerShell):
+```powershell
+$env:SUPABASE_URL="https://dkfissjbxaevmxcqvpai.supabase.co"
+$env:SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrZmlzc2pieGFldm14Y3F2cGFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwNzQ3NjIsImV4cCI6MjA3ODY1MDc2Mn0.jvhYLRPvgkOa-Yx4So9-b3MfouLoRl9f-iHgkldxEcI"
+$env:SUPABASE_SERVICE_KEY="TU_SERVICE_ROLE_KEY"
+$env:GOOGLE_CLIENT_ID="132351690242-pu2s0jq83q1oodg677g5tdl4jijrn8vt.apps.googleusercontent.com"
+$env:API_PORT="3001"
+npm run api
+```
+
+2. **Iniciar frontend** (en otra terminal):
+```powershell
+npm run dev
+```
+
+3. **Login**: Abre http://localhost:3000 y entra con Supabase (email/contraseña) o Google. El token se obtiene automáticamente.
+
+4. **Probar en consola del navegador** (DevTools → Console):
+```javascript
+// Ver el token actual
+const { data: { session } } = await supabase.auth.getSession();
+session?.access_token;
+
+// Llamar a la API protegida
+const resp = await fetch('/api/health', {
+  headers: { Authorization: `Bearer ${session.access_token}` }
+});
+await resp.json();
+```
+
+#### Servidor API en local
+```bash
+npm run api
+```
+- Prueba sin token (debe responder 401):
+```powershell
+iwr -UseBasicParsing -Method GET -Uri http://localhost:3001/api/health
+```
+- Prueba con token (desde el navegador tras login con Google o Supabase):
+```powershell
+$token="PEGAR_TOKEN_AQUI"
+iwr -UseBasicParsing -Headers @{Authorization="Bearer $token"} -Uri http://localhost:3001/api/health
        - `SUPABASE_URL` = URL de tu proyecto Supabase
        - `SUPABASE_ANON_KEY` = anon key pública para el cliente
        - `SUPABASE_SERVICE_ROLE_KEY` = service role key (solo del lado servidor, usada por PHP)

@@ -20,7 +20,9 @@ fi
 
 # Arrancar servidor Node (API)
 export SUPABASE_URL=${SUPABASE_URL:-}
+export SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
 export SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY:-$SUPABASE_SERVICE_ROLE_KEY}
+export GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
 export API_PORT=3001
 node /var/www/html/server.js &
 
