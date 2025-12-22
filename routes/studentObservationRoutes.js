@@ -7,6 +7,7 @@ import {
   updateStudentObservation,
   deleteStudentObservation
 } from '../models/studentObservationModel.js';
+import { createStudentObservation } from '../models/studentObservationModel.js';
 
 const router = Router();
 
@@ -53,6 +54,15 @@ router.delete('/:id', async (req, res) => {
     res.json({ success: true, message: 'Student observation deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/student-observations', async (req, res) => {
+  try {
+    const row = await createStudentObservation(req.body);
+    res.status(201).json(row);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
   }
 });
 
