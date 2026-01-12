@@ -1,0 +1,81 @@
+services:
+  # ----------------------------------------
+  # 1. API CRUD (Backend)
+  # ----------------------------------------
+  - type: web
+    name: nicekids-api-crud
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerContext: ./api-crud
+    dockerfilePath: ./api-crud/Dockerfile
+    envVars:
+      - key: PORT
+        value: 3001
+      # Importamos TODO el grupo de variables (Supabase)
+      - fromGroup: supabase-settings
+
+  # ----------------------------------------
+  # 2. API BUSINESS (Backend)
+  # ----------------------------------------
+  - type: web
+    name: nicekids-api-business
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerContext: ./api-business
+    dockerfilePath: ./api-business/Dockerfile
+    envVars:
+      - key: PORT
+        value: 3002
+      # Importamos TODO el grupo de variables
+      - fromGroup: supabase-settings
+
+  # ----------------------------------------
+  # 3. CLIENTE (Frontend React)
+  # ----------------------------------------
+  - type: web
+    name: nicekids-client
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerContext: ./client
+    dockerfilePath: ./client/Dockerfile
+    envVars:
+      # Importamos claves de Supabase (He agregado las versiones VITE_ al grupo abajo)
+      - fromGroup: supabase-settings
+      
+      # Enlace de servicios (Usando 'host' en lugar de 'url')
+      # Render devolverá el dominio sin https:// (ej: nicekids-api.onrender.com)
+      - key: VITE_API_CRUD_URL
+        fromService:
+          type: web
+          name: nicekids-api-crud
+          property: host
+      - key: VITE_API_BUSINESS_URL
+        fromService:
+          type: web
+          name: nicekids-api-business
+          property: host
+
+# ----------------------------------------
+# VARIABLES GLOBALES
+# ----------------------------------------
+envVarGroups:
+  - name: supabase-settings
+    envVars:
+      # --- Para los Backends ---
+      - key: SUPABASE_URL
+        value: https://dkfissjbxaevmxcqvpai.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrZmlzc2pieGFldm14Y3F2cGFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwNzQ3NjIsImV4cCI6MjA3ODY1MDc2Mn0.jvhYLRPvgkOa-Yx4So9-b3MfouLoRl9f-iHgkldxEcI
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrZmlzc2pieGFldm14Y3F2cGFpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzA3NDc2MiwiZXhwIjoyMDc4NjUwNzYyfQ.PKpjl12ijgNy9qAagwoqWpmdKGNVXJ8dMBXrNXNvTOU
+      
+      # --- Para el Frontend (Deben empezar con VITE_) ---
+      - key: VITE_SUPABASE_URL
+        value: https://dkfissjbxaevmxcqvpai.supabase.co
+      - key: VITE_SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrZmlzc2pieGFldm14Y3F2cGFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwNzQ3NjIsImV4cCI6MjA3ODY1MDc2Mn0.jvhYLRPvgkOa-Yx4So9-b3MfouLoRl9f-iHgkldxEcI
+      - key: VITE_GOOGLE_CLIENT_ID
+        value: 132351690242-pu2s0jq83q1oodg
