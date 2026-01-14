@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
     LayoutDashboard, Users, GraduationCap, CalendarDays, 
-    FileText, UserCheck, DollarSign, Bolt, Shield, X 
+    FileText, UserCheck, DollarSign, Bolt, Shield, X, Bell, Award
 } from 'lucide-react';
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
@@ -12,17 +12,19 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     const menu = [
         { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
         { label: 'Actividades', path: '/activities', icon: CalendarDays },
+        { label: 'Gestor de Actividades', path: '/activity-manager', icon: CalendarDays },
         { label: 'Estudiantes', path: '/students', icon: GraduationCap },
+        { label: 'Calificaciones', path: '/grades', icon: Award },
         { label: 'Alta Rápida', path: '/intake', icon: Bolt },
         { label: 'Asistencia', path: '/attendance', icon: UserCheck },
         { label: 'Pagos', path: '/payments', icon: DollarSign },
-        { label: 'Usuarios', path: '/users', icon: Users },
-        { label: 'Roles y Permisos', path: '/roles', icon: Shield },
         { label: 'Facturas', path: '/invoices', icon: FileText },
         { label: 'Responsables', path: '/guardians', icon: Users },
         { label: 'Personal', path: '/staff', icon: Users },
-        { label: 'Tareas', path: '/tasks', icon: FileText },
-        { label: 'Gestor de Actividades', path: '/activity-manager', icon: CalendarDays }
+        { label: 'Usuarios', path: '/users', icon: Users },
+        { label: 'Roles y Permisos', path: '/roles', icon: Shield },
+        { label: 'Notificaciones', path: '/notifications', icon: Bell },
+        { label: 'Tareas', path: '/tasks', icon: FileText }
     ];
 
     return (

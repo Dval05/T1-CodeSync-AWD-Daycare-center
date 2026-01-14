@@ -38,11 +38,11 @@ export const AuthProvider = ({ children }) => {
             return;
         }
 
-        const token = session.access_token;
-        localStorage.setItem('sb-access-token', token);
-        setUser(session.user);
-
         try {
+            const token = session.access_token;
+            localStorage.setItem('sb-access-token', token);
+            setUser(session.user);
+
             // 1. Sincronizar con backend (por si es login nuevo de Google)
             await businessApi.auth.syncGoogle();
 
@@ -58,9 +58,23 @@ export const AuthProvider = ({ children }) => {
                 // Mapear IDs de rol a nombres (opcional, si necesitas nombres en el front)
                 // Por ahora guardamos el perfil crudo
                 setProfile({ ...currentUser, roles: roles || [] });
+            } else {
+                // Si no hay usuario en BD, crear perfil básico
+                setProfile({ 
+                    FirstName: session.user.user_metadata?.name?.split(' ')[0] || '',
+                    LastName: session.user.user_metadata?.name?.split(' ')[1] || '',
+                    Email: session.user.email,
+                    roles: [] 
+                });
             }
         } catch (error) {
             console.error("Error cargando perfil:", error);
+            // En caso de error, crear perfil mínimo para evitar crashes
+            setProfile({ 
+                FirstName: session.user.user_metadata?.name || '',
+                Email: session.user.email,
+                roles: [] 
+            });
         } finally {
             setLoading(false);
         }

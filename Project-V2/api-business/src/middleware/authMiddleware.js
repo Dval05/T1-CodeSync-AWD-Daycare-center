@@ -16,7 +16,7 @@ export const requireAuth = async (req, res, next) => {
             .from('user')
             .select('UserID, IsActive, guardian(GuardianID), employee(EmpID)')
             .eq('AuthUserID', user.id)
-            .single();
+            .maybeSingle();
 
         // Si no existe registro interno, es un usuario no provisionado
         if (dbError || !internalUser) {

@@ -16,6 +16,7 @@ import Users from './pages/Users';
 import Invoices from './pages/Invoices'
 import Attendance from './pages/Attendance';
 import Roles from './pages/Roles';
+import Notifications from './pages/Notifications';
 
 // Importa el resto de tus páginas aquí...
 
@@ -49,6 +50,7 @@ export default function App() {
                     <Route path="/guardians" element={<ProtectedRoute><Guardians /></ProtectedRoute>} />
                     <Route path="/staff" element={<ProtectedRoute><Staff /></ProtectedRoute>} />
                     <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+                    <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
                     {/* Agrega aquí Students, Grades, etc. */}
                 </Routes>
             </BrowserRouter>
