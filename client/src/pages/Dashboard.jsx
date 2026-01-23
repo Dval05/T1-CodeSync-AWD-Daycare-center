@@ -16,7 +16,6 @@ export default function Dashboard() {
             try {
                 const today = new Date().toISOString().split('T')[0];
 
-                // Hacemos las 3 consultas en paralelo para velocidad
                 const [studentsRes, attendanceRes, paymentsRes] = await Promise.all([
                     crudApi.getAll('student', { IsActive: 1 }), // Estudiantes Activos
                     crudApi.getAll('attendance', { Date: today, Status: 'Present' }), // Asistencia Hoy

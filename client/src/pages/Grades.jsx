@@ -25,7 +25,6 @@ export default function Grades() {
         } catch (e) { toast.error('Error al eliminar'); }
     };
 
-    // Definimos las columnas para nuestra Tabla Inteligente
     const columns = [
         { header: 'ID', accessor: 'GradeID' },
         { header: 'Nombre del Grado', accessor: 'GradeName' },

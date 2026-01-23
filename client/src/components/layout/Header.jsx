@@ -7,7 +7,7 @@ export default function Header({ toggleSidebar }) {
 
     return (
         <header className="bg-white shadow-sm h-16 px-6 flex items-center justify-between sticky top-0 z-10">
-            {/* Botón Menú (Solo visible en móvil) */}
+            {}
             <div className="flex items-center gap-4">
                 <button 
                     onClick={toggleSidebar} 
@@ -17,7 +17,7 @@ export default function Header({ toggleSidebar }) {
                 </button>
             </div>
 
-            {/* Perfil de Usuario */}
+            {}
             <div className="flex items-center gap-4">
                 <div className="text-right hidden sm:block">
                     <p className="text-sm font-bold text-gray-800">

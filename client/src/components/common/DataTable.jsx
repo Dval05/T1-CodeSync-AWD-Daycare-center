@@ -14,17 +14,14 @@ export default function DataTable({
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    // Lógica de Filtrado Inteligente
     const filteredData = data.filter(item => {
         if (!searchTerm) return true;
-        // Busca en todos los valores de las columnas indicadas
         return columns.some(col => {
             const val = item[col.accessor];
             return val && val.toString().toLowerCase().includes(searchTerm.toLowerCase());
         });
     });
 
-    // Paginación
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const paginatedData = filteredData.slice(
         (currentPage - 1) * itemsPerPage,
@@ -33,7 +30,7 @@ export default function DataTable({
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            {/* Header de la Tabla */}
+            {}
             <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white">
                 <h2 className="text-xl font-bold text-gray-800">{title}</h2>
                 
@@ -47,7 +44,7 @@ export default function DataTable({
                             value={searchTerm}
                             onChange={(e) => {
                                 setSearchTerm(e.target.value);
-                                setCurrentPage(1); // Resetear a página 1 al buscar
+                                setCurrentPage(1); 
                             }}
                         />
                     </div>

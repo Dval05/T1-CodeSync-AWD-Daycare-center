@@ -11,17 +11,15 @@ const supabase = createClient(
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null); // Usuario Auth de Supabase
-    const [profile, setProfile] = useState(null); // Perfil interno (user + roles)
+    const [user, setUser] = useState(null); 
+    const [profile, setProfile] = useState(null); 
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Verificar sesión inicial
         supabase.auth.getSession().then(({ data: { session } }) => {
             handleSession(session);
         });
 
-        // Escuchar cambios
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             handleSession(session);
         });
@@ -43,23 +41,16 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('sb-access-token', token);
             setUser(session.user);
 
-            // 1. Sincronizar con backend (por si es login nuevo de Google)
             await businessApi.auth.syncGoogle();
 
-            // 2. Obtener perfil interno + roles desde api-crud
-            // Buscamos en la tabla 'user' filtrando por AuthUserID
             const { data: users } = await crudApi.getAll('user', { AuthUserID: session.user.id });
             const currentUser = users?.[0];
 
             if (currentUser) {
-                // Obtener roles
                 const { data: roles } = await crudApi.getAll('user_role', { UserID: currentUser.UserID });
                 
-                // Mapear IDs de rol a nombres (opcional, si necesitas nombres en el front)
-                // Por ahora guardamos el perfil crudo
                 setProfile({ ...currentUser, roles: roles || [] });
             } else {
-                // Si no hay usuario en BD, crear perfil básico
                 setProfile({ 
                     FirstName: session.user.user_metadata?.name?.split(' ')[0] || '',
                     LastName: session.user.user_metadata?.name?.split(' ')[1] || '',
@@ -69,7 +60,6 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.error("Error cargando perfil:", error);
-            // En caso de error, crear perfil mínimo para evitar crashes
             setProfile({ 
                 FirstName: session.user.user_metadata?.name || '',
                 Email: session.user.email,

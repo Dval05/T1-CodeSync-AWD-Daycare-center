@@ -15,7 +15,6 @@ export default function ActivityManager() {
 
     const loadActivities = () => crudApi.getAll('activity').then(res => setActivities(res.data));
 
-    // Cargar multimedia de una actividad específica
     const loadMedia = async (activity) => {
         setSelectedActivity(activity);
         try {
@@ -38,7 +37,7 @@ export default function ActivityManager() {
         try {
             await crudApi.create('activity_media', payload);
             toast.success('Recurso añadido');
-            loadMedia(selectedActivity); // Recargar
+            loadMedia(selectedActivity); 
             e.target.reset();
         } catch (e) { toast.error('Error guardando'); }
     };
@@ -50,7 +49,7 @@ export default function ActivityManager() {
                     <button onClick={() => setView('list')} className="text-blue-600 hover:underline">← Volver a Actividades</button>
                 </div>
                 <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Formulario de Subida */}
+                    {}
                     <div className="lg:w-1/3 bg-white p-6 rounded-lg shadow h-fit">
                         <h3 className="font-bold text-lg mb-4">Añadir Recurso a: {selectedActivity.Name}</h3>
                         <form onSubmit={handleAddMedia} className="space-y-4">
@@ -65,7 +64,7 @@ export default function ActivityManager() {
                         </form>
                     </div>
 
-                    {/* Galería */}
+                    {}
                     <div className="lg:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {mediaList.length === 0 && <p className="text-gray-400 col-span-2 text-center py-10">No hay recursos adjuntos.</p>}
                         {mediaList.map(m => (
@@ -91,7 +90,6 @@ export default function ActivityManager() {
         );
     }
 
-    // Vista de Lista (Por defecto)
     const columns = [
         { header: 'Actividad', accessor: 'Name' },
         { header: 'Fecha', accessor: 'ScheduledDate', render: i => new Date(i.ScheduledDate).toLocaleDateString() },

@@ -6,7 +6,6 @@ export default function Activities() {
     const [activities, setActivities] = useState([]);
 
     useEffect(() => {
-        // Esta llamada es "mágica": El backend decide qué mostrar basado en el rol
         businessApi.activities.myFeed()
             .then(res => setActivities(res.data))
             .catch(console.error);

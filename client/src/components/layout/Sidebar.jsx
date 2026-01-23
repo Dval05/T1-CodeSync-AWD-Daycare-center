@@ -14,7 +14,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
         { label: 'Actividades', path: '/activities', icon: CalendarDays },
         { label: 'Gestor de Actividades', path: '/activity-manager', icon: CalendarDays },
         { label: 'Estudiantes', path: '/students', icon: GraduationCap },
-        { label: 'Calificaciones', path: '/grades', icon: Award },
+        { label: 'Grupos', path: '/grades', icon: Award },
         { label: 'Alta Rápida', path: '/intake', icon: Bolt },
         { label: 'Asistencia', path: '/attendance', icon: UserCheck },
         { label: 'Pagos', path: '/payments', icon: DollarSign },
@@ -29,7 +29,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
     return (
         <>
-            {/* FONDO OSCURO (Solo en Móvil cuando está abierto) */}
+            {}
             <div 
                 onClick={() => setSidebarOpen(false)}
                 className={`fixed inset-0 z-20 transition-opacity bg-black opacity-50 lg:hidden ${
@@ -37,13 +37,13 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 }`}
             ></div>
 
-            {/* SIDEBAR */}
+            {}
             <aside 
                 className={`fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto transition-transform duration-300 transform bg-slate-900 lg:translate-x-0 lg:static lg:inset-0 ${
                     sidebarOpen ? 'translate-x-0 ease-out' : '-translate-x-full ease-in'
                 }`}
             >
-                {/* Cabecera del Sidebar */}
+                {}
                 <div className="flex items-center justify-between p-6 border-b border-slate-800">
                     <h1 className="text-2xl font-bold text-blue-400">NiceKids</h1>
                     <button 
@@ -54,7 +54,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     </button>
                 </div>
 
-                {/* Lista de Enlaces */}
+                {}
                 <nav className="p-4 space-y-2">
                     {menu.map((item) => {
                         const Icon = item.icon;

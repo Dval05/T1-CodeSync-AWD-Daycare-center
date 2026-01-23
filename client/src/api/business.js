@@ -48,5 +48,8 @@ export const businessApi = {
         markRead: (id) => api.patch(`/notifications/${id}/read`),
         broadcast: (data) => api.post('/notifications/broadcast', data),
         send: (data) => api.post('/notifications/send', data),
-    }
+    },
+    // Método directo para llamadas personalizadas
+    get: (url, config) => api.get(url, config),
+    post: (url, data, config) => api.post(url, data, config),
 };
