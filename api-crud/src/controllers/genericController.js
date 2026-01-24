@@ -1,8 +1,5 @@
 import { getAuthenticatedClient } from '../config/supabase.js';
 
-// --- CONFIGURACIÓN ---
-
-// 1. MAPA DE PRIMARY KEYS
 const PK_MAP = {
     'activity': 'ActivityID',
     'activity_media': 'MediaID',
@@ -27,7 +24,6 @@ const PK_MAP = {
     'user_role': 'UserRoleID'
 };
 
-// 2. TABLAS CON BORRADO LÓGICO
 const LOGICAL_DELETE_TABLES = [
     'activity',
     'employee',
@@ -37,8 +33,6 @@ const LOGICAL_DELETE_TABLES = [
     'student',
     'user'
 ];
-
-// --- FUNCIONES CRUD ---
 
 export const getAll = async (req, res) => {
     const { resource } = req.params;

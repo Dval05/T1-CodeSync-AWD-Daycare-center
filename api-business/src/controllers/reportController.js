@@ -16,7 +16,6 @@ export const getAttendanceReport = async (req, res) => {
         const { data: records, error } = await dbRequest;
         if (error) throw error;
 
-        // Filtrar por curso si se especifica (después de la consulta)
         let filteredRecords = records;
         if (gradeId) {
             filteredRecords = records.filter(r => r.student?.GradeID == gradeId);
@@ -29,7 +28,6 @@ export const getAttendanceReport = async (req, res) => {
             late: filteredRecords.filter(r => r.IsLate === 1).length
         };
 
-        // Si piden PDF, generar y retornar
         if (format === 'pdf') {
             return generateAttendancePDF(res, stats, filteredRecords, from, to, studentId, gradeId);
         }
@@ -43,19 +41,15 @@ export const getAttendanceReport = async (req, res) => {
 function generateAttendancePDF(res, stats, records, from, to, studentId, gradeId) {
     const doc = new PDFDocument({ margin: 50 });
 
-    // Headers para descarga
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=reporte-asistencia-${from}-${to}.pdf`);
 
-    // Pipe al response
     doc.pipe(res);
 
-    // Título
     doc.fontSize(20).font('Helvetica-Bold').text('Reporte de Asistencias', { align: 'center' });
     doc.moveDown(0.5);
     doc.fontSize(12).font('Helvetica').text(`Periodo: ${from} al ${to}`, { align: 'center' });
     
-    // Mostrar filtros aplicados
     if (studentId || gradeId) {
         doc.fontSize(10).font('Helvetica-Oblique');
         if (studentId) doc.text('Filtrado por estudiante seleccionado', { align: 'center' });
@@ -64,7 +58,6 @@ function generateAttendancePDF(res, stats, records, from, to, studentId, gradeId
     
     doc.moveDown(2);
 
-    // Estadísticas
     doc.fontSize(14).font('Helvetica-Bold').text('Resumen Estadístico', { underline: true });
     doc.moveDown(0.5);
     doc.fontSize(11).font('Helvetica');
@@ -74,11 +67,9 @@ function generateAttendancePDF(res, stats, records, from, to, studentId, gradeId
     doc.text(`Retardos: ${stats.late}`);
     doc.moveDown(2);
 
-    // Tabla de registros
     doc.fontSize(14).font('Helvetica-Bold').text('Detalle de Registros', { underline: true });
     doc.moveDown(1);
 
-    // Headers de tabla
     const tableTop = doc.y;
     const col1 = 50;
     const col2 = 140;
@@ -94,12 +85,10 @@ function generateAttendancePDF(res, stats, records, from, to, studentId, gradeId
     doc.moveTo(50, doc.y + 5).lineTo(550, doc.y + 5).stroke();
     doc.moveDown(0.5);
 
-    // Datos
     doc.font('Helvetica').fontSize(9);
     records.forEach((record, i) => {
         const y = doc.y;
         
-        // Si nos quedamos sin espacio, nueva página
         if (y > 720) {
             doc.addPage();
             doc.y = 50;
@@ -118,7 +107,6 @@ function generateAttendancePDF(res, stats, records, from, to, studentId, gradeId
         doc.moveDown(0.8);
     });
 
-    // Pie de página
     doc.moveDown(2);
     doc.fontSize(8).font('Helvetica-Oblique').text(
         `Generado el ${new Date().toLocaleString('es-ES')}`,
@@ -133,19 +121,16 @@ export const getStudentProgressReport = async (req, res) => {
     const { from, to } = req.query;
 
     try {
-        // Asistencia
         let attReq = supabase.from('attendance').select('Status, IsLate').eq('StudentID', id);
         if (from) attReq = attReq.gte('Date', from);
         if (to) attReq = attReq.lte('Date', to);
         const { data: attendance } = await attReq;
 
-        // Observaciones
         let obsReq = supabase.from('student_observation').select('*').eq('StudentID', id).order('ObservationDate', {ascending: false});
         if (from) obsReq = obsReq.gte('ObservationDate', from);
         if (to) obsReq = obsReq.lte('ObservationDate', to);
         const { data: observations } = await obsReq;
 
-        // Cálculos
         const total = attendance.length;
         const present = attendance.filter(r => r.Status === 'Present').length;
         const percentage = total ? ((present / total) * 100).toFixed(1) : 0;

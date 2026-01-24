@@ -11,7 +11,6 @@ const PORT = process.env.PORT || 3002;
 app.use(cors());
 app.use(express.json());
 
-// Rutas base
 app.use('/api', routes);
 
 app.get('/health', (req, res) => res.json({ status: 'API Business OK', time: new Date() }));
