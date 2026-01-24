@@ -1,21 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { AlertCircle } from 'lucide-react';
 
 export default function Login() {
     const { loginWithPassword, loginWithGoogle } = useAuth();
     const { register, handleSubmit } = useForm();
     const navigate = useNavigate();
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const onSubmit = async (data) => {
+        setError('');
+        setLoading(true);
+        
         try {
-            const { error } = await loginWithPassword(data.email, data.password);
-            if (error) throw error;
+            const { error: authError } = await loginWithPassword(data.email, data.password);
+            
+            if (authError) {
+                // Mensajes personalizados según el tipo de error
+                if (authError.message.includes('Invalid login credentials')) {
+                    setError('Correo o contraseña incorrectos. Verifica tus datos.');
+                    toast.error('Credenciales incorrectas');
+                } else if (authError.message.includes('Email not confirmed')) {
+                    setError('Tu correo no ha sido confirmado. Revisa tu bandeja de entrada.');
+                    toast.error('Email no confirmado');
+                } else if (authError.message.includes('User not found')) {
+                    setError('No existe una cuenta con este correo.');
+                    toast.error('Usuario no encontrado');
+                } else {
+                    setError(`Error: ${authError.message}`);
+                    toast.error('Error de autenticación');
+                }
+                return;
+            }
+            
+            toast.success('¡Bienvenido!');
             navigate('/dashboard');
         } catch (err) {
-            toast.error(err.message || 'Error de autenticación');
+            console.error('Error en login:', err);
+            setError('Error al iniciar sesión. Intenta nuevamente.');
+            toast.error('Error de autenticación');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -38,6 +67,14 @@ export default function Login() {
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                        {/* Mensaje de Error */}
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 animate-shake">
+                                <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
+                                <p className="text-sm text-red-700">{error}</p>
+                            </div>
+                        )}
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
                             <input 
@@ -45,7 +82,8 @@ export default function Login() {
                                 type="email" 
                                 className="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 p-2.5 focus:border-blue-500 focus:ring-blue-500"
                                 placeholder="admin@nicekids.com"
-                                required 
+                                required
+                                disabled={loading}
                             />
                         </div>
                         <div>
@@ -54,15 +92,24 @@ export default function Login() {
                                 {...register("password")} 
                                 type="password" 
                                 className="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 p-2.5 focus:border-blue-500 focus:ring-blue-500"
-                                required 
+                                required
+                                disabled={loading}
                             />
                         </div>
 
                         <button 
                             type="submit" 
-                            className="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-3 text-center transition-transform transform hover:scale-105"
+                            disabled={loading}
+                            className="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-3 text-center transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
                         >
-                            Ingresar
+                            {loading ? (
+                                <>
+                                    <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></div>
+                                    <span>Verificando...</span>
+                                </>
+                            ) : (
+                                'Ingresar'
+                            )}
                         </button>
                     </form>
 

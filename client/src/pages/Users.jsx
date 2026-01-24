@@ -3,18 +3,15 @@ import Layout from '../components/layout/Layout';
 import { crudApi } from '../api/crud';
 import { toast } from 'react-hot-toast';
 import { Shield, Trash2, UserPlus, Edit, MapPin, Phone, CheckCircle, XCircle } from 'lucide-react';
-import Modal from '../components/common/Modal'; // Asegúrate de importar tu Modal
-
+import Modal from '../components/common/Modal'; 
 export default function Users() {
     const [users, setUsers] = useState([]);
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Estados para el Modal y Edición
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState(null); // null = Crear, Objeto = Editar
+    const [editingUser, setEditingUser] = useState(null); 
 
-    // Cargar Usuarios y Roles
     useEffect(() => {
         loadData();
     }, []);
@@ -34,21 +31,16 @@ export default function Users() {
         }
     };
 
-    // --- MANEJADORES DE ACCIONES ---
-
-    // 1. Asignar Rol Rápido (Desde la tabla)
     const handleAssignRole = async (userId, roleId) => {
         if (!roleId) return;
         try {
             await crudApi.create('user_role', { UserID: userId, RoleID: roleId });
             toast.success('Rol asignado correctamente');
-            // Opcional: recargar si quieres ver cambios reflejados inmediatamente en alguna columna
         } catch (error) {
             toast.error('Error al asignar rol');
         }
     };
 
-    // 2. Eliminar Usuario
     const handleDelete = async (id) => {
         if (!confirm('¿Estás seguro de eliminar este usuario?')) return;
         try {
@@ -60,22 +52,18 @@ export default function Users() {
         }
     };
 
-    // 3. Guardar Usuario (Crear o Editar)
     const handleSaveUser = async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData.entries());
 
-        // Convertir IsActive a número
         data.IsActive = data.IsActive === 'true' ? 1 : 0;
 
         try {
             if (editingUser) {
-                // UPDATE
                 await crudApi.update('user', editingUser.UserID, data);
                 toast.success('Usuario actualizado');
             } else {
-                // CREATE (Asegurar campos mínimos)
                 await crudApi.create('user', data);
                 toast.success('Usuario creado');
             }
@@ -87,7 +75,6 @@ export default function Users() {
         }
     };
 
-    // 4. Abrir Modal
     const openModal = (user = null) => {
         setEditingUser(user);
         setIsModalOpen(true);
@@ -95,7 +82,7 @@ export default function Users() {
 
     return (
         <Layout>
-            {/* Header con Botón de Crear */}
+            {}
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">Gestión de Usuarios</h2>
                 <button 
@@ -122,13 +109,13 @@ export default function Users() {
                         <tbody className="bg-white divide-y divide-gray-200">
                             {users.map((user) => (
                                 <tr key={user.UserID} className="hover:bg-gray-50 transition-colors">
-                                    {/* Nombre y Username */}
+                                    {}
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm font-bold text-gray-900">{user.FirstName} {user.LastName}</div>
                                         <div className="text-xs text-blue-600 font-mono">@{user.UserName}</div>
                                     </td>
 
-                                    {/* Email y Teléfono */}
+                                    {}
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm text-gray-900">{user.Email}</div>
                                         {user.Phone && (
@@ -138,7 +125,7 @@ export default function Users() {
                                         )}
                                     </td>
 
-                                    {/* Dirección */}
+                                    {}
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {user.Address ? (
                                             <div className="flex items-center gap-1">
@@ -148,7 +135,7 @@ export default function Users() {
                                         ) : <span className="text-gray-300 italic">--</span>}
                                     </td>
 
-                                    {/* Estado */}
+                                    {}
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         {user.IsActive ? (
                                             <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 items-center gap-1">
@@ -161,7 +148,7 @@ export default function Users() {
                                         )}
                                     </td>
 
-                                    {/* Asignación Rápida de Rol */}
+                                    {}
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <div className="flex items-center gap-2">
                                             <Shield size={16} className="text-purple-500" />
@@ -178,7 +165,7 @@ export default function Users() {
                                         </div>
                                     </td>
 
-                                    {/* Botones de Acción */}
+                                    {}
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex justify-end gap-2">
                                             <button 
@@ -204,7 +191,7 @@ export default function Users() {
                 </div>
             </div>
 
-            {/* MODAL PARA CREAR / EDITAR */}
+            {}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}

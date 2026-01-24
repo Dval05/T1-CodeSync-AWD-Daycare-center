@@ -2,17 +2,37 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import { useAuth } from '../context/AuthContext';
 import { crudApi } from '../api/crud';
-import { User, Mail, Phone, MapPin, Calendar, Shield } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
+import { User, Mail, Phone, MapPin, Calendar, Shield, Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+const supabase = createClient(
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 export default function Profile() {
     const { user, profile, loading } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState('');
+    
     const [formData, setFormData] = useState({
         FirstName: '',
         LastName: '',
         Email: '',
         PhoneNumber: '',
         Address: ''
+    });
+
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
     });
 
     // Actualizar formData cuando profile esté disponible
@@ -32,12 +52,79 @@ export default function Profile() {
         e.preventDefault();
         try {
             await crudApi.update('user', profile.UserID, formData);
-            alert('Perfil actualizado exitosamente');
+            toast.success('✅ Perfil actualizado exitosamente');
             setIsEditing(false);
             window.location.reload();
         } catch (error) {
             console.error("Error actualizando perfil:", error);
-            alert('Error al actualizar perfil');
+            toast.error('❌ Error al actualizar perfil');
+        }
+    };
+
+    const handlePasswordChange = async (e) => {
+        e.preventDefault();
+        setPasswordError('');
+        setPasswordSuccess('');
+
+        // Validar que las contraseñas coincidan
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            setPasswordError('Las contraseñas no coinciden');
+            return;
+        }
+
+        // Validar longitud mínima
+        if (passwordData.newPassword.length < 8) {
+            setPasswordError('La contraseña debe tener al menos 8 caracteres');
+            return;
+        }
+
+        // Validar que sea diferente a la actual
+        if (passwordData.currentPassword === passwordData.newPassword) {
+            setPasswordError('La nueva contraseña debe ser diferente a la actual');
+            return;
+        }
+
+        try {
+            // Primero verificar la contraseña actual intentando hacer login
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: user.email,
+                password: passwordData.currentPassword
+            });
+
+            if (signInError) {
+                setPasswordError('La contraseña actual es incorrecta');
+                return;
+            }
+
+            // Actualizar la contraseña en Supabase Auth
+            const { error: updateError } = await supabase.auth.updateUser({
+                password: passwordData.newPassword
+            });
+
+            if (updateError) {
+                setPasswordError('Error al actualizar la contraseña: ' + updateError.message);
+                return;
+            }
+
+            // Limpiar el formulario
+            setPasswordData({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+            });
+
+            setPasswordSuccess('✅ Contraseña actualizada exitosamente');
+            toast.success('🔒 Contraseña actualizada correctamente');
+            
+            // Cerrar el panel de cambio de contraseña después de 2 segundos
+            setTimeout(() => {
+                setIsChangingPassword(false);
+                setPasswordSuccess('');
+            }, 2000);
+
+        } catch (error) {
+            console.error("Error cambiando contraseña:", error);
+            setPasswordError('Error inesperado al cambiar la contraseña');
         }
     };
 
@@ -56,14 +143,25 @@ export default function Profile() {
             <div className="max-w-4xl mx-auto">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-800">Mi Perfil</h2>
-                    {!isEditing && (
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                        >
-                            Editar Perfil
-                        </button>
-                    )}
+                    <div className="flex gap-2">
+                        {!isChangingPassword && (
+                            <button
+                                onClick={() => setIsChangingPassword(true)}
+                                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
+                            >
+                                <Lock size={18} />
+                                Cambiar Contraseña
+                            </button>
+                        )}
+                        {!isEditing && !isChangingPassword && (
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                            >
+                                Editar Perfil
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden">
