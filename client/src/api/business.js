@@ -7,6 +7,20 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('sb-access-token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
+
+    // Dev helper: if using the local 'custom-auth-token' (loginWithCredentials),
+    // forward the internal UserID so the API can resolve permissions during dev.
+    try {
+        if (token === 'custom-auth-token') {
+            const saved = localStorage.getItem('user-profile');
+            if (saved) {
+                const profile = JSON.parse(saved);
+                if (profile?.UserID) config.headers['x-dev-user'] = String(profile.UserID);
+            }
+        }
+    } catch (e) {
+        // ignore JSON parse errors
+    }
     return config;
 });
 
