@@ -4,6 +4,7 @@ import ChangePasswordModal from './components/auth/ChangePasswordModal';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Activities from './pages/Activities';
+import Audit from './pages/Audit';
 import ActivityManager from './pages/ActivityManager';
 import Intake from './pages/Intake';
 import Students from './pages/Students';
@@ -38,6 +39,7 @@ const AppContent = () => {
                 
                 {/* Rutas Protegidas */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/audit" element={<ProtectedRoute><Audit /></ProtectedRoute>} />
                 <Route path="/activities" element={<ProtectedRoute><Activities /></ProtectedRoute>} />
                 <Route path="/intake" element={<ProtectedRoute><Intake /></ProtectedRoute>} />
                 <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />

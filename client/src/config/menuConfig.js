@@ -20,6 +20,12 @@ export const MENU_CONFIG = [
         permissions: [] // Sin permisos requeridos - todos pueden ver el dashboard
     },
     {
+        label: 'Auditoría',
+        path: '/audit',
+        icon: FileText,
+        permissions: ['attendance.view']
+    },
+    {
         label: 'Actividades',
         path: '/activities',
         icon: CalendarDays,
