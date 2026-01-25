@@ -78,6 +78,8 @@ export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
+        console.log('🔐 Intento de login:', { email });
+
         if (!email || !password) {
             return res.status(400).json({ error: 'Email y contraseña requeridos' });
         }
@@ -90,12 +92,21 @@ export const login = async (req, res) => {
             .eq('IsActive', 1)
             .single();
 
+        console.log('👤 Usuario encontrado:', user ? 'Sí' : 'No');
+        console.log('❌ Error de búsqueda:', error ? error.message : 'Ninguno');
+        
+        if (user) {
+            console.log('🔑 PasswordHash presente:', user.PasswordHash ? 'Sí' : 'No');
+        }
+
         if (error || !user) {
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
 
         // Verificar contraseña
         const isValidPassword = await bcrypt.compare(password, user.PasswordHash);
+        
+        console.log('✅ Contraseña válida:', isValidPassword);
         
         if (!isValidPassword) {
             return res.status(401).json({ error: 'Credenciales inválidas' });

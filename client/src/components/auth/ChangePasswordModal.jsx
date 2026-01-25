@@ -63,7 +63,7 @@ export default function ChangePasswordModal({ user, onSuccess }) {
         setLoading(true);
 
         try {
-            const response = await axios.post(`${API_URL}/api/auth/change-password`, {
+            const response = await axios.post(`${API_URL}/auth/change-password`, {
                 userId: user.UserID,
                 currentPassword: formData.currentPassword,
                 newPassword: formData.newPassword

@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }) => {
     // Login con email y contraseña (sistema propio)
     const loginWithCredentials = async (email, password) => {
         try {
-            const response = await axios.post(`${API_CRUD_URL}/api/auth/login`, {
+            const response = await axios.post(`${API_CRUD_URL}/auth/login`, {
                 email,
                 password
             });

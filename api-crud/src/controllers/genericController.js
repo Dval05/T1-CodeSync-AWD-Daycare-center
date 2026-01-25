@@ -1,4 +1,4 @@
-import { getAuthenticatedClient, supabaseAdmin } from '../config/supabase.js';
+import { supabaseAdmin } from '../config/supabase.js';
 
 const PK_MAP = {
     'activity': 'ActivityID',
@@ -34,18 +34,10 @@ const LOGICAL_DELETE_TABLES = [
     'user'
 ];
 
-// Tablas que requieren privilegios administrativos (bypassean RLS)
-const ADMIN_TABLES = [
-    'user',
-    'role',
-    'permission',
-    'role_permission',
-    'user_role'
-];
-
 export const getAll = async (req, res) => {
     const { resource } = req.params;
-    const supabase = getAuthenticatedClient(req.token);
+    // Usar supabaseAdmin para bypass de RLS (autenticación ya validada por authCheck)
+    const supabase = supabaseAdmin;
 
     if (!PK_MAP[resource]) {
         return res.status(400).json({ error: `La tabla '${resource}' no está configurada en la API.` });
@@ -79,7 +71,8 @@ export const getAll = async (req, res) => {
 
 export const getById = async (req, res) => {
     const { resource, id } = req.params;
-    const supabase = getAuthenticatedClient(req.token);
+    // Usar supabaseAdmin para bypass de RLS (autenticación ya validada por authCheck)
+    const supabase = supabaseAdmin;
     const pk = PK_MAP[resource];
 
     if (!pk) return res.status(400).json({ error: `Recurso '${resource}' no configurado.` });
@@ -97,10 +90,8 @@ export const getById = async (req, res) => {
 export const create = async (req, res) => {
     const { resource } = req.params;
     
-    // Usar cliente admin para tablas que requieren privilegios especiales
-    const supabase = ADMIN_TABLES.includes(resource) 
-        ? supabaseAdmin 
-        : getAuthenticatedClient(req.token);
+    // Usar supabaseAdmin para bypass de RLS (autenticación ya validada por authCheck)
+    const supabase = supabaseAdmin;
 
     const { data, error } = await supabase
         .from(resource)
@@ -118,10 +109,8 @@ export const update = async (req, res) => {
 
     if (!pk) return res.status(400).json({ error: `Recurso '${resource}' no configurado.` });
 
-    // Usar cliente admin para tablas que requieren privilegios especiales
-    const supabase = ADMIN_TABLES.includes(resource) 
-        ? supabaseAdmin 
-        : getAuthenticatedClient(req.token);
+    // Usar supabaseAdmin para bypass de RLS (autenticación ya validada por authCheck)
+    const supabase = supabaseAdmin;
 
     const { data, error } = await supabase
         .from(resource)
@@ -136,7 +125,8 @@ export const update = async (req, res) => {
 
 export const remove = async (req, res) => {
     const { resource, id } = req.params;
-    const supabase = getAuthenticatedClient(req.token);
+    // Usar supabaseAdmin para bypass de RLS (autenticación ya validada por authCheck)
+    const supabase = supabaseAdmin;
     const pk = PK_MAP[resource];
 
     if (!pk) return res.status(400).json({ error: `Recurso '${resource}' no configurado.` });
