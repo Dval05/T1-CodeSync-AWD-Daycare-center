@@ -149,6 +149,79 @@ export default function Attendance() {
         }
     };
 
+    const handleExportExcel = () => {
+        if (!dashboardStats || !dashboardStats.records || dashboardStats.records.length === 0) {
+            toast.error('No hay datos para exportar');
+            return;
+        }
+
+        (async () => {
+            try {
+                const XLSX = await import('xlsx');
+
+                const headers = ['Fecha','Estudiante','Curso','Estado','Retardo'];
+                const aoa = [headers];
+
+                dashboardStats.records.forEach(r => {
+                    const fecha = r.Date ? new Date(r.Date).toLocaleDateString('es-ES') : '';
+                    const student = r.student ? `${r.student.FirstName || ''} ${r.student.LastName || ''}`.trim() : '';
+                    const gradeId = r.student?.GradeID || r.GradeID || null;
+                    const gradeObj = grades.find(g => String(g.GradeID) === String(gradeId));
+                    const course = gradeObj ? gradeObj.GradeName : 'No asignado';
+                    const estado = r.Status === 'Present' ? 'Presente' : (r.Status === 'Absent' ? 'Ausente' : r.Status);
+                    const retardo = r.IsLate ? 'Sí' : 'No';
+                    aoa.push([fecha, student, course, estado, retardo]);
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(aoa);
+                // Apply thin black border to all cells
+                const range = ws['!ref'];
+                if (range) {
+                    const [start, end] = range.split(':');
+                    const startCol = XLSX.utils.decode_cell(start).c;
+                    const startRow = XLSX.utils.decode_cell(start).r;
+                    const endCol = XLSX.utils.decode_cell(end).c;
+                    const endRow = XLSX.utils.decode_cell(end).r;
+
+                    const thin = { style: 'thin', color: { rgb: '000000' } };
+                    for (let R = startRow; R <= endRow; ++R) {
+                        for (let C = startCol; C <= endCol; ++C) {
+                            const cellAddress = { c: C, r: R };
+                            const cellRef = XLSX.utils.encode_cell(cellAddress);
+                            const cell = ws[cellRef] || (ws[cellRef] = { t: 's', v: '' });
+                            // set border style
+                            if (!cell.s) cell.s = {};
+                            cell.s.border = {
+                                top: thin,
+                                bottom: thin,
+                                left: thin,
+                                right: thin
+                            };
+                            cell.s.alignment = { vertical: 'center', horizontal: 'left' };
+                        }
+                    }
+                }
+
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Asistencias');
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/octet-stream' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `asistencias-${dateFrom}-${dateTo}.xlsx`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+                toast.success('Excel generado y descargado');
+            } catch (err) {
+                console.error('Error exportando Excel:', err);
+                toast.error('Error generando Excel. Instala la dependencia xlsx con npm install');
+            }
+        })();
+    };
+
     return (
         <Layout>
             <div className="flex justify-between items-center mb-6">
@@ -403,6 +476,13 @@ export default function Attendance() {
                                     className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 shadow-lg font-bold disabled:bg-gray-400"
                                 >
                                     {loadingReport ? 'Generando...' : '📄 Generar PDF'}
+                                </button>
+                                <button
+                                    onClick={handleExportExcel}
+                                    disabled={loadingReport}
+                                    className="ml-3 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 shadow-lg font-bold disabled:bg-gray-400"
+                                >
+                                    📥 Exportar Excel
                                 </button>
                             </div>
                         </>
