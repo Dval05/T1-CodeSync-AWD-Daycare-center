@@ -11,42 +11,16 @@ export default function Login() {
     const navigate = useNavigate();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [loginType, setLoginType] = useState('credentials'); // 'credentials' o 'google'
 
     const onSubmit = async (data) => {
         setError('');
         setLoading(true);
         
         try {
-            if (loginType === 'credentials') {
-                // Login con usuario/contraseña (sistema propio)
-                const result = await loginWithCredentials(data.username, data.password);
-                
-                if (result.success) {
-                    toast.success('¡Bienvenido!');
-                    navigate('/dashboard');
-                }
-            } else {
-                // Login con Supabase (Google)
-                const { error: authError } = await loginWithPassword(data.email, data.password);
-                
-                if (authError) {
-                    if (authError.message.includes('Invalid login credentials')) {
-                        setError('Correo o contraseña incorrectos. Verifica tus datos.');
-                        toast.error('Credenciales incorrectas');
-                    } else if (authError.message.includes('Email not confirmed')) {
-                        setError('Tu correo no ha sido confirmado. Revisa tu bandeja de entrada.');
-                        toast.error('Email no confirmado');
-                    } else if (authError.message.includes('User not found')) {
-                        setError('No existe una cuenta con este correo.');
-                        toast.error('Usuario no encontrado');
-                    } else {
-                        setError(`Error: ${authError.message}`);
-                        toast.error('Error de autenticación');
-                    }
-                    return;
-                }
-                
+            // Login con email y contraseña (sistema propio)
+            const result = await loginWithCredentials(data.email, data.password);
+            
+            if (result.success) {
                 toast.success('¡Bienvenido!');
                 navigate('/dashboard');
             }
@@ -88,14 +62,12 @@ export default function Login() {
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                {loginType === 'credentials' ? 'Usuario o Cédula' : 'Correo Electrónico'}
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
                             <input 
-                                {...register(loginType === 'credentials' ? "username" : "email")} 
-                                type={loginType === 'credentials' ? "text" : "email"}
+                                {...register("email")} 
+                                type="email"
                                 className="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 p-2.5 focus:border-blue-500 focus:ring-blue-500"
-                                placeholder={loginType === 'credentials' ? "Usuario o cédula" : "admin@nicekids.com"}
+                                placeholder="usuario@ejemplo.com"
                                 required
                                 disabled={loading}
                             />
@@ -106,10 +78,11 @@ export default function Login() {
                                 {...register("password")} 
                                 type="password" 
                                 className="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 p-2.5 focus:border-blue-500 focus:ring-blue-500"
-                                placeholder={loginType === 'credentials' ? "Tu contraseña o cédula" : ""}
+                                placeholder="Tu contraseña"
                                 required
                                 disabled={loading}
                             />
+                            <p className="text-xs text-gray-500 mt-1">Si es tu primer inicio, usa tu cédula</p>
                         </div>
 
                         <button 

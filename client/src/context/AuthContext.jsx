@@ -91,11 +91,11 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // Login con usuario y contraseña (sistema propio)
-    const loginWithCredentials = async (username, password) => {
+    // Login con email y contraseña (sistema propio)
+    const loginWithCredentials = async (email, password) => {
         try {
             const response = await axios.post(`${API_CRUD_URL}/api/auth/login`, {
-                username,
+                email,
                 password
             });
 

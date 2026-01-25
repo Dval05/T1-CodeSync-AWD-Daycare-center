@@ -76,17 +76,17 @@ export const updateUser = async (req, res) => {
  */
 export const login = async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { email, password } = req.body;
 
-        if (!username || !password) {
-            return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email y contraseña requeridos' });
         }
 
-        // Buscar usuario por UserName o Email
+        // Buscar usuario por Email
         const { data: user, error } = await supabaseAdmin
             .from('user')
             .select('UserID, UserName, Email, FirstName, LastName, PasswordHash, IsActive, MustChangePassword, IDNumber')
-            .or(`UserName.eq.${username},Email.eq.${username}`)
+            .eq('Email', email)
             .eq('IsActive', 1)
             .single();
 
