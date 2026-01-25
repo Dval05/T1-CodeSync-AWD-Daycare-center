@@ -9,6 +9,7 @@ export default function Users() {
     const [roles, setRoles] = useState([]);
     const [userRoles, setUserRoles] = useState({}); // Roles asignados por usuario
     const [loading, setLoading] = useState(true);
+    const [userFilter, setUserFilter] = useState('all'); // 'all' | 'active' | 'inactive' | 'role:<id>'
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState(null); 
@@ -127,7 +128,20 @@ export default function Users() {
         <Layout>
             {}
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Gestión de Usuarios</h2>
+                <div className="flex items-center gap-4">
+                    <h2 className="text-2xl font-bold text-gray-800">Gestión de Usuarios</h2>
+                    <select
+                        className="border border-gray-300 rounded p-2 text-sm"
+                        value={userFilter}
+                        onChange={(e) => setUserFilter(e.target.value)}
+                        aria-label="Filtrar usuarios"
+                    >
+                        <option value="all">Todos</option>
+                        <option value="active">Activos</option>
+                        <option value="inactive">Inactivos</option>
+                        {roles.map(r => <option key={r.RoleID} value={`role:${r.RoleID}`}>{r.RoleName}</option>)}
+                    </select>
+                </div>
                 <button 
                     onClick={() => openModal(null)}
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
@@ -150,7 +164,18 @@ export default function Users() {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {users.map((user) => (
+                            {(() => {
+                                const filtered = users.filter(user => {
+                                    if (userFilter === 'all') return true;
+                                    if (userFilter === 'active') return !!user.IsActive;
+                                    if (userFilter === 'inactive') return !user.IsActive;
+                                    if (userFilter.startsWith('role:')) {
+                                        const roleId = parseInt(userFilter.split(':')[1]);
+                                        return (userRoles[user.UserID] || []).includes(roleId);
+                                    }
+                                    return true;
+                                });
+                                return filtered.map((user) => (
                                 <tr key={user.UserID} className="hover:bg-gray-50 transition-colors">
                                     {}
                                     <td className="px-6 py-4 whitespace-nowrap">
@@ -262,7 +287,8 @@ export default function Users() {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                                ));
+                            })()}
                         </tbody>
                     </table>
                 </div>
