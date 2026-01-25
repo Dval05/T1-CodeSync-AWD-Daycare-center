@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { crudApi } from '../api/crud';
 import { toast } from 'react-hot-toast';
-import { Shield, Trash2, UserPlus, Edit, MapPin, Phone, CheckCircle, XCircle } from 'lucide-react';
+import { Shield, Trash2, UserPlus, Edit, MapPin, Phone, CheckCircle, XCircle, X } from 'lucide-react';
 import Modal from '../components/common/Modal'; 
 export default function Users() {
     const [users, setUsers] = useState([]);
     const [roles, setRoles] = useState([]);
+    const [userRoles, setUserRoles] = useState({}); // Roles asignados por usuario
     const [loading, setLoading] = useState(true);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,12 +19,23 @@ export default function Users() {
 
     const loadData = async () => {
         try {
-            const [usersRes, rolesRes] = await Promise.all([
+            const [usersRes, rolesRes, userRolesRes] = await Promise.all([
                 crudApi.getAll('user'), 
-                crudApi.getAll('role')
+                crudApi.getAll('role'),
+                crudApi.getAll('user_role')
             ]);
             setUsers(usersRes.data);
             setRoles(rolesRes.data);
+            
+            // Organizar roles por usuario
+            const rolesMap = {};
+            userRolesRes.data.forEach(ur => {
+                if (!rolesMap[ur.UserID]) {
+                    rolesMap[ur.UserID] = [];
+                }
+                rolesMap[ur.UserID].push(ur.RoleID);
+            });
+            setUserRoles(rolesMap);
         } catch (error) {
             toast.error('Error cargando datos');
         } finally {
@@ -33,11 +45,41 @@ export default function Users() {
 
     const handleAssignRole = async (userId, roleId) => {
         if (!roleId) return;
+        
+        // Verificar si el usuario ya tiene este rol
+        const currentUserRoles = userRoles[userId] || [];
+        if (currentUserRoles.includes(parseInt(roleId))) {
+            toast.error('El usuario ya tiene este rol asignado');
+            return;
+        }
+        
         try {
-            await crudApi.create('user_role', { UserID: userId, RoleID: roleId });
+            await crudApi.create('user_role', { UserID: userId, RoleID: parseInt(roleId) });
             toast.success('Rol asignado correctamente');
+            loadData(); // Recargar para actualizar los roles
         } catch (error) {
-            toast.error('Error al asignar rol');
+            console.error('Error asignando rol:', error);
+            toast.error(error.response?.data?.error || 'Error al asignar rol');
+        }
+    };
+
+    const handleRemoveRole = async (userId, roleId) => {
+        try {
+            // Buscar el registro user_role específico para eliminarlo
+            const { data: userRoleRecords } = await crudApi.getAll('user_role', { 
+                UserID: userId, 
+                RoleID: roleId 
+            });
+            
+            if (userRoleRecords && userRoleRecords.length > 0) {
+                const recordId = userRoleRecords[0].UserRoleID;
+                await crudApi.remove('user_role', recordId);
+                toast.success('Rol removido correctamente');
+                loadData(); // Recargar para actualizar los roles
+            }
+        } catch (error) {
+            console.error('Error removiendo rol:', error);
+            toast.error('Error al remover rol');
         }
     };
 
@@ -151,18 +193,52 @@ export default function Users() {
 
                                     {}
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <div className="flex items-center gap-2">
-                                            <Shield size={16} className="text-purple-500" />
-                                            <select 
-                                                className="border border-gray-300 rounded p-1 text-xs focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                                onChange={(e) => handleAssignRole(user.UserID, e.target.value)}
-                                                defaultValue=""
-                                            >
-                                                <option value="" disabled>Asignar Rol...</option>
-                                                {roles.map(role => (
-                                                    <option key={role.RoleID} value={role.RoleID}>{role.RoleName}</option>
-                                                ))}
-                                            </select>
+                                        <div className="flex flex-col gap-2">
+                                            {/* Roles actuales */}
+                                            {userRoles[user.UserID] && userRoles[user.UserID].length > 0 ? (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {userRoles[user.UserID].map(roleId => {
+                                                        const role = roles.find(r => r.RoleID === roleId);
+                                                        return role ? (
+                                                            <span key={roleId} className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full flex items-center gap-1 group">
+                                                                <Shield size={12} /> 
+                                                                {role.RoleName}
+                                                                <button
+                                                                    onClick={() => handleRemoveRole(user.UserID, roleId)}
+                                                                    className="ml-1 hover:bg-purple-200 rounded-full p-0.5 transition-colors"
+                                                                    title={`Remover rol ${role.RoleName}`}
+                                                                >
+                                                                    <X size={10} className="text-purple-600" />
+                                                                </button>
+                                                            </span>
+                                                        ) : null;
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <span className="text-gray-400 italic text-xs">Sin roles asignados</span>
+                                            )}
+                                            
+                                            {/* Selector para agregar más roles */}
+                                            <div className="flex items-center gap-2">
+                                                <select 
+                                                    className="border border-gray-300 rounded p-1 text-xs focus:ring-blue-500 focus:border-blue-500 outline-none w-full"
+                                                    onChange={(e) => {
+                                                        handleAssignRole(user.UserID, e.target.value);
+                                                        e.target.value = ''; // Reset select
+                                                    }}
+                                                    value=""
+                                                >
+                                                    <option value="">+ Agregar rol...</option>
+                                                    {roles
+                                                        .filter(role => !userRoles[user.UserID]?.includes(role.RoleID))
+                                                        .map(role => (
+                                                            <option key={role.RoleID} value={role.RoleID}>
+                                                                {role.RoleName}
+                                                            </option>
+                                                        ))
+                                                    }
+                                                </select>
+                                            </div>
                                         </div>
                                     </td>
 

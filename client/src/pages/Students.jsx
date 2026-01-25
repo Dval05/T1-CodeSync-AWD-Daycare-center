@@ -4,7 +4,8 @@ import { StudentModal } from '../components/modals/StudentModal';
 import { crudApi } from '../api/crud';
 import { businessApi } from '../api/business';
 import { toast } from 'react-hot-toast';
-import { User, Trash2, DollarSign, TrendingUp, X } from 'lucide-react';
+import { User, DollarSign, X } from 'lucide-react';
+import { ActionButton } from '../components/permissions/ActionButton';
 
 export default function Students() {
     const [students, setStudents] = useState([]);
@@ -94,12 +95,13 @@ export default function Students() {
         <Layout>
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">Estudiantes</h2>
-                <button 
+                <ActionButton
+                    resource="student"
+                    action="create"
                     onClick={handleCreate}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                    + Nuevo Estudiante
-                </button>
+                    label="Nuevo Estudiante"
+                    variant="primary"
+                />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -119,24 +121,29 @@ export default function Students() {
                         </div>
                         
                         <div className="mt-4 flex gap-2">
-                            <button 
+                            <ActionButton
+                                resource="student"
+                                action="update"
                                 onClick={() => handleEdit(stu)}
-                                className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded hover:bg-blue-100 text-sm font-semibold"
-                            >
-                                Editar
-                            </button>
+                                label="Editar"
+                                variant="secondary"
+                                className="flex-1 text-sm"
+                            />
                             <button 
                                 onClick={() => handleViewDetails(stu)}
                                 className="flex-1 bg-green-50 text-green-600 px-3 py-2 rounded hover:bg-green-100 text-sm font-semibold flex items-center justify-center gap-1"
                             >
                                 <DollarSign size={16} /> Balance
                             </button>
-                            <button 
+                            <ActionButton
+                                resource="student"
+                                action="delete"
                                 onClick={() => handleDelete(stu.StudentID)}
-                                className="bg-red-50 text-red-600 p-2 rounded hover:bg-red-100"
-                            >
-                                <Trash2 size={18} />
-                            </button>
+                                label=""
+                                variant="danger"
+                                className="p-2"
+                                icon={X}
+                            />
                         </div>
                     </div>
                 ))}

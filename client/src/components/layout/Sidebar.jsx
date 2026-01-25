@@ -1,31 +1,32 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-    LayoutDashboard, Users, GraduationCap, CalendarDays, 
-    FileText, UserCheck, DollarSign, Bolt, Shield, X, Bell, Award
-} from 'lucide-react';
+import { X } from 'lucide-react';
+import { usePermissions } from '../../hooks/usePermissions';
+import { MENU_CONFIG } from '../../config/menuConfig';
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
     const location = useLocation();
+    const { hasAnyPermission, loading } = usePermissions();
 
-    // Menú de navegación
-    const menu = [
-        { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-        { label: 'Actividades', path: '/activities', icon: CalendarDays },
-        { label: 'Gestor de Actividades', path: '/activity-manager', icon: CalendarDays },
-        { label: 'Estudiantes', path: '/students', icon: GraduationCap },
-        { label: 'Grupos', path: '/grades', icon: Award },
-        { label: 'Alta Rápida', path: '/intake', icon: Bolt },
-        { label: 'Asistencia', path: '/attendance', icon: UserCheck },
-        { label: 'Pagos', path: '/payments', icon: DollarSign },
-        { label: 'Facturas', path: '/invoices', icon: FileText },
-        { label: 'Responsables', path: '/guardians', icon: Users },
-        { label: 'Personal', path: '/staff', icon: Users },
-        { label: 'Usuarios', path: '/users', icon: Users },
-        { label: 'Roles y Permisos', path: '/roles', icon: Shield },
-        { label: 'Notificaciones', path: '/notifications', icon: Bell },
-        { label: 'Tareas', path: '/tasks', icon: FileText }
-    ];
+    // Filtrar menú según permisos del usuario
+    const visibleMenu = MENU_CONFIG.filter(item => {
+        // Si no requiere permisos, siempre visible
+        if (!item.permissions || item.permissions.length === 0) {
+            return true;
+        }
+        // Mostrar si tiene al menos uno de los permisos requeridos
+        return hasAnyPermission(item.permissions);
+    });
+
+    if (loading) {
+        return (
+            <aside className="fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 lg:static lg:inset-0">
+                <div className="flex items-center justify-center h-full">
+                    <div className="text-slate-400">Cargando menú...</div>
+                </div>
+            </aside>
+        );
+    }
 
     return (
         <>
@@ -56,7 +57,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
                 {}
                 <nav className="p-4 space-y-2">
-                    {menu.map((item) => {
+                    {visibleMenu.map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname === item.path;
                         return (

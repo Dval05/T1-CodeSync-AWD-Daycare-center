@@ -18,17 +18,27 @@ export const AuthProvider = ({ children }) => {
     const [profile, setProfile] = useState(null); 
     const [loading, setLoading] = useState(true);
     const [mustChangePassword, setMustChangePassword] = useState(false);
+    const [permissions, setPermissions] = useState([]);
+    const [permissionsLoaded, setPermissionsLoaded] = useState(false);
 
     useEffect(() => {
         // Verificar si hay usuario guardado en localStorage (para login con usuario/contraseña)
         const savedUser = localStorage.getItem('user-profile');
         const savedToken = localStorage.getItem('sb-access-token');
+        const savedPermissions = localStorage.getItem('user-permissions');
         
         if (savedUser && savedToken) {
             const userData = JSON.parse(savedUser);
             setProfile(userData);
             setUser({ email: userData.Email });
             setMustChangePassword(userData.MustChangePassword === 1);
+            
+            // Cargar permisos desde localStorage si existen
+            if (savedPermissions) {
+                setPermissions(JSON.parse(savedPermissions));
+                setPermissionsLoaded(true);
+            }
+            
             setLoading(false);
             return;
         }
@@ -49,8 +59,18 @@ export const AuthProvider = ({ children }) => {
         if (!session) {
             setUser(null);
             setProfile(null);
+            setPermissions([]);
+            setPermissionsLoaded(false);
             localStorage.removeItem('sb-access-token');
             localStorage.removeItem('user-profile');
+            localStorage.removeItem('user-permissions');
+            setLoading(false);
+            return;
+        }
+
+        // Evitar procesar la misma sesión múltiples veces
+        if (user && session.user.id === user.id) {
+            console.log('⏭️ AuthContext: Sesión ya procesada, saltando');
             setLoading(false);
             return;
         }
@@ -71,6 +91,11 @@ export const AuthProvider = ({ children }) => {
                 const userData = { ...currentUser, roles: roles || [] };
                 setProfile(userData);
                 setMustChangePassword(false); // Google login no requiere cambio de contraseña
+                
+                // Cargar permisos del usuario solo si no están cargados
+                if (!permissionsLoaded) {
+                    await loadUserPermissions(currentUser.UserID);
+                }
             } else {
                 setProfile({ 
                     FirstName: session.user.user_metadata?.name?.split(' ')[0] || '',
@@ -78,6 +103,8 @@ export const AuthProvider = ({ children }) => {
                     Email: session.user.email,
                     roles: [] 
                 });
+                setPermissions([]);
+                setPermissionsLoaded(true);
             }
         } catch (error) {
             console.error("Error cargando perfil:", error);
@@ -86,8 +113,76 @@ export const AuthProvider = ({ children }) => {
                 Email: session.user.email,
                 roles: [] 
             });
+            setPermissions([]);
+            setPermissionsLoaded(true);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Función para cargar permisos del usuario
+    const loadUserPermissions = async (userId) => {
+        // Evitar cargas duplicadas
+        if (permissionsLoaded) {
+            console.log('⏭️ AuthContext: Permisos ya cargados, saltando carga');
+            return;
+        }
+
+        try {
+            console.log('🔍 AuthContext: Cargando permisos para UserID:', userId);
+            
+            // 1. Obtener roles del usuario
+            const { data: userRoles } = await crudApi.getAll('user_role', { UserID: userId });
+
+            if (!userRoles || userRoles.length === 0) {
+                console.warn('⚠️ AuthContext: Usuario no tiene roles asignados');
+                setPermissions([]);
+                setPermissionsLoaded(true);
+                return;
+            }
+
+            // 2. Obtener permisos de cada rol
+            const roleIds = userRoles.map(ur => ur.RoleID);
+            const permissionsPromises = roleIds.map(roleId =>
+                crudApi.getAll('role_permission', { RoleID: roleId })
+            );
+
+            const rolePermissionsResults = await Promise.all(permissionsPromises);
+            
+            // 3. Extraer IDs de permisos únicos
+            const permissionIds = [
+                ...new Set(
+                    rolePermissionsResults
+                        .flatMap(result => result.data || [])
+                        .map(rp => rp.PermissionID)
+                )
+            ];
+
+            // 4. Obtener detalles de los permisos
+            if (permissionIds.length > 0) {
+                const permissionsDetails = await Promise.all(
+                    permissionIds.map(id => crudApi.getById('permission', id))
+                );
+
+                const loadedPermissions = permissionsDetails
+                    .map(result => result.data)
+                    .filter(Boolean);
+
+                console.log('✅ AuthContext: Permisos cargados:', loadedPermissions.length, 'permisos');
+                setPermissions(loadedPermissions);
+                setPermissionsLoaded(true);
+                
+                // Guardar en localStorage para persistencia
+                localStorage.setItem('user-permissions', JSON.stringify(loadedPermissions));
+            } else {
+                console.warn('⚠️ AuthContext: No se encontraron permisos');
+                setPermissions([]);
+                setPermissionsLoaded(true);
+            }
+        } catch (error) {
+            console.error('❌ AuthContext: Error cargando permisos:', error);
+            setPermissions([]);
+            setPermissionsLoaded(true);
         }
     };
 
@@ -110,6 +205,11 @@ export const AuthProvider = ({ children }) => {
                 setProfile(userData);
                 setMustChangePassword(response.data.mustChangePassword);
                 
+                // Cargar permisos al iniciar sesión solo si no están cargados
+                if (userData.UserID && !permissionsLoaded) {
+                    await loadUserPermissions(userData.UserID);
+                }
+                
                 return { success: true, mustChangePassword: response.data.mustChangePassword };
             }
         } catch (error) {
@@ -124,8 +224,11 @@ export const AuthProvider = ({ children }) => {
         supabase.auth.signOut();
         localStorage.removeItem('sb-access-token');
         localStorage.removeItem('user-profile');
+        localStorage.removeItem('user-permissions');
         setUser(null);
         setProfile(null);
+        setPermissions([]);
+        setPermissionsLoaded(false);
         setMustChangePassword(false);
     };
 
@@ -145,6 +248,8 @@ export const AuthProvider = ({ children }) => {
             profile, 
             loading, 
             mustChangePassword,
+            permissions,
+            permissionsLoaded,
             loginWithCredentials,
             loginWithPassword, 
             loginWithGoogle, 
