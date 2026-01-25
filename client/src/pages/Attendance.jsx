@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
+import Charts from '../components/attendance/Charts';
 import { crudApi } from '../api/crud';
 import { businessApi } from '../api/business';
 import { toast } from 'react-hot-toast';
@@ -19,6 +20,7 @@ export default function Attendance() {
     const [filterStudent, setFilterStudent] = useState('');
     const [filterGrade, setFilterGrade] = useState('');
     const [dashboardStats, setDashboardStats] = useState(null);
+    const [showCharts, setShowCharts] = useState(false);
 
     useEffect(() => {
         loadList();
@@ -86,6 +88,7 @@ export default function Attendance() {
         try {
             setLoadingReport(true);
             setDashboardStats(null);
+            setShowCharts(false);
             
             // Construir parámetros de filtro
             const params = {
@@ -99,12 +102,19 @@ export default function Attendance() {
             const response = await businessApi.reports.attendance(params);
             setDashboardStats(response.data);
             toast.success('Búsqueda realizada correctamente');
+            return true;
         } catch (error) {
             console.error('Error buscando datos:', error);
             toast.error('Error realizando búsqueda');
+            return false;
         } finally {
             setLoadingReport(false);
         }
+    };
+
+    const handleSearchCharts = async () => {
+        const ok = await handleSearchReport();
+        if (ok) setShowCharts(true);
     };
 
     const handleGeneratePDF = async () => {
@@ -163,6 +173,16 @@ export default function Attendance() {
                         }`}
                     >
                         Reportes
+                    </button>
+                    <button
+                        onClick={() => { setActiveTab('charts'); setShowCharts(false); }}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                            activeTab === 'charts'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                        }`}
+                    >
+                        Gráficas
                     </button>
                 </div>
             </div>
@@ -386,6 +406,83 @@ export default function Attendance() {
                                 </button>
                             </div>
                         </>
+                    )}
+                </>
+            )}
+
+            {/* TAB: GRÁFICAS */}
+            {activeTab === 'charts' && (
+                <>
+                    <div className="bg-white rounded-lg shadow p-6 mb-6">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4">Generar gráficas de asistencia</h3>
+                        {/* FILTROS (mismos controles que en reportes) */}
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Desde:</label>
+                                <input 
+                                    type="date" 
+                                    value={dateFrom}
+                                    onChange={(e) => setDateFrom(e.target.value)}
+                                    className="w-full border border-gray-300 p-2 rounded"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Hasta:</label>
+                                <input 
+                                    type="date" 
+                                    value={dateTo}
+                                    onChange={(e) => setDateTo(e.target.value)}
+                                    className="w-full border border-gray-300 p-2 rounded"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Curso:</label>
+                                <select
+                                    value={filterGrade}
+                                    onChange={(e) => setFilterGrade(e.target.value)}
+                                    className="w-full border border-gray-300 p-2 rounded"
+                                >
+                                    <option value="">Todos los cursos</option>
+                                    {grades.map(g => (
+                                        <option key={g.GradeID} value={g.GradeID}>{g.GradeName}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Estudiante:</label>
+                                <select
+                                    value={filterStudent}
+                                    onChange={(e) => setFilterStudent(e.target.value)}
+                                    className="w-full border border-gray-300 p-2 rounded"
+                                >
+                                    <option value="">Todos los estudiantes</option>
+                                    {allStudents.map(s => (
+                                        <option key={s.StudentID} value={s.StudentID}>
+                                            {s.FirstName} {s.LastName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="flex items-end space-y-0">
+                                <div className="grid gap-2 w-full">
+                                    <button 
+                                        onClick={handleSearchCharts}
+                                        disabled={loadingReport}
+                                        className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 font-semibold"
+                                    >
+                                        {loadingReport ? 'Buscando...' : '🔍 Buscar'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* GRÁFICAS */}
+                    {showCharts && dashboardStats && (
+                        <div className="bg-white rounded-lg shadow p-6 mb-6">
+                            <h4 className="text-lg font-bold text-gray-800 mb-4">Gráficas de Asistencia</h4>
+                            <Charts records={dashboardStats.records} dateFrom={dateFrom} dateTo={dateTo} />
+                        </div>
                     )}
                 </>
             )}
