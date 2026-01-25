@@ -6,43 +6,55 @@ import { toast } from 'react-hot-toast';
 import { AlertCircle } from 'lucide-react';
 
 export default function Login() {
-    const { loginWithPassword, loginWithGoogle } = useAuth();
+    const { loginWithPassword, loginWithGoogle, loginWithCredentials } = useAuth();
     const { register, handleSubmit } = useForm();
     const navigate = useNavigate();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [loginType, setLoginType] = useState('credentials'); // 'credentials' o 'google'
 
     const onSubmit = async (data) => {
         setError('');
         setLoading(true);
         
         try {
-            const { error: authError } = await loginWithPassword(data.email, data.password);
-            
-            if (authError) {
-                // Mensajes personalizados según el tipo de error
-                if (authError.message.includes('Invalid login credentials')) {
-                    setError('Correo o contraseña incorrectos. Verifica tus datos.');
-                    toast.error('Credenciales incorrectas');
-                } else if (authError.message.includes('Email not confirmed')) {
-                    setError('Tu correo no ha sido confirmado. Revisa tu bandeja de entrada.');
-                    toast.error('Email no confirmado');
-                } else if (authError.message.includes('User not found')) {
-                    setError('No existe una cuenta con este correo.');
-                    toast.error('Usuario no encontrado');
-                } else {
-                    setError(`Error: ${authError.message}`);
-                    toast.error('Error de autenticación');
+            if (loginType === 'credentials') {
+                // Login con usuario/contraseña (sistema propio)
+                const result = await loginWithCredentials(data.username, data.password);
+                
+                if (result.success) {
+                    toast.success('¡Bienvenido!');
+                    navigate('/dashboard');
                 }
-                return;
+            } else {
+                // Login con Supabase (Google)
+                const { error: authError } = await loginWithPassword(data.email, data.password);
+                
+                if (authError) {
+                    if (authError.message.includes('Invalid login credentials')) {
+                        setError('Correo o contraseña incorrectos. Verifica tus datos.');
+                        toast.error('Credenciales incorrectas');
+                    } else if (authError.message.includes('Email not confirmed')) {
+                        setError('Tu correo no ha sido confirmado. Revisa tu bandeja de entrada.');
+                        toast.error('Email no confirmado');
+                    } else if (authError.message.includes('User not found')) {
+                        setError('No existe una cuenta con este correo.');
+                        toast.error('Usuario no encontrado');
+                    } else {
+                        setError(`Error: ${authError.message}`);
+                        toast.error('Error de autenticación');
+                    }
+                    return;
+                }
+                
+                toast.success('¡Bienvenido!');
+                navigate('/dashboard');
             }
-            
-            toast.success('¡Bienvenido!');
-            navigate('/dashboard');
         } catch (err) {
             console.error('Error en login:', err);
-            setError('Error al iniciar sesión. Intenta nuevamente.');
-            toast.error('Error de autenticación');
+            const errorMsg = err.response?.data?.error || 'Error al iniciar sesión';
+            setError(errorMsg);
+            toast.error(errorMsg);
         } finally {
             setLoading(false);
         }
@@ -76,12 +88,14 @@ export default function Login() {
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+                            <label className="block text-sm font-medium text-gray-700">
+                                {loginType === 'credentials' ? 'Usuario o Cédula' : 'Correo Electrónico'}
+                            </label>
                             <input 
-                                {...register("email")} 
-                                type="email" 
+                                {...register(loginType === 'credentials' ? "username" : "email")} 
+                                type={loginType === 'credentials' ? "text" : "email"}
                                 className="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 p-2.5 focus:border-blue-500 focus:ring-blue-500"
-                                placeholder="admin@nicekids.com"
+                                placeholder={loginType === 'credentials' ? "Usuario o cédula" : "admin@nicekids.com"}
                                 required
                                 disabled={loading}
                             />
@@ -92,6 +106,7 @@ export default function Login() {
                                 {...register("password")} 
                                 type="password" 
                                 className="mt-1 block w-full rounded-lg border-gray-300 bg-gray-50 p-2.5 focus:border-blue-500 focus:ring-blue-500"
+                                placeholder={loginType === 'credentials' ? "Tu contraseña o cédula" : ""}
                                 required
                                 disabled={loading}
                             />

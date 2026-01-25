@@ -64,14 +64,15 @@ export default function Users() {
                 await crudApi.update('user', editingUser.UserID, data);
                 toast.success('Usuario actualizado');
             } else {
+                // Al crear, el backend automáticamente usará la cédula como contraseña
                 await crudApi.create('user', data);
-                toast.success('Usuario creado');
+                toast.success('Usuario creado. Contraseña inicial: su cédula');
             }
             setIsModalOpen(false);
             loadData();
         } catch (error) {
             console.error(error);
-            toast.error('Error al guardar usuario');
+            toast.error(error.response?.data?.error || 'Error al guardar usuario');
         }
     };
 
@@ -217,6 +218,20 @@ export default function Users() {
                                 required 
                                 className="mt-1 w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
                             />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Cédula</label>
+                            <input 
+                                name="IDNumber" 
+                                defaultValue={editingUser?.IDNumber} 
+                                required={!editingUser}
+                                pattern="[0-9]{10}"
+                                maxLength={10}
+                                placeholder="10 dígitos"
+                                disabled={!!editingUser}
+                                className="mt-1 w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                            />
+                            {!editingUser && <p className="text-xs text-gray-500 mt-1">La contraseña inicial será la cédula</p>}
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Nombre</label>
