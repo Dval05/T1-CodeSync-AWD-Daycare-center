@@ -4,6 +4,7 @@ import Charts from '../components/attendance/Charts';
 import { crudApi } from '../api/crud';
 import { businessApi } from '../api/business';
 import { toast } from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 
 export default function Attendance() {
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -157,8 +158,6 @@ export default function Attendance() {
 
         (async () => {
             try {
-                const XLSX = await import('xlsx');
-
                 const headers = ['Fecha','Estudiante','Curso','Estado','Retardo'];
                 const aoa = [headers];
 
