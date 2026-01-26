@@ -1,6 +1,6 @@
 import { 
     LayoutDashboard, Users, GraduationCap, CalendarDays, 
-    FileText, UserCheck, DollarSign, Bolt, Shield, Bell, Award
+    FileText, UserCheck, DollarSign, Bolt, Shield, Bell, Award, UserCircle
 } from 'lucide-react';
 
 /**
@@ -108,6 +108,12 @@ export const MENU_CONFIG = [
         path: '/tasks',
         icon: FileText,
         permissions: ['employee_task.view']
+    },
+    {
+        label: 'Mi Perfil',
+        path: '/profile',
+        icon: UserCircle,
+        permissions: [] // Todos los usuarios pueden ver su perfil
     }
 ];
 
