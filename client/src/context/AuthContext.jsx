@@ -1,15 +1,10 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { crudApi } from '../api/crud';
 import { businessApi } from '../api/business';
+import { supabase } from '../config/supabase';
 import axios from 'axios';
 
 const API_CRUD_URL = import.meta.env.VITE_API_CRUD_URL || 'http://localhost:3001';
-
-const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 const AuthContext = createContext();
 
@@ -22,7 +17,6 @@ export const AuthProvider = ({ children }) => {
     const [permissionsLoaded, setPermissionsLoaded] = useState(false);
 
     useEffect(() => {
-        // Verificar si hay usuario guardado en localStorage (para login con usuario/contraseña)
         const savedUser = localStorage.getItem('user-profile');
         const savedToken = localStorage.getItem('sb-access-token');
         const savedPermissions = localStorage.getItem('user-permissions');
@@ -33,7 +27,6 @@ export const AuthProvider = ({ children }) => {
             setUser({ email: userData.Email });
             setMustChangePassword(userData.MustChangePassword === 1);
             
-            // Cargar permisos desde localStorage si existen
             if (savedPermissions) {
                 setPermissions(JSON.parse(savedPermissions));
                 setPermissionsLoaded(true);
@@ -43,7 +36,6 @@ export const AuthProvider = ({ children }) => {
             return;
         }
 
-        // Si no hay usuario guardado, verificar sesión de Supabase (Google)
         supabase.auth.getSession().then(({ data: { session } }) => {
             handleSession(session);
         });
@@ -68,9 +60,8 @@ export const AuthProvider = ({ children }) => {
             return;
         }
 
-        // Evitar procesar la misma sesión múltiples veces
         if (user && session.user.id === user.id) {
-            console.log('⏭️ AuthContext: Sesión ya procesada, saltando');
+            console.log('AuthContext: Sesión ya procesada, saltando');
             setLoading(false);
             return;
         }
@@ -90,10 +81,8 @@ export const AuthProvider = ({ children }) => {
                 
                 const userData = { ...currentUser, roles: roles || [] };
                 setProfile(userData);
-                setMustChangePassword(false); // Google login no requiere cambio de contraseña
-                
-                // Cargar permisos del usuario solo si no están cargados
-                if (!permissionsLoaded) {
+                setMustChangePassword(false); 
+                    if (!permissionsLoaded) {
                     await loadUserPermissions(currentUser.UserID);
                 }
             } else {
@@ -120,28 +109,24 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // Función para cargar permisos del usuario
     const loadUserPermissions = async (userId) => {
-        // Evitar cargas duplicadas
         if (permissionsLoaded) {
-            console.log('⏭️ AuthContext: Permisos ya cargados, saltando carga');
+            console.log('AuthContext: Permisos ya cargados, saltando carga');
             return;
         }
 
         try {
-            console.log('🔍 AuthContext: Cargando permisos para UserID:', userId);
+            console.log('AuthContext: Cargando permisos para UserID:', userId);
             
-            // 1. Obtener roles del usuario
             const { data: userRoles } = await crudApi.getAll('user_role', { UserID: userId });
 
             if (!userRoles || userRoles.length === 0) {
-                console.warn('⚠️ AuthContext: Usuario no tiene roles asignados');
+                console.warn('AuthContext: Usuario no tiene roles asignados');
                 setPermissions([]);
                 setPermissionsLoaded(true);
                 return;
             }
 
-            // 2. Obtener permisos de cada rol
             const roleIds = userRoles.map(ur => ur.RoleID);
             const permissionsPromises = roleIds.map(roleId =>
                 crudApi.getAll('role_permission', { RoleID: roleId })
@@ -149,7 +134,6 @@ export const AuthProvider = ({ children }) => {
 
             const rolePermissionsResults = await Promise.all(permissionsPromises);
             
-            // 3. Extraer IDs de permisos únicos
             const permissionIds = [
                 ...new Set(
                     rolePermissionsResults
@@ -158,7 +142,6 @@ export const AuthProvider = ({ children }) => {
                 )
             ];
 
-            // 4. Obtener detalles de los permisos
             if (permissionIds.length > 0) {
                 const permissionsDetails = await Promise.all(
                     permissionIds.map(id => crudApi.getById('permission', id))
@@ -168,25 +151,23 @@ export const AuthProvider = ({ children }) => {
                     .map(result => result.data)
                     .filter(Boolean);
 
-                console.log('✅ AuthContext: Permisos cargados:', loadedPermissions.length, 'permisos');
+                console.log('AuthContext: Permisos cargados:', loadedPermissions.length, 'permisos');
                 setPermissions(loadedPermissions);
                 setPermissionsLoaded(true);
                 
-                // Guardar en localStorage para persistencia
                 localStorage.setItem('user-permissions', JSON.stringify(loadedPermissions));
             } else {
-                console.warn('⚠️ AuthContext: No se encontraron permisos');
+                console.warn('AuthContext: No se encontraron permisos');
                 setPermissions([]);
                 setPermissionsLoaded(true);
             }
         } catch (error) {
-            console.error('❌ AuthContext: Error cargando permisos:', error);
+            console.error('AuthContext: Error cargando permisos:', error);
             setPermissions([]);
             setPermissionsLoaded(true);
         }
     };
 
-    // Login con email y contraseña (sistema propio)
     const loginWithCredentials = async (email, password) => {
         try {
             const response = await axios.post(`${API_CRUD_URL}/auth/login`, {
@@ -196,8 +177,8 @@ export const AuthProvider = ({ children }) => {
 
             if (response.data.success) {
                 const userData = response.data.user;
-                const token = 'custom-auth-token'; // Podrías generar un JWT real aquí
-                
+                const token = 'custom-auth-token'; 
+
                 localStorage.setItem('sb-access-token', token);
                 localStorage.setItem('user-profile', JSON.stringify(userData));
                 
@@ -205,7 +186,6 @@ export const AuthProvider = ({ children }) => {
                 setProfile(userData);
                 setMustChangePassword(response.data.mustChangePassword);
                 
-                // Cargar permisos al iniciar sesión solo si no están cargados
                 if (userData.UserID && !permissionsLoaded) {
                     await loadUserPermissions(userData.UserID);
                 }
@@ -234,12 +214,17 @@ export const AuthProvider = ({ children }) => {
 
     const onPasswordChanged = () => {
         setMustChangePassword(false);
-        // Actualizar el perfil en localStorage
         if (profile) {
             const updatedProfile = { ...profile, MustChangePassword: 0 };
             setProfile(updatedProfile);
             localStorage.setItem('user-profile', JSON.stringify(updatedProfile));
         }
+    };
+
+    const updateProfile = (updatedData) => {
+        const updatedProfile = { ...profile, ...updatedData };
+        setProfile(updatedProfile);
+        localStorage.setItem('user-profile', JSON.stringify(updatedProfile));
     };
 
     return (
@@ -254,7 +239,8 @@ export const AuthProvider = ({ children }) => {
             loginWithPassword, 
             loginWithGoogle, 
             logout,
-            onPasswordChanged
+            onPasswordChanged,
+            updateProfile
         }}>
             {!loading && children}
         </AuthContext.Provider>

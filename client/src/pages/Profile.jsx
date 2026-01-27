@@ -2,17 +2,12 @@
     import Layout from '../components/layout/Layout';
     import { useAuth } from '../context/AuthContext';
     import { crudApi } from '../api/crud';
-    import { createClient } from '@supabase/supabase-js';
+    import { supabase } from '../config/supabase';
     import { User, Mail, Phone, MapPin, Calendar, Shield, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Camera, Upload } from 'lucide-react';
     import toast from 'react-hot-toast';
 
-    const supabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY
-    );
-
     export default function Profile() {
-        const { user, profile, loading } = useAuth();
+        const { user, profile, loading, updateProfile } = useAuth();
         const [isEditing, setIsEditing] = useState(false);
         const [isChangingPassword, setIsChangingPassword] = useState(false);
         const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -29,7 +24,7 @@
             FirstName: '',
             LastName: '',
             Email: '',
-            PhoneNumber: '',
+            Phone: '',
             Address: '',
             ProfilePhotoURL: ''
         });
@@ -46,7 +41,7 @@
                     FirstName: profile.FirstName || '',
                     LastName: profile.LastName || '',
                     Email: profile.Email || user?.email || '',
-                    PhoneNumber: profile.PhoneNumber || '',
+                    Phone: profile.Phone || '',
                     Address: profile.Address || '',
                     ProfilePhotoURL: profile.ProfilePhotoURL || ''
                 });
@@ -62,7 +57,6 @@
         };
 
         const uploadPhoto = async (file) => {
-            // Validar tipo de archivo
             if (!file.type.startsWith('image/')) {
                 toast.error('Por favor selecciona una imagen válida');
                 return;
@@ -117,8 +111,11 @@
                     ProfilePhotoURL: photoURL
                 });
 
+                updateProfile({ ProfilePhotoURL: photoURL });
+                
+                setFormData(prev => ({ ...prev, ProfilePhotoURL: photoURL }));
+                
                 toast.success('Foto de perfil actualizada');
-                window.location.reload();
 
             } catch (error) {
                 console.error('Error actualizando foto:', error);
@@ -154,6 +151,7 @@
         const handleSubmit = async (e) => {
             e.preventDefault();
             try {
+                // Si el email cambió, actualizar en Supabase Auth también
                 if (formData.Email !== profile.Email && user?.email) {
                     const { error: emailError } = await supabase.auth.updateUser({
                         email: formData.Email
@@ -167,18 +165,45 @@
                     toast.info('Se ha enviado un correo de verificación a ' + formData.Email);
                 }
                 
-                await crudApi.update('user', profile.UserID, formData);
-                toast.success('Perfil actualizado exitosamente');
+                // Preparar datos para enviar (sin ProfilePhotoURL si no se usa)
+                const updateData = {
+                    FirstName: formData.FirstName,
+                    LastName: formData.LastName,
+                    Email: formData.Email,
+                    Phone: formData.Phone,
+                    Address: formData.Address
+                };
+                
+                // Solo incluir ProfilePhotoURL si existe y tiene valor
+                if (formData.ProfilePhotoURL) {
+                    updateData.ProfilePhotoURL = formData.ProfilePhotoURL;
+                }
+                
+                const response = await crudApi.update('user', profile.UserID, updateData);
+                
+                // Actualizar el contexto global del perfil
+                updateProfile(updateData);
+                
+                // Actualizar también el formData local
+                setFormData({
+                    FirstName: updateData.FirstName || '',
+                    LastName: updateData.LastName || '',
+                    Email: updateData.Email || user?.email || '',
+                    Phone: updateData.Phone || '',
+                    Address: updateData.Address || '',
+                    ProfilePhotoURL: updateData.ProfilePhotoURL || ''
+                });
+                
+                toast.success('✅ Perfil actualizado exitosamente');
                 setIsEditing(false);
                 
-                if (formData.Email === profile.Email) {
-                    window.location.reload();
-                } else {
+                // Si cambió el email, pedir verificación
+                if (formData.Email !== profile.Email) {
                     toast.info('Por favor, verifica tu nuevo email y vuelve a iniciar sesión');
                 }
             } catch (error) {
                 console.error("Error actualizando perfil:", error);
-                toast.error('❌ Error al actualizar perfil: ' + (error.message || 'Error desconocido'));
+                toast.error('❌ Error al actualizar perfil: ' + (error.response?.data?.error || error.message || 'Error desconocido'));
             }
         };
 
@@ -397,8 +422,8 @@
                                             <label className="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
                                             <input
                                                 type="tel"
-                                                value={formData.PhoneNumber}
-                                                onChange={(e) => setFormData({...formData, PhoneNumber: e.target.value})}
+                                                value={formData.Phone}
+                                                onChange={(e) => setFormData({...formData, Phone: e.target.value})}
                                                 className="w-full border rounded-lg px-4 py-2"
                                             />
                                         </div>
@@ -446,7 +471,7 @@
                                             <Phone className="text-gray-400 mt-1" size={20} />
                                             <div>
                                                 <p className="text-sm text-gray-500">Teléfono</p>
-                                                <p className="font-medium text-gray-800">{formData.PhoneNumber || 'No especificado'}</p>
+                                                <p className="font-medium text-gray-800">{formData.Phone || 'No especificado'}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-start gap-3">

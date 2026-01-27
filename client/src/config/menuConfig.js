@@ -17,7 +17,7 @@ export const MENU_CONFIG = [
         label: 'Dashboard',
         path: '/dashboard',
         icon: LayoutDashboard,
-        permissions: [] // Sin permisos requeridos - todos pueden ver el dashboard
+        permissions: [] 
     },
     {
         label: 'Auditoría',
@@ -113,21 +113,16 @@ export const MENU_CONFIG = [
         label: 'Mi Perfil',
         path: '/profile',
         icon: UserCircle,
-        permissions: [] // Todos los usuarios pueden ver su perfil
+        permissions: [] 
     }
 ];
 
-/**
- * Mapeo de acciones CRUD por recurso
- */
 export const RESOURCE_ACTIONS = {
-    // Botones comunes
     CREATE: 'create',
     UPDATE: 'update',
     DELETE: 'delete',
     VIEW: 'view',
     
-    // Acciones especiales
     EXPORT: 'export',
     IMPORT: 'import',
     ASSIGN: 'assign'
