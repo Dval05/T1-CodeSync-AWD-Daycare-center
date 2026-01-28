@@ -1,23 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { AlertCircle } from 'lucide-react';
+import { supabase } from '../config/supabase';
 
 export default function Login() {
-    const { loginWithPassword, loginWithGoogle, loginWithCredentials } = useAuth();
+    const { loginWithPassword, loginWithGoogle, loginWithCredentials, user } = useAuth();
     const { register, handleSubmit } = useForm();
     const navigate = useNavigate();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        
+        if (accessToken) {
+            console.log('Token de OAuth detectado, esperando autenticación...');
+        
+            window.history.replaceState(null, '', window.location.pathname);
+            return;
+        }
+
+        if (user) {
+            console.log('Usuario autenticado, redirigiendo al dashboard');
+            navigate('/dashboard', { replace: true });
+        }
+    }, [user, navigate]);
 
     const onSubmit = async (data) => {
         setError('');
         setLoading(true);
         
         try {
-            // Login con email y contraseña (sistema propio)
             const result = await loginWithCredentials(data.email, data.password);
             
             if (result.success) {

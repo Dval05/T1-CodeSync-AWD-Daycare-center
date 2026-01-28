@@ -45,18 +45,15 @@ services:
       # Importamos claves de Supabase (He agregado las versiones VITE_ al grupo abajo)
       - fromGroup: supabase-settings
       
-      # Enlace de servicios (Usando 'host' en lugar de 'url')
-      # Render devolverá el dominio sin https:// (ej: nicekids-api.onrender.com)
+      # URL del frontend para OAuth redirect
+      - key: VITE_APP_URL
+        value: https://nicekids-client.onrender.com
+      
+      # Enlace de servicios con https://
       - key: VITE_API_CRUD_URL
-        fromService:
-          type: web
-          name: nicekids-api-crud
-          property: host
+        value: https://nicekids-api-crud.onrender.com/api
       - key: VITE_API_BUSINESS_URL
-        fromService:
-          type: web
-          name: nicekids-api-business
-          property: host
+        value: https://nicekids-api-business.onrender.com/api
 
 # ----------------------------------------
 # VARIABLES GLOBALES

@@ -48,6 +48,8 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const handleSession = async (session) => {
+        console.log('handleSession llamado', { session, hasUser: !!session?.user });
+        
         if (!session) {
             setUser(null);
             setProfile(null);
@@ -60,17 +62,23 @@ export const AuthProvider = ({ children }) => {
             return;
         }
 
-        if (user && session.user.id === user.id) {
+        // Evitar reprocesar la misma sesión
+        const currentUserId = user?.id || localStorage.getItem('current-user-id');
+        if (currentUserId === session.user.id && permissionsLoaded) {
             console.log('AuthContext: Sesión ya procesada, saltando');
             setLoading(false);
             return;
         }
+        
+        // Guardar el ID del usuario actual
+        localStorage.setItem('current-user-id', session.user.id);
 
         try {
             const token = session.access_token;
             localStorage.setItem('sb-access-token', token);
             setUser(session.user);
 
+            console.log('Sincronizando con backend...');
             await businessApi.auth.syncGoogle();
 
             const { data: users } = await crudApi.getAll('user', { AuthUserID: session.user.id });
@@ -85,7 +93,9 @@ export const AuthProvider = ({ children }) => {
                     if (!permissionsLoaded) {
                     await loadUserPermissions(currentUser.UserID);
                 }
+                console.log('Usuario cargado exitosamente:', userData);
             } else {
+                console.log('Usuario no encontrado en BD, creando perfil temporal');
                 setProfile({ 
                     FirstName: session.user.user_metadata?.name?.split(' ')[0] || '',
                     LastName: session.user.user_metadata?.name?.split(' ')[1] || '',
@@ -198,13 +208,32 @@ export const AuthProvider = ({ children }) => {
     };
 
     const loginWithPassword = (email, password) => supabase.auth.signInWithPassword({ email, password });
-    const loginWithGoogle = () => supabase.auth.signInWithOAuth({ provider: 'google' });
+    const loginWithGoogle = async () => {
+        const redirectUrl = `${window.location.origin}/`;
+        console.log('OAuth redirect URL:', redirectUrl);
+        
+        const { data, error } = await supabase.auth.signInWithOAuth({ 
+            provider: 'google',
+            options: {
+                redirectTo: redirectUrl,
+                skipBrowserRedirect: false
+            }
+        });
+        
+        if (error) {
+            console.error('Error en OAuth:', error);
+            throw error;
+        }
+        
+        return { data, error };
+    };
     
     const logout = () => {
         supabase.auth.signOut();
         localStorage.removeItem('sb-access-token');
         localStorage.removeItem('user-profile');
         localStorage.removeItem('user-permissions');
+        localStorage.removeItem('current-user-id');
         setUser(null);
         setProfile(null);
         setPermissions([]);
