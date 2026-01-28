@@ -4,7 +4,7 @@ import { StudentModal } from '../components/modals/StudentModal';
 import { crudApi } from '../api/crud';
 import { businessApi } from '../api/business';
 import { toast } from 'react-hot-toast';
-import { User, DollarSign, X } from 'lucide-react';
+import { User, DollarSign, X, TrendingUp } from 'lucide-react';
 import { ActionButton } from '../components/permissions/ActionButton';
 
 export default function Students() {

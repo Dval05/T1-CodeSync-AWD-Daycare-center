@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { crudApi } from '../api/crud';
 import { businessApi } from '../api/business';
 import { supabase } from '../config/supabase';
@@ -15,8 +15,24 @@ export const AuthProvider = ({ children }) => {
     const [mustChangePassword, setMustChangePassword] = useState(false);
     const [permissions, setPermissions] = useState([]);
     const [permissionsLoaded, setPermissionsLoaded] = useState(false);
+    const [sessionExpired, setSessionExpired] = useState(false);
+    const sessionProcessingRef = useRef(false);
 
     useEffect(() => {
+        const lastActivity = localStorage.getItem('lastActivity');
+        const sessionTimeout = 5 * 60 * 1000; // 5 min
+        
+        if (lastActivity) {
+            const timeSinceLastActivity = Date.now() - parseInt(lastActivity);
+            if (timeSinceLastActivity > sessionTimeout) {
+                console.log('Sesión expirada por inactividad previa');
+                localStorage.clear();
+                setSessionExpired(true);
+                setLoading(false);
+                return;
+            }
+        }
+
         const savedUser = localStorage.getItem('user-profile');
         const savedToken = localStorage.getItem('sb-access-token');
         const savedPermissions = localStorage.getItem('user-permissions');
@@ -31,6 +47,8 @@ export const AuthProvider = ({ children }) => {
                 setPermissions(JSON.parse(savedPermissions));
                 setPermissionsLoaded(true);
             }
+            
+            localStorage.setItem('lastActivity', Date.now().toString());
             
             setLoading(false);
             return;
@@ -51,6 +69,7 @@ export const AuthProvider = ({ children }) => {
         console.log('handleSession llamado', { session, hasUser: !!session?.user });
         
         if (!session) {
+            sessionProcessingRef.current = false;
             setUser(null);
             setProfile(null);
             setPermissions([]);
@@ -58,28 +77,36 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('sb-access-token');
             localStorage.removeItem('user-profile');
             localStorage.removeItem('user-permissions');
+            localStorage.removeItem('current-user-id');
             setLoading(false);
             return;
         }
 
-        // Evitar reprocesar la misma sesión
-        const currentUserId = user?.id || localStorage.getItem('current-user-id');
-        if (currentUserId === session.user.id && permissionsLoaded) {
+        // Prevenir procesamiento múltiple
+        const currentUserId = localStorage.getItem('current-user-id');
+        if (currentUserId === session.user.id && permissionsLoaded && sessionProcessingRef.current) {
             console.log('AuthContext: Sesión ya procesada, saltando');
             setLoading(false);
             return;
         }
         
-        // Guardar el ID del usuario actual
+        // Marcar como procesando
+        sessionProcessingRef.current = true;
         localStorage.setItem('current-user-id', session.user.id);
 
         try {
             const token = session.access_token;
             localStorage.setItem('sb-access-token', token);
+            localStorage.setItem('lastActivity', Date.now().toString()); // Registrar actividad
             setUser(session.user);
+            setSessionExpired(false);         
 
             console.log('Sincronizando con backend...');
-            await businessApi.auth.syncGoogle();
+            try {
+                await businessApi.auth.syncGoogle();
+            } catch (syncError) {
+                console.warn('Error en sincronización (no crítico):', syncError);
+            }
 
             const { data: users } = await crudApi.getAll('user', { AuthUserID: session.user.id });
             const currentUser = users?.[0];
@@ -107,6 +134,7 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.error("Error cargando perfil:", error);
+            sessionProcessingRef.current = false; // Resetear en caso de error
             setProfile({ 
                 FirstName: session.user.user_metadata?.name || '',
                 Email: session.user.email,
@@ -191,11 +219,12 @@ export const AuthProvider = ({ children }) => {
 
                 localStorage.setItem('sb-access-token', token);
                 localStorage.setItem('user-profile', JSON.stringify(userData));
+                localStorage.setItem('lastActivity', Date.now().toString()); // Registrar actividad
                 
                 setUser({ email: userData.Email });
                 setProfile(userData);
                 setMustChangePassword(response.data.mustChangePassword);
-                
+                setSessionExpired(false);         
                 if (userData.UserID && !permissionsLoaded) {
                     await loadUserPermissions(userData.UserID);
                 }
@@ -229,16 +258,28 @@ export const AuthProvider = ({ children }) => {
     };
     
     const logout = () => {
+        sessionProcessingRef.current = false;
         supabase.auth.signOut();
-        localStorage.removeItem('sb-access-token');
-        localStorage.removeItem('user-profile');
-        localStorage.removeItem('user-permissions');
-        localStorage.removeItem('current-user-id');
+        localStorage.clear();
         setUser(null);
         setProfile(null);
         setPermissions([]);
         setPermissionsLoaded(false);
         setMustChangePassword(false);
+        setSessionExpired(false);
+    };
+
+    const logoutDueToInactivity = () => {
+        console.log('🔒 Cerrando sesión por inactividad...');
+        sessionProcessingRef.current = false;
+        supabase.auth.signOut();
+        localStorage.clear();
+        setUser(null);
+        setProfile(null);
+        setPermissions([]);
+        setPermissionsLoaded(false);
+        setMustChangePassword(false);
+        setSessionExpired(true);
     };
 
     const onPasswordChanged = () => {
@@ -264,10 +305,12 @@ export const AuthProvider = ({ children }) => {
             mustChangePassword,
             permissions,
             permissionsLoaded,
+            sessionExpired,
             loginWithCredentials,
             loginWithPassword, 
             loginWithGoogle, 
             logout,
+            logoutDueToInactivity,
             onPasswordChanged,
             updateProfile
         }}>

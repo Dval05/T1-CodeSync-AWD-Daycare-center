@@ -7,13 +7,18 @@ import { AlertCircle } from 'lucide-react';
 import { supabase } from '../config/supabase';
 
 export default function Login() {
-    const { loginWithPassword, loginWithGoogle, loginWithCredentials, user } = useAuth();
+    const { loginWithPassword, loginWithGoogle, loginWithCredentials, user, sessionExpired } = useAuth();
     const { register, handleSubmit } = useForm();
     const navigate = useNavigate();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
+        if (sessionExpired) {
+            toast.error('Tu sesión ha expirado por inactividad. Por favor, inicia sesión nuevamente.');
+            setError('Tu sesión ha expirado por inactividad');
+        }
+
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
         
@@ -24,11 +29,11 @@ export default function Login() {
             return;
         }
 
-        if (user) {
+        if (user && !sessionExpired) {
             console.log('Usuario autenticado, redirigiendo al dashboard');
             navigate('/dashboard', { replace: true });
         }
-    }, [user, navigate]);
+    }, [user, navigate, sessionExpired]);
 
     const onSubmit = async (data) => {
         setError('');
@@ -70,8 +75,21 @@ export default function Login() {
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                        {/* Mensaje de Error */}
-                        {error && (
+                        {}
+                        {sessionExpired && (
+                            <div className="bg-orange-50 border-2 border-orange-400 rounded-lg p-4 flex items-start gap-3 animate-pulse">
+                                <AlertCircle className="text-orange-600 flex-shrink-0 mt-0.5" size={24} />
+                                <div>
+                                    <p className="text-sm font-semibold text-orange-800">Sesión Expirada</p>
+                                    <p className="text-xs text-orange-700 mt-1">
+                                        Tu sesión ha expirado por 5 minutos de inactividad. Por seguridad, debes iniciar sesión nuevamente.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {}
+                        {error && !sessionExpired && (
                             <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 animate-shake">
                                 <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
                                 <p className="text-sm text-red-700">{error}</p>

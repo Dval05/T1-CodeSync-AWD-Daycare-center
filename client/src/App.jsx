@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { useInactivityTimeout } from './hooks/useInactivityTimeout';
 import ChangePasswordModal from './components/auth/ChangePasswordModal';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -19,18 +20,40 @@ import Invoices from './pages/Invoices'
 import Attendance from './pages/Attendance';
 import Roles from './pages/Roles';
 import Notifications from './pages/Notifications';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 // Importa el resto de tus páginas aquí...
 
 const ProtectedRoute = ({ children }) => {
-    const { user, loading } = useAuth();
+    const { user, loading, sessionExpired } = useAuth();
+    
     if (loading) return <div>Cargando...</div>;
-    if (!user) return <Navigate to="/" />;
+    
+    // Si la sesión expiró, redirigir al login
+    if (sessionExpired || !user) {
+        return <Navigate to="/" replace />;
+    }
+    
     return children;
 };
 
 const AppContent = () => {
-    const { mustChangePassword, profile, onPasswordChanged } = useAuth();
+    const { mustChangePassword, profile, onPasswordChanged, user, logoutDueToInactivity } = useAuth();
+    const navigate = useNavigate();
+
+    // Configurar el timeout de inactividad (5 minutos)
+    useInactivityTimeout(5 * 60 * 1000, () => {
+        if (user) {
+            toast.error('Tu sesión ha expirado por inactividad', {
+                duration: 4000,
+                position: 'top-center'
+            });
+            logoutDueToInactivity();
+            navigate('/', { replace: true });
+        }
+    });
 
     return (
         <>
