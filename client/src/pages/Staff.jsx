@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/layout/Layout';
+import { StaffModal } from '../components/modals/StaffModal';
 import { crudApi } from '../api/crud';
 import { businessApi } from '../api/business';
-import { User, Calendar, CheckSquare, Plus, X } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { User, Calendar, CheckSquare, Plus, X, Edit, Trash2 } from 'lucide-react';
 
 export default function Staff() {
     const [staff, setStaff] = useState([]);
@@ -10,7 +12,9 @@ export default function Staff() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showTaskModal, setShowTaskModal] = useState(false);
+    const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [editingEmployee, setEditingEmployee] = useState(null);
     const [newTask, setNewTask] = useState({
         title: '',
         description: '',
@@ -48,6 +52,44 @@ export default function Staff() {
         }
     };
 
+    const handleCreateStaff = () => {
+        setEditingEmployee(null);
+        setIsStaffModalOpen(true);
+    };
+
+    const handleEditStaff = (employee) => {
+        setEditingEmployee(employee);
+        setIsStaffModalOpen(true);
+    };
+
+    const handleSaveStaff = async (data) => {
+        try {
+            if (editingEmployee) {
+                await crudApi.update('employee', editingEmployee.EmpID, data);
+                toast.success('Personal actualizado correctamente');
+            } else {
+                await crudApi.create('employee', data);
+                toast.success('Personal creado correctamente');
+            }
+            setIsStaffModalOpen(false);
+            loadData();
+        } catch (error) {
+            toast.error(error.response?.data?.error || 'Error guardando personal');
+        }
+    };
+
+    const handleDeleteStaff = async (employee) => {
+        if (!confirm(`¿Desactivar a ${employee.FirstName} ${employee.LastName}?`)) return;
+        
+        try {
+            await crudApi.remove('employee', employee.EmpID);
+            toast.success('Personal desactivado correctamente');
+            loadData();
+        } catch (error) {
+            toast.error('Error al desactivar');
+        }
+    };
+
     const handleAssignTask = async () => {
         if (!selectedEmployee || !newTask.title) return;
         
@@ -61,7 +103,7 @@ export default function Staff() {
             });
             
             if (response.data.success) {
-                alert(`✅ Tarea asignada exitosamente a ${selectedEmployee.FirstName} ${selectedEmployee.LastName}`);
+                toast.success(`Tarea asignada a ${selectedEmployee.FirstName} ${selectedEmployee.LastName}`);
                 setShowTaskModal(false);
                 setNewTask({ title: '', description: '', dueDate: '', priority: 'Media' });
                 setSelectedEmployee(null);
@@ -69,9 +111,7 @@ export default function Staff() {
                 throw new Error(response.data.message || 'Error desconocido');
             }
         } catch (error) {
-            console.error("Error asignando tarea:", error);
-            const errorMsg = error.response?.data?.error || error.message || 'Error al asignar tarea';
-            alert(`❌ ${errorMsg}`);
+            toast.error(error.response?.data?.error || error.message || 'Error al asignar tarea');
         }
     };
 
@@ -82,7 +122,7 @@ export default function Staff() {
                     <h2 className="text-2xl font-bold text-gray-800">Personal</h2>
                 </div>
 
-                {/* Loading State */}
+                {}
                 {loading && (
                     <div className="bg-white rounded-lg shadow p-8 text-center">
                         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -90,7 +130,7 @@ export default function Staff() {
                     </div>
                 )}
 
-                {/* Error State */}
+                {}
                 {error && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                         <p className="text-red-700">{error}</p>
@@ -103,10 +143,10 @@ export default function Staff() {
                     </div>
                 )}
 
-                {/* Content - Solo mostrar si no hay loading ni error */}
+                {}
                 {!loading && !error && (
                     <>
-                        {/* Horarios */}
+                        {}
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="flex items-center gap-2 mb-4">
                                 <Calendar className="text-blue-600" size={24} />
@@ -125,6 +165,12 @@ export default function Staff() {
                                     ))}
                                 </div>
                             )}
+                    <button
+                        onClick={handleCreateStaff}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                    >
+                        <Plus size={20} /> Nuevo Personal
+                    </button>
                         </div>
 
                         {/* Lista de Personal */}
@@ -250,6 +296,13 @@ export default function Staff() {
                                 onClick={() => setShowTaskModal(false)}
                                 className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
                             >
+
+            <StaffModal
+                isOpen={isStaffModalOpen}
+                onClose={() => setIsStaffModalOpen(false)}
+                onSave={handleSaveStaff}
+                staff={editingEmployee}
+            />
                                 Cancelar
                             </button>
                         </div>

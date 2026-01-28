@@ -4,6 +4,7 @@ import Charts from '../components/attendance/Charts';
 import { crudApi } from '../api/crud';
 import { businessApi } from '../api/business';
 import { toast } from 'react-hot-toast';
+import { Edit } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function Attendance() {
@@ -11,9 +12,9 @@ export default function Attendance() {
     const [students, setStudents] = useState([]);
     const [allStudents, setAllStudents] = useState([]);
     const [grades, setGrades] = useState([]);
-    const [attendance, setAttendance] = useState({}); // { StudentID: 'Present' | 'Absent' }
-    const [lateStatus, setLateStatus] = useState({}); // { StudentID: 0 | 1 }
-    const [activeTab, setActiveTab] = useState('register'); // 'register' o 'report'
+    const [attendance, setAttendance] = useState({});
+    const [lateStatus, setLateStatus] = useState({});
+    const [activeTab, setActiveTab] = useState('register');
     const [reportData, setReportData] = useState(null);
     const [dateFrom, setDateFrom] = useState(new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
     const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
@@ -22,6 +23,7 @@ export default function Attendance() {
     const [filterGrade, setFilterGrade] = useState('');
     const [dashboardStats, setDashboardStats] = useState(null);
     const [showCharts, setShowCharts] = useState(false);
+    const [editingRecord, setEditingRecord] = useState(null);
 
     useEffect(() => {
         loadList();
@@ -147,6 +149,29 @@ export default function Attendance() {
             toast.error('Error generando reporte PDF');
         } finally {
             setLoadingReport(false);
+        }
+    };
+ditRecord = (record) => {
+        setEditingRecord({
+            AttendanceID: record.AttendanceID,
+            Status: record.Status,
+            IsLate: record.IsLate
+        });
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editingRecord) return;
+        
+        try {
+            await crudApi.update('attendance', editingRecord.AttendanceID, {
+                Status: editingRecord.Status,
+                IsLate: editingRecord.IsLate
+            });
+            toast.success('Registro actualizado correctamente');
+            setEditingRecord(null);
+            await handleSearchReport();
+        } catch (error) {
+            toast.error('Error actualizando registro');
         }
     };
 
@@ -437,6 +462,7 @@ export default function Attendance() {
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estudiante</th>
                                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Estado</th>
                                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Retardo</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200">
@@ -459,6 +485,15 @@ export default function Attendance() {
                                                         ) : (
                                                             <span className="text-gray-400">No</span>
                                                         )}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <button
+                                                            onClick={() => handleEditRecord(record)}
+                                                            className="text-yellow-600 hover:text-yellow-700 p-2"
+                                                            title="Editar"
+                                                        >
+                                                            <Edit size={18} />
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -555,6 +590,56 @@ export default function Attendance() {
                             </div>
                         </div>
                     </div>
+
+            {editingRecord && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+                        <h3 className="text-xl font-bold mb-4">Editar Registro de Asistencia</h3>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                                <select
+                                    value={editingRecord.Status}
+                                    onChange={(e) => setEditingRecord({...editingRecord, Status: e.target.value})}
+                                    className="w-full border rounded-lg px-3 py-2"
+                                >
+                                    <option value="Present">Presente</option>
+                                    <option value="Absent">Ausente</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label className="flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={editingRecord.IsLate === 1}
+                                        onChange={(e) => setEditingRecord({...editingRecord, IsLate: e.target.checked ? 1 : 0})}
+                                        disabled={editingRecord.Status !== 'Present'}
+                                        className="w-5 h-5 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500 disabled:opacity-50"
+                                    />
+                                    <span className="ml-2 text-sm font-medium text-gray-700">¿Llegó tarde?</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-2 mt-6">
+                            <button
+                                onClick={handleSaveEdit}
+                                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                            >
+                                Guardar
+                            </button>
+                            <button
+                                onClick={() => setEditingRecord(null)}
+                                className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
                     {/* GRÁFICAS */}
                     {showCharts && dashboardStats && (
