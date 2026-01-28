@@ -1,119 +1,153 @@
 import { 
     LayoutDashboard, Users, GraduationCap, CalendarDays, 
-    FileText, UserCheck, DollarSign, Bolt, Shield, Bell, Award, UserCircle
+    FileText, UserCheck, DollarSign, Bolt, Shield, Bell, 
+    Award, UserCircle, BookOpen, Briefcase, Settings
 } from 'lucide-react';
 
-/**
- * Configuración de rutas con sus permisos requeridos
- * 
- * Estructura de permisos:
- * - {resource}.view: Ver listado
- * - {resource}.create: Crear nuevo registro
- * - {resource}.update: Editar registro existente
- * - {resource}.delete: Eliminar registro
- */
 export const MENU_CONFIG = [
     {
+        id: 'dashboard',
         label: 'Dashboard',
         path: '/dashboard',
         icon: LayoutDashboard,
-        permissions: [] 
+        permissions: []
     },
     {
-        label: 'Auditoría',
-        path: '/audit',
-        icon: FileText,
-        permissions: ['attendance.view']
+        id: 'academic',
+        label: 'Académico',
+        icon: BookOpen,
+        permissions: ['student.view', 'grade.view', 'activity.view'],
+        children: [
+            {
+                label: 'Estudiantes',
+                path: '/students',
+                icon: GraduationCap,
+                permissions: ['student.view']
+            },
+            {
+                label: 'Grupos',
+                path: '/grades',
+                icon: Award,
+                permissions: ['grade.view']
+            },
+            {
+                label: 'Actividades',
+                path: '/activities',
+                icon: CalendarDays,
+                permissions: ['activity.view']
+            },
+            {
+                label: 'Gestor de Actividades',
+                path: '/activity-manager',
+                icon: CalendarDays,
+                permissions: ['activity.create', 'activity.update']
+            }
+        ]
     },
     {
-        label: 'Actividades',
-        path: '/activities',
-        icon: CalendarDays,
-        permissions: ['activity.view']
+        id: 'operations',
+        label: 'Operaciones',
+        icon: Briefcase,
+        permissions: ['attendance.view', 'employee_task.view', 'student.create'],
+        children: [
+            {
+                label: 'Asistencia',
+                path: '/attendance',
+                icon: UserCheck,
+                permissions: ['attendance.view']
+            },
+            {
+                label: 'Alta Rápida',
+                path: '/intake',
+                icon: Bolt,
+                permissions: ['student.create']
+            },
+            {
+                label: 'Tareas',
+                path: '/tasks',
+                icon: FileText,
+                permissions: ['employee_task.view']
+            },
+            {
+                label: 'Auditoría',
+                path: '/audit',
+                icon: FileText,
+                permissions: ['attendance.view']
+            }
+        ]
     },
     {
-        label: 'Gestor de Actividades',
-        path: '/activity-manager',
-        icon: CalendarDays,
-        permissions: ['activity.create', 'activity.update']
-    },
-    {
-        label: 'Estudiantes',
-        path: '/students',
-        icon: GraduationCap,
-        permissions: ['student.view']
-    },
-    {
-        label: 'Grupos',
-        path: '/grades',
-        icon: Award,
-        permissions: ['grade.view']
-    },
-    {
-        label: 'Alta Rápida',
-        path: '/intake',
-        icon: Bolt,
-        permissions: ['student.create']
-    },
-    {
-        label: 'Asistencia',
-        path: '/attendance',
-        icon: UserCheck,
-        permissions: ['attendance.view']
-    },
-    {
-        label: 'Pagos',
-        path: '/payments',
+        id: 'financial',
+        label: 'Finanzas',
         icon: DollarSign,
-        permissions: ['student_payment.view']
+        permissions: ['student_payment.view', 'invoice.view'],
+        children: [
+            {
+                label: 'Pagos',
+                path: '/payments',
+                icon: DollarSign,
+                permissions: ['student_payment.view']
+            },
+            {
+                label: 'Facturas',
+                path: '/invoices',
+                icon: FileText,
+                permissions: ['invoice.view']
+            }
+        ]
     },
     {
-        label: 'Facturas',
-        path: '/invoices',
-        icon: FileText,
-        permissions: ['invoice.view']
-    },
-    {
-        label: 'Responsables',
-        path: '/guardians',
+        id: 'people',
+        label: 'Personas',
         icon: Users,
-        permissions: ['guardian.view']
+        permissions: ['guardian.view', 'employee.view'],
+        children: [
+            {
+                label: 'Responsables',
+                path: '/guardians',
+                icon: Users,
+                permissions: ['guardian.view']
+            },
+            {
+                label: 'Personal',
+                path: '/staff',
+                icon: Users,
+                permissions: ['employee.view']
+            }
+        ]
     },
     {
-        label: 'Personal',
-        path: '/staff',
-        icon: Users,
-        permissions: ['employee.view']
+        id: 'system',
+        label: 'Sistema',
+        icon: Settings,
+        permissions: ['user.view', 'role.view', 'permission.view', 'notification.view'],
+        children: [
+            {
+                label: 'Usuarios',
+                path: '/users',
+                icon: Users,
+                permissions: ['user.view']
+            },
+            {
+                label: 'Roles y Permisos',
+                path: '/roles',
+                icon: Shield,
+                permissions: ['role.view', 'permission.view']
+            },
+            {
+                label: 'Notificaciones',
+                path: '/notifications',
+                icon: Bell,
+                permissions: ['notification.view']
+            }
+        ]
     },
     {
-        label: 'Usuarios',
-        path: '/users',
-        icon: Users,
-        permissions: ['user.view']
-    },
-    {
-        label: 'Roles y Permisos',
-        path: '/roles',
-        icon: Shield,
-        permissions: ['role.view', 'permission.view']
-    },
-    {
-        label: 'Notificaciones',
-        path: '/notifications',
-        icon: Bell,
-        permissions: ['notification.view']
-    },
-    {
-        label: 'Tareas',
-        path: '/tasks',
-        icon: FileText,
-        permissions: ['employee_task.view']
-    },
-    {
+        id: 'profile',
         label: 'Mi Perfil',
         path: '/profile',
         icon: UserCircle,
-        permissions: [] 
+        permissions: []
     }
 ];
 
@@ -122,7 +156,6 @@ export const RESOURCE_ACTIONS = {
     UPDATE: 'update',
     DELETE: 'delete',
     VIEW: 'view',
-    
     EXPORT: 'export',
     IMPORT: 'import',
     ASSIGN: 'assign'
