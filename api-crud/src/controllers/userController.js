@@ -192,3 +192,50 @@ export const changePassword = async (req, res) => {
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
+
+/**
+ * Resetear contraseña de un usuario a su cédula (IDNumber)
+ * - Requiere: { userId }
+ * - Comportamiento: Hashea la cédula actual (IDNumber) como nueva contraseña y marca MustChangePassword = 1
+ */
+export const resetPasswordToID = async (req, res) => {
+    try {
+        const { userId } = req.body;
+        if (!userId) {
+            return res.status(400).json({ error: 'userId es requerido' });
+        }
+
+        // Obtener usuario para leer su cédula
+        const { data: user, error: fetchError } = await supabaseAdmin
+            .from('user')
+            .select('UserID, IDNumber')
+            .eq('UserID', userId)
+            .single();
+
+        if (fetchError || !user) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        if (!user.IDNumber) {
+            return res.status(400).json({ error: 'El usuario no tiene cédula (IDNumber) registrada' });
+        }
+
+        // Hashear la cédula
+        const hashedPassword = await bcrypt.hash(user.IDNumber, SALT_ROUNDS);
+
+        // Actualizar contraseña y forzar cambio al siguiente login
+        const { error: updateError } = await supabaseAdmin
+            .from('user')
+            .update({ PasswordHash: hashedPassword, MustChangePassword: 1 })
+            .eq('UserID', userId);
+
+        if (updateError) {
+            return res.status(400).json({ error: updateError.message });
+        }
+
+        res.json({ success: true, message: 'Contraseña reseteada a la cédula correctamente' });
+    } catch (error) {
+        console.error('Error reseteando contraseña a cédula:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+};

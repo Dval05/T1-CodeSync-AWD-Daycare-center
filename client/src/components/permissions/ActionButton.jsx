@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Edit, Trash2, Eye, Download, Upload } from 'lucide-react';
 import { PermissionGate } from './PermissionGate';
+import { AdminGate } from './AdminGate';
 
 /**
  * Botón de acción con control de permisos
@@ -22,6 +23,8 @@ export const ActionButton = ({
     disabled = false,
     icon: CustomIcon,
     className = '',
+    requireAdmin = false,
+    iconOnly = false,
     ...rest
 }) => {
     const permission = `${resource}.${action}`;
@@ -47,24 +50,36 @@ export const ActionButton = ({
 
     const Icon = CustomIcon || defaultIcons[action] || Plus;
 
-    return (
+    const button = (
+        <button
+            onClick={onClick}
+            disabled={disabled}
+            className={`
+                flex items-center ${iconOnly ? '' : 'gap-2'} ${iconOnly ? 'p-2 rounded-full' : 'px-4 py-2 rounded-lg'} font-medium
+                transition-all duration-200
+                ${variants[variant] || variants.primary}
+                ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'}
+                ${className}
+            `}
+            {...rest}
+        >
+            <Icon size={18} />
+            {iconOnly ? (<span className="sr-only">{label}</span>) : label}
+        </button>
+    );
+
+    const gatedByPermission = (
         <PermissionGate permission={permission}>
-            <button
-                onClick={onClick}
-                disabled={disabled}
-                className={`
-                    flex items-center gap-2 px-4 py-2 rounded-lg font-medium
-                    transition-all duration-200
-                    ${variants[variant] || variants.primary}
-                    ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'}
-                    ${className}
-                `}
-                {...rest}
-            >
-                <Icon size={18} />
-                {label}
-            </button>
+            {button}
         </PermissionGate>
+    );
+
+    return requireAdmin ? (
+        <AdminGate>
+            {gatedByPermission}
+        </AdminGate>
+    ) : (
+        gatedByPermission
     );
 };
 

@@ -2,19 +2,26 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { crudApi } from '../api/crud';
 import { toast } from 'react-hot-toast';
-import { Shield, CheckSquare, Square, Plus, Trash2, Tag } from 'lucide-react';
+import { Shield, CheckSquare, Square, Plus, Trash2, Tag, Edit, Eye, XCircle } from 'lucide-react';
+import axios from 'axios';
+import { ActionButton } from '../components/permissions/ActionButton';
 
 export default function Roles() {
     // Estado de datos
     const [roles, setRoles] = useState([]);
     const [permissions, setPermissions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [expandedRoleId, setExpandedRoleId] = useState(null);
+    const [rolePermsMap, setRolePermsMap] = useState({});
 
     // Estado del formulario
     const [roleName, setRoleName] = useState('');
     const [description, setDescription] = useState('');
     const [selectedPerms, setSelectedPerms] = useState(new Set()); 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingRole, setEditingRole] = useState(null);
+    const [originalAssignments, setOriginalAssignments] = useState([]); // [{RolePermissionID, PermissionID}]
 
     // Cargar Roles y Permisos existentes
     useEffect(() => {
@@ -104,6 +111,92 @@ export default function Roles() {
             toast.error('Error al eliminar');
         }
     };
+    
+    // Iniciar edición: cargar rol y permisos actuales
+    const startEditRole = async (role) => {
+        try {
+            setIsEditing(true);
+            setEditingRole(role);
+            setRoleName(role.RoleName || '');
+            setDescription(role.Description || '');
+
+            // Obtener asignaciones actuales del rol
+            const { data: assignments } = await crudApi.getAll('role_permission', { RoleID: role.RoleID });
+            setOriginalAssignments(assignments || []);
+
+            const currentPermIds = new Set((assignments || []).map(a => a.PermissionID));
+            setSelectedPerms(currentPermIds);
+        } catch (error) {
+            console.error(error);
+            toast.error('Error iniciando edición del rol');
+        }
+    };
+
+    const cancelEditRole = () => {
+        setIsEditing(false);
+        setEditingRole(null);
+        setRoleName('');
+        setDescription('');
+        setSelectedPerms(new Set());
+        setOriginalAssignments([]);
+    };
+
+    // Guardar cambios del rol (nombre/desc + permisos dif)
+    const handleUpdateRole = async (e) => {
+        e.preventDefault();
+        if (!editingRole) return;
+        setIsSubmitting(true);
+        try {
+            // 1) Actualizar metadatos del rol
+            await crudApi.update('role', editingRole.RoleID, { RoleName: roleName, Description: description });
+
+            // 2) Calcular diff de permisos
+            const originalSet = new Set(originalAssignments.map(a => a.PermissionID));
+            const selectedSet = new Set(selectedPerms);
+
+            // Añadir: en selected pero no en original
+            const toAdd = Array.from(selectedSet).filter(pid => !originalSet.has(pid));
+            // Quitar: en original pero no en selected
+            const toRemove = Array.from(originalSet).filter(pid => !selectedSet.has(pid));
+
+            const addPromises = toAdd.map(pid => crudApi.create('role_permission', { RoleID: editingRole.RoleID, PermissionID: pid }));
+            const removePromises = toRemove.map(pid => {
+                const assignment = originalAssignments.find(a => a.PermissionID === pid);
+                return assignment ? crudApi.remove('role_permission', assignment.RolePermissionID) : Promise.resolve();
+            });
+
+            await Promise.all([...addPromises, ...removePromises]);
+
+            toast.success('Permisos del rol actualizados');
+            cancelEditRole();
+            loadData();
+        } catch (error) {
+            console.error(error);
+            toast.error('Error guardando cambios del rol');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const toggleViewPermissions = async (roleId) => {
+        const API_CRUD_URL = import.meta.env.VITE_API_CRUD_URL;
+        if (expandedRoleId === roleId) {
+            setExpandedRoleId(null);
+            return;
+        }
+        try {
+            if (!rolePermsMap[roleId]) {
+                const { data } = await axios.get(`${API_CRUD_URL}/access/role/${roleId}/permissions`, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('sb-access-token')}` }
+                });
+                setRolePermsMap(prev => ({ ...prev, [roleId]: data || [] }));
+            }
+            setExpandedRoleId(roleId);
+        } catch (error) {
+            console.error(error);
+            toast.error('Error cargando permisos del rol');
+        }
+    };
 
     return (
         <Layout>
@@ -113,13 +206,23 @@ export default function Roles() {
                 <div className="lg:w-2/3 bg-white rounded-lg shadow-lg flex flex-col">
                     <div className="p-6 border-b border-gray-100 bg-gray-50 rounded-t-lg">
                         <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                            <Plus className="text-blue-600" /> Nuevo Rol
+                            {isEditing ? (
+                                <>
+                                    <Edit className="text-purple-600" /> Editar Rol
+                                </>
+                            ) : (
+                                <>
+                                    <Plus className="text-blue-600" /> Nuevo Rol
+                                </>
+                            )}
                         </h2>
-                        <p className="text-sm text-gray-500 mt-1">Crea un rol y asigna sus permisos.</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                            {isEditing ? 'Modifica nombre/descripcion y permisos del rol seleccionado.' : 'Crea un rol y asigna sus permisos.'}
+                        </p>
                     </div>
 
                     <div className="p-6 flex-1 overflow-y-auto">
-                        <form id="roleForm" onSubmit={handleCreateRole} className="space-y-6">
+                        <form id="roleForm" onSubmit={isEditing ? handleUpdateRole : handleCreateRole} className="space-y-6">
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -192,17 +295,26 @@ export default function Roles() {
                         </form>
                     </div>
 
-                    <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-lg">
+                    <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-lg flex gap-3">
                         <button 
                             type="submit" 
                             form="roleForm"
                             disabled={isSubmitting}
-                            className={`w-full py-3 rounded-lg font-bold text-white transition-all ${
-                                isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'
+                            className={`flex-1 py-3 rounded-lg font-bold text-white transition-all ${
+                                isSubmitting ? 'bg-gray-400 cursor-not-allowed' : (isEditing ? 'bg-purple-600 hover:bg-purple-700' : 'bg-blue-600 hover:bg-blue-700')
                             }`}
                         >
-                            {isSubmitting ? 'Guardando...' : 'Guardar Nuevo Rol'}
+                            {isSubmitting ? 'Guardando...' : (isEditing ? 'Guardar Cambios' : 'Guardar Nuevo Rol')}
                         </button>
+                        {isEditing && (
+                            <button
+                                type="button"
+                                onClick={cancelEditRole}
+                                className="px-4 py-3 rounded-lg font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 transition"
+                            >
+                                <span className="inline-flex items-center gap-2"><XCircle size={18} /> Cancelar</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -219,18 +331,63 @@ export default function Roles() {
                             {loading && <p className="text-center text-gray-400 py-4">Cargando roles...</p>}
                             
                             {!loading && roles.map(role => (
-                                <div key={role.RoleID} className="group flex justify-between items-center p-4 border border-gray-100 rounded-lg hover:bg-purple-50 hover:border-purple-200 transition-all shadow-sm">
-                                    <div>
-                                        <h3 className="font-bold text-gray-800">{role.RoleName}</h3>
-                                        <p className="text-xs text-gray-500 mt-1">{role.Description}</p>
+                                <div key={role.RoleID} className="p-4 border border-gray-100 rounded-lg hover:bg-purple-50 hover:border-purple-200 transition-all shadow-sm group">
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <h3 className="font-bold text-gray-800">{role.RoleName}</h3>
+                                            <p className="text-xs text-gray-500 mt-1">{role.Description}</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            {/* Editar permisos: visible si tiene role.update */}
+                                            <ActionButton
+                                                resource="role"
+                                                action="update"
+                                                label="Editar permisos"
+                                                icon={Edit}
+                                                variant="secondary"
+                                                iconOnly
+                                                title="Editar permisos"
+                                                onClick={() => startEditRole(role)}
+                                            />
+                                            {/* Ver/Ocultar lista de permisos asignados */}
+                                            <ActionButton
+                                                resource="role"
+                                                action="view"
+                                                label={expandedRoleId === role.RoleID ? 'Ocultar' : 'Permisos'}
+                                                icon={Eye}
+                                                variant="outline"
+                                                iconOnly
+                                                title={expandedRoleId === role.RoleID ? 'Ocultar' : 'Ver permisos'}
+                                                onClick={() => toggleViewPermissions(role.RoleID)}
+                                            />
+                                            {/* Eliminar rol */}
+                                            <ActionButton
+                                                resource="role"
+                                                action="delete"
+                                                label="Eliminar"
+                                                icon={Trash2}
+                                                variant="danger"
+                                                iconOnly
+                                                title="Eliminar"
+                                                onClick={() => handleDeleteRole(role.RoleID)}
+                                            />
+                                        </div>
                                     </div>
-                                    <button 
-                                        onClick={() => handleDeleteRole(role.RoleID)}
-                                        className="text-gray-300 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition opacity-0 group-hover:opacity-100"
-                                        title="Eliminar Rol"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
+                                    {expandedRoleId === role.RoleID && (
+                                        <div className="mt-3 p-3 bg-white border rounded">
+                                            <p className="text-xs font-semibold text-gray-500 mb-2">Permisos del rol</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {(rolePermsMap[role.RoleID] || []).map(perm => (
+                                                    <span key={perm.PermissionID} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                                        {perm.PermissionName}
+                                                    </span>
+                                                ))}
+                                                {(rolePermsMap[role.RoleID]?.length ?? 0) === 0 && (
+                                                    <span className="text-xs text-gray-400">Sin permisos asignados</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
