@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Menu, LogOut, User, Settings, UserCircle } from 'lucide-react';
+import NotificationBadge from '../notifications/NotificationBadge';
+import NotificationPanel from '../notifications/NotificationPanel';
+import { useNotifications } from '../../hooks/useNotifications';
 
 export default function Header({ toggleSidebar }) {
     const { user, logout, profile } = useAuth();
     const navigate = useNavigate();
     const [showDropdown, setShowDropdown] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
+    const notificationState = useNotifications();
 
     return (
         <header className="bg-white shadow-sm h-16 px-6 flex items-center justify-between sticky top-0 z-10">
@@ -22,6 +27,11 @@ export default function Header({ toggleSidebar }) {
 
             {}
             <div className="flex items-center gap-4">
+                <NotificationBadge 
+                    count={notificationState.unreadCount}
+                    onClick={() => setShowNotifications(true)}
+                />
+
                 <div className="text-right hidden sm:block">
                     <p className="text-sm font-bold text-gray-800">
                         {profile?.FirstName || 'Usuario'} {profile?.LastName}
@@ -78,6 +88,17 @@ export default function Header({ toggleSidebar }) {
                     )}
                 </div>
             </div>
+
+            <NotificationPanel 
+                isOpen={showNotifications}
+                onClose={() => setShowNotifications(false)}
+                notifications={notificationState.notifications}
+                unreadCount={notificationState.unreadCount}
+                loading={notificationState.loading}
+                onMarkAsRead={notificationState.markAsRead}
+                onMarkAllAsRead={notificationState.markAllAsRead}
+                onDelete={notificationState.deleteNotification}
+            />
         </header>
     );
 }
