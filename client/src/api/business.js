@@ -8,8 +8,6 @@ api.interceptors.request.use((config) => {
     const token = localStorage.getItem('sb-access-token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
 
-    // Dev helper: if using the local 'custom-auth-token' (loginWithCredentials),
-    // forward the internal UserID so the API can resolve permissions during dev.
     try {
         if (token === 'custom-auth-token') {
             const saved = localStorage.getItem('user-profile');
@@ -19,7 +17,6 @@ api.interceptors.request.use((config) => {
             }
         }
     } catch (e) {
-        // ignore JSON parse errors
     }
     return config;
 });
@@ -58,12 +55,15 @@ export const businessApi = {
         notify: (id, data) => api.post(`/guardians/${id}/notify`, data),
     },
     notifications: {
-        getMy: () => api.get('/notifications/my'),
-        markRead: (id) => api.patch(`/notifications/${id}/read`),
-        broadcast: (data) => api.post('/notifications/broadcast', data),
+        getUnreadCount: () => api.get('/notifications/unread-count'),
+        getMyNotifications: (limit = 50) => api.get(`/notifications/my?limit=${limit}`),
+        getSentNotifications: (limit = 50) => api.get(`/notifications/sent?limit=${limit}`),
+        markAsRead: (id) => api.patch(`/notifications/${id}/read`),
+        markAllAsRead: () => api.patch('/notifications/mark-all-read'),
+        deleteNotification: (id) => api.delete(`/notifications/${id}`),
         send: (data) => api.post('/notifications/send', data),
+        broadcastToRole: (data) => api.post('/notifications/broadcast-role', data),
     },
-    // Método directo para llamadas personalizadas
     get: (url, config) => api.get(url, config),
     post: (url, data, config) => api.post(url, data, config),
 };
