@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { businessApi } from '../api/business';
 import { useAuth } from '../context/AuthContext';
 
-const NOTIFICATION_SOUND = '/notification.mp3';
 const POLLING_INTERVAL = 30000;
 
 export const useNotifications = () => {
@@ -10,19 +9,29 @@ export const useNotifications = () => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
-    const audioRef = useRef(null);
     const previousCountRef = useRef(0);
 
     const isReady = user && !authLoading && localStorage.getItem('sb-access-token');
 
-    useEffect(() => {
-        audioRef.current = new Audio(NOTIFICATION_SOUND);
-        audioRef.current.volume = 0.5;
-    }, []);
-
     const playNotificationSound = useCallback(() => {
-        if (audioRef.current) {
-            audioRef.current.play().catch(() => {});
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        } catch (error) {
+            console.log('No se pudo reproducir el sonido de notificación');
         }
     }, []);
 
