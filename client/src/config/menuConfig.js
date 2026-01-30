@@ -86,7 +86,7 @@ export const MENU_CONFIG = [
                 label: 'Pagos',
                 path: '/payments',
                 icon: DollarSign,
-                permissions: ['teacher_payment.view']
+                permissions: []
             },
             {
                 label: 'Facturas',

@@ -16,6 +16,7 @@ const PK_MAP = {
     'role_permission': 'RolePermissionID',
     'session': 'SessionID',
     'student': 'StudentID',
+    'teacher': 'TeacherID',
     'student_guardian': 'StudentGuardianID',
     'student_observation': 'ObservationID',
     'student_payment': 'StudentPaymentID',
