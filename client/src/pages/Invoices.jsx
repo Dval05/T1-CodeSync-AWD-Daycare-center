@@ -114,7 +114,7 @@ export default function Invoices() {
                                         <h3 className="font-bold text-lg">Factura #{invoice.InvoiceID}</h3>
                                     </div>
                                     <p className="text-gray-600 mt-1">
-                                        Estudiante ID: {invoice.StudentID}
+                                        Profesor ID: {invoice.StudentID}
                                     </p>
                                     <div className="flex gap-4 mt-2 text-sm">
                                         <span className="text-gray-500">
@@ -153,14 +153,14 @@ export default function Invoices() {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Estudiante
+                                    Profesor
                                 </label>
                                 <select
                                     value={newInvoice.studentId}
                                     onChange={(e) => setNewInvoice({...newInvoice, studentId: e.target.value})}
                                     className="w-full border rounded-lg px-3 py-2"
                                 >
-                                    <option value="">Seleccionar estudiante...</option>
+                                    <option value="">Seleccionar profesor...</option>
                                     {students.map(student => (
                                         <option key={student.StudentID} value={student.StudentID}>
                                             {student.FirstName} {student.LastName}
