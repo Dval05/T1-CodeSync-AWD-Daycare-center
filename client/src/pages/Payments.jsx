@@ -82,34 +82,23 @@ export default function Payments() {
                         ))}
                     </select>
 
-                    <div className="mt-4">
-                        <button disabled={!selectedTeacher || loading} onClick={async () => {
-                            setMessage(null);
-                            setLoading(true);
-                            try {
-                                const { data } = await businessApi.finance.teacherBalance(selectedTeacher);
-                                setMessage(`Saldo del profesor: ${data?.balance ?? 'N/A'}`);
-                            } catch (e) {
-                                setMessage('No se pudo obtener el saldo');
-                            } finally { setLoading(false); }
-                        }} className="mt-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50">Ver saldo</button>
-                    </div>
+                    
                 </div>
 
                 <div className="md:col-span-2 bg-white rounded-lg shadow p-4">
                     <label className="block text-sm font-medium text-gray-700">Formulario de Pago</label>
                     <div className="grid grid-cols-2 gap-2 mt-2">
-                        <input placeholder="Base Salary" value={form.BaseSalary} onChange={e => setForm({...form, BaseSalary: e.target.value})} className="border p-2 rounded" />
-                        <input placeholder="Bonuses" value={form.Bonuses} onChange={e => setForm({...form, Bonuses: e.target.value})} className="border p-2 rounded" />
-                        <input placeholder="Overtime" value={form.Overtime} onChange={e => setForm({...form, Overtime: e.target.value})} className="border p-2 rounded" />
-                        <input placeholder="Deductions" value={form.Deductions} onChange={e => setForm({...form, Deductions: e.target.value})} className="border p-2 rounded" />
-                        <input type="date" placeholder="Payment Date" value={form.PaymentDate} onChange={e => setForm({...form, PaymentDate: e.target.value})} className="border p-2 rounded" />
+                        <input placeholder="Salario base" value={form.BaseSalary} onChange={e => setForm({...form, BaseSalary: e.target.value})} className="border p-2 rounded" />
+                        <input placeholder="Bonificaciones" value={form.Bonuses} onChange={e => setForm({...form, Bonuses: e.target.value})} className="border p-2 rounded" />
+                        <input placeholder="Horas extra" value={form.Overtime} onChange={e => setForm({...form, Overtime: e.target.value})} className="border p-2 rounded" />
+                        <input placeholder="Deducciones" value={form.Deductions} onChange={e => setForm({...form, Deductions: e.target.value})} className="border p-2 rounded" />
+                        <input type="date" placeholder="Fecha de pago" value={form.PaymentDate} onChange={e => setForm({...form, PaymentDate: e.target.value})} className="border p-2 rounded" />
                         <select value={form.PaymentMethod} onChange={e => setForm({...form, PaymentMethod: e.target.value})} className="border p-2 rounded">
-                            <option>Transfer</option>
-                            <option>Cash</option>
-                            <option>Cheque</option>
+                            <option value="Transfer">Transferencia</option>
+                            <option value="Cash">Efectivo</option>
+                            <option value="Cheque">Cheque</option>
                         </select>
-                        <input placeholder="Total Amount (opcional)" value={form.TotalAmount} onChange={e => setForm({...form, TotalAmount: e.target.value})} className="border p-2 rounded col-span-2" />
+                        <input placeholder="Monto total (opcional)" value={form.TotalAmount} onChange={e => setForm({...form, TotalAmount: e.target.value})} className="border p-2 rounded col-span-2" />
                         <textarea placeholder="Notas" value={form.Notes} onChange={e => setForm({...form, Notes: e.target.value})} className="border p-2 rounded col-span-2" />
                     </div>
                     <div className="mt-3">
