@@ -93,4 +93,74 @@ export class PaymentService {
         if (error) throw error;
         return data;
     }
+
+    // Teacher payment methods
+    async registerTeacherPayment(teacherId, paymentData, processedBy) {
+        const payment = {
+            TeacherID: teacherId,
+            ServiceType: paymentData.ServiceType || 'Salary',
+            Hours: paymentData.Hours || null,
+            RatePerHour: paymentData.RatePerHour || null,
+            TotalAmount: paymentData.TotalAmount,
+            PaidAmount: paymentData.PaidAmount || 0,
+            BalanceRemaining: this.calculateBalance(paymentData),
+            PaymentDate: paymentData.PaymentDate || new Date().toISOString().split('T')[0],
+            DueDate: paymentData.DueDate,
+            PaymentMethod: paymentData.PaymentMethod,
+            Status: this.determineStatus(paymentData),
+            Notes: paymentData.Notes || null,
+            ProcessedBy: processedBy,
+            CreatedBy: processedBy
+        };
+
+        const { data, error } = await supabase
+            .from('teacher_payment')
+            .insert(payment)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    }
+
+    async updateTeacherPayment(paymentId, updateData) {
+        const updates = { ...updateData };
+        if (updateData.PaidAmount !== undefined && updateData.TotalAmount !== undefined) {
+            updates.BalanceRemaining = this.calculateBalance(updateData);
+            updates.Status = this.determineStatus(updateData);
+        }
+        updates.UpdatedAt = new Date().toISOString();
+
+        const { data, error } = await supabase
+            .from('teacher_payment')
+            .update(updates)
+            .eq('TeacherPaymentID', paymentId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    }
+
+    async getTeacherPaymentById(paymentId) {
+        const { data, error } = await supabase
+            .from('teacher_payment')
+            .select('*')
+            .eq('TeacherPaymentID', paymentId)
+            .single();
+
+        if (error) throw error;
+        return data;
+    }
+
+    async getPaymentsByTeacher(teacherId) {
+        const { data, error } = await supabase
+            .from('teacher_payment')
+            .select('*')
+            .eq('TeacherID', teacherId)
+            .order('PaymentDate', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    }
 }

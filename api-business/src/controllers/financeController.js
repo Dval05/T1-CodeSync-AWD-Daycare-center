@@ -32,3 +32,24 @@ export const getStudentBalance = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+export const getTeacherBalance = async (req, res) => {
+    const { id } = req.params; // TeacherID
+
+    try {
+        const { data: payments, error } = await supabase
+            .from('teacher_payment')
+            .select('TotalAmount, PaidAmount')
+            .eq('TeacherID', id);
+
+        if (error) throw error;
+
+        const totalDue = payments.reduce((sum, p) => sum + (Number(p.TotalAmount) || 0), 0);
+        const totalPaid = payments.reduce((sum, p) => sum + (Number(p.PaidAmount) || 0), 0);
+        const balance = totalDue - totalPaid;
+
+        res.json({ teacherId: id, summary: { totalDue, totalPaid, balance } });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};

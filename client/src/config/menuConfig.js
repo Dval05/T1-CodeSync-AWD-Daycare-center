@@ -80,13 +80,13 @@ export const MENU_CONFIG = [
         id: 'financial',
         label: 'Finanzas',
         icon: DollarSign,
-        permissions: ['student_payment.view', 'invoice.view'],
+        permissions: ['teacher_payment.view', 'invoice.view'],
         children: [
             {
                 label: 'Pagos',
                 path: '/payments',
                 icon: DollarSign,
-                permissions: ['student_payment.view']
+                permissions: ['teacher_payment.view']
             },
             {
                 label: 'Facturas',

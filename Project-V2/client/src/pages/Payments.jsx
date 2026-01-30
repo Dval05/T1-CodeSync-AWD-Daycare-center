@@ -6,7 +6,7 @@ export default function Payments() {
     const [payments, setPayments] = useState([]);
 
     useEffect(() => {
-        crudApi.getAll('student_payment').then(res => setPayments(res.data));
+        crudApi.getAll('teacher_payment').then(res => setPayments(res.data));
     }, []);
 
     const getStatusColor = (status) => {
@@ -32,8 +32,8 @@ export default function Payments() {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                         {payments.map(pay => (
-                            <tr key={pay.StudentPaymentID}>
-                                <td className="px-6 py-4 text-sm text-gray-500">#{pay.StudentPaymentID}</td>
+                            <tr key={pay.TeacherPaymentID}>
+                                <td className="px-6 py-4 text-sm text-gray-500">#{pay.TeacherPaymentID}</td>
                                 <td className="px-6 py-4 font-medium">${pay.Amount}</td>
                                 <td className="px-6 py-4 text-sm text-gray-500">{new Date(pay.PaymentDate).toLocaleDateString()}</td>
                                 <td className="px-6 py-4">

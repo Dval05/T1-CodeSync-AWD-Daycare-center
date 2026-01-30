@@ -6,11 +6,11 @@ import { FileText, Plus, Download, DollarSign } from 'lucide-react';
 
 export default function Invoices() {
     const [invoices, setInvoices] = useState([]);
-    const [students, setStudents] = useState([]);
+    const [teachers, setTeachers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showGenerateModal, setShowGenerateModal] = useState(false);
     const [newInvoice, setNewInvoice] = useState({
-        studentId: '',
+        teacherId: '',
         month: new Date().toISOString().slice(0, 7),
         items: [
             { concept: 'Mensualidad', amount: 1000 }
@@ -23,12 +23,12 @@ export default function Invoices() {
 
     const loadData = async () => {
         try {
-            const [invoicesRes, studentsRes] = await Promise.all([
+            const [invoicesRes, teachersRes] = await Promise.all([
                 crudApi.getAll('invoice'),
-                crudApi.getAll('student', { IsActive: 1 })
+                crudApi.getAll('teacher', { IsActive: 1 })
             ]);
             setInvoices(invoicesRes.data || []);
-            setStudents(studentsRes.data || []);
+            setTeachers(teachersRes.data || []);
         } catch (error) {
             console.error("Error cargando datos:", error);
         } finally {
@@ -43,7 +43,7 @@ export default function Invoices() {
             setShowGenerateModal(false);
             loadData();
             setNewInvoice({
-                studentId: '',
+                teacherId: '',
                 month: new Date().toISOString().slice(0, 7),
                 items: [{ concept: 'Mensualidad', amount: 1000 }]
             });
@@ -114,7 +114,7 @@ export default function Invoices() {
                                         <h3 className="font-bold text-lg">Factura #{invoice.InvoiceID}</h3>
                                     </div>
                                     <p className="text-gray-600 mt-1">
-                                        Profesor ID: {invoice.StudentID}
+                                        Profesor ID: {invoice.TeacherID}
                                     </p>
                                     <div className="flex gap-4 mt-2 text-sm">
                                         <span className="text-gray-500">
@@ -156,14 +156,14 @@ export default function Invoices() {
                                     Profesor
                                 </label>
                                 <select
-                                    value={newInvoice.studentId}
-                                    onChange={(e) => setNewInvoice({...newInvoice, studentId: e.target.value})}
+                                    value={newInvoice.teacherId}
+                                    onChange={(e) => setNewInvoice({...newInvoice, teacherId: e.target.value})}
                                     className="w-full border rounded-lg px-3 py-2"
                                 >
                                     <option value="">Seleccionar profesor...</option>
-                                    {students.map(student => (
-                                        <option key={student.StudentID} value={student.StudentID}>
-                                            {student.FirstName} {student.LastName}
+                                    {teachers.map(teacher => (
+                                        <option key={teacher.TeacherID} value={teacher.TeacherID}>
+                                            {teacher.FirstName} {teacher.LastName}
                                         </option>
                                     ))}
                                 </select>
@@ -237,7 +237,7 @@ export default function Invoices() {
                         <div className="flex gap-2 mt-6">
                             <button
                                 onClick={handleGenerateInvoice}
-                                disabled={!newInvoice.studentId}
+                                disabled={!newInvoice.teacherId}
                                 className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-300"
                             >
                                 Generar Factura

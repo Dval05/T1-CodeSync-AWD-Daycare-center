@@ -6,16 +6,18 @@ const paymentService = new PaymentService();
 
 export const generateInvoice = async (req, res) => {
     try {
-        const { studentId, paymentData } = req.body;
+        const { studentId, teacherId, paymentData } = req.body;
 
-        if (!studentId || !paymentData) {
+        if ((!studentId && !teacherId) || !paymentData) {
             return res.status(400).json({ 
-                error: 'Se requiere studentId y paymentData' 
+                error: 'Se requiere studentId o teacherId y paymentData' 
             });
         }
 
         const createdBy = req.user?.userId || null;
-        const invoice = await invoiceService.generateInvoice(studentId, paymentData, createdBy);
+        const referenceType = teacherId ? 'Teacher' : 'Student';
+        const referenceId = teacherId || studentId;
+        const invoice = await invoiceService.generateInvoice(referenceType, referenceId, paymentData, createdBy);
 
         res.json({ 
             ok: true, 
@@ -29,16 +31,21 @@ export const generateInvoice = async (req, res) => {
 
 export const registerPayment = async (req, res) => {
     try {
-        const { studentId, ...paymentData } = req.body;
+        const { studentId, teacherId, ...paymentData } = req.body;
 
-        if (!studentId) {
+        if (!studentId && !teacherId) {
             return res.status(400).json({ 
-                error: 'Se requiere studentId' 
+                error: 'Se requiere studentId o teacherId' 
             });
         }
 
         const processedBy = req.user?.userId || null;
-        const payment = await paymentService.registerPayment(studentId, paymentData, processedBy);
+        let payment;
+        if (teacherId) {
+            payment = await paymentService.registerTeacherPayment(teacherId, paymentData, processedBy);
+        } else {
+            payment = await paymentService.registerPayment(studentId, paymentData, processedBy);
+        }
 
         res.json({ 
             ok: true, 
@@ -69,9 +76,14 @@ export const updatePayment = async (req, res) => {
 
 export const getPaymentsByStudent = async (req, res) => {
     try {
-        const { studentId } = req.params;
+        const { studentId, teacherId } = req.params;
 
-        const payments = await paymentService.getPaymentsByStudent(studentId);
+        let payments;
+        if (teacherId) {
+            payments = await paymentService.getPaymentsByTeacher(teacherId);
+        } else {
+            payments = await paymentService.getPaymentsByStudent(studentId);
+        }
 
         res.json({ 
             ok: true, 
