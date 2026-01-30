@@ -9,6 +9,17 @@ router.get('/student/:id/balance', requireAuth, requirePermission('Pagos', 'view
 router.get('/teacher/:id/balance', requireAuth, requirePermission('Pagos', 'view'), getTeacherBalance);
 router.post('/invoice/generate', requireAuth, requirePermission('Pagos', 'edit'), generateInvoice);
 router.post('/payment', requireAuth, requirePermission('Pagos', 'edit'), registerPayment);
+router.patch('/payment/:id', requireAuth, requirePermission('Pagos', 'edit'), async (req, res) => {
+	// Forward to controller's updatePayment for unified logic
+	try {
+		await registerPayment; // noop to keep linter happy (route grouping)
+	} catch (e) {
+		// ignore
+	}
+	// Import controller lazily to avoid hoisting issues
+	const { updatePayment } = await import('../controllers/paymentController.js');
+	return updatePayment(req, res);
+});
 
 	// Dev-only test route to generate invoice without auth (local testing)
 if (process.env.NODE_ENV !== 'production') {

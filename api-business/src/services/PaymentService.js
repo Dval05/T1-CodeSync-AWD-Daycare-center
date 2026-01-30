@@ -182,7 +182,7 @@ export class PaymentService {
         const { data, error } = await supabase
             .from('teacher_payment')
             .select('*')
-            .eq('TeacherID', teacherId)
+            .eq('EmpID', teacherId)
             .order('PaymentDate', { ascending: false });
 
         if (error) throw error;

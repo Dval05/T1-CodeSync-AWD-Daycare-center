@@ -20,7 +20,8 @@ export default function Payments() {
                     crudApi.getAll('teacher_payment'),
                     crudApi.getAll('employee', { IsActive: 1 })
                 ]);
-                setPayments(paymentsRes.data || []);
+                // Hide already paid records from the main list
+                setPayments((paymentsRes.data || []).filter(p => (p.Status || '').toString() !== 'Paid'));
                 // Filter locally to accept both English/Spanish position labels
                 const teachers = (employeesRes.data || []).filter(e => {
                     const pos = (e.Position || '').toString().toLowerCase();
@@ -57,16 +58,33 @@ export default function Payments() {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                         {payments.map(pay => (
-                            <tr key={pay.TeacherPaymentID}>
-                                <td className="px-6 py-4 text-sm text-gray-500">#{pay.TeacherPaymentID}</td>
-                                <td className="px-6 py-4 font-medium">${pay.Amount}</td>
-                                <td className="px-6 py-4 text-sm text-gray-500">{new Date(pay.PaymentDate).toLocaleDateString()}</td>
-                                <td className="px-6 py-4">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(pay.Status)}`}>
-                                        {pay.Status}
-                                    </span>
-                                </td>
-                            </tr>
+                                    <tr key={pay.TeacherPaymentID}>
+                                            <td className="px-6 py-4 text-sm text-gray-500">#{pay.TeacherPaymentID}</td>
+                                            <td className="px-6 py-4 font-medium">${pay.TotalAmount ?? ''}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-500">{pay.TransactionReference || pay.InvoiceNumber || ''}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-500">{new Date(pay.PaymentDate).toLocaleDateString()}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(pay.Status)}`}>
+                                                    {pay.Status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button onClick={async () => {
+                                                    if (!confirm('Marcar este pago como PAGADO?')) return;
+                                                    try {
+                                                        setLoading(true); setMessage(null);
+                                                        const res = await businessApi.finance.updatePayment(pay.TeacherPaymentID, { Status: 'Paid' });
+                                                        setMessage('Pago actualizado');
+                                                        // refresh lists
+                                                        const list = await crudApi.getAll('teacher_payment');
+                                                        setPayments(list.data || []);
+                                                        // refresh invoices optionally
+                                                    } catch (err) {
+                                                        setMessage(err?.response?.data?.error || err.message || 'Error al actualizar pago');
+                                                    } finally { setLoading(false); }
+                                                }} className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600">Editar</button>
+                                            </td>
+                                        </tr>
                         ))}
                     </tbody>
                 </table>

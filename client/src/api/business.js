@@ -18,6 +18,19 @@ api.interceptors.request.use((config) => {
         }
     } catch (e) {
     }
+    // During local development, add a dev user header so UI calls pass requireAuth
+    try {
+        if (import.meta.env.DEV && !config.headers['x-dev-user']) {
+            const saved = localStorage.getItem('user-profile');
+            if (saved) {
+                const profile = JSON.parse(saved);
+                if (profile?.UserID) config.headers['x-dev-user'] = String(profile.UserID);
+            } else {
+                // Default dev user id
+                config.headers['x-dev-user'] = '1';
+            }
+        }
+    } catch (e) {}
     return config;
 });
 
@@ -44,6 +57,7 @@ export const businessApi = {
         teacherBalance: (id) => api.get(`/finance/teacher/${id}/balance`),
         generateInvoice: (data) => api.post('/finance/invoice/generate', data),
         registerPayment: (data) => api.post('/finance/payment', data),
+        updatePayment: (id, data) => api.patch(`/finance/payment/${id}`, data),
     },
     employees: {
         schedules: () => api.get('/employees/schedules'),

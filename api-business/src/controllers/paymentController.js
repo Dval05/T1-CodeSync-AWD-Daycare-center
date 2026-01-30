@@ -61,12 +61,46 @@ export const updatePayment = async (req, res) => {
     try {
         const { id } = req.params;
         const updateData = req.body;
+        // Determine if the id belongs to a teacher payment first
+        let updatedPayment = null;
+        try {
+            const existingTeacherPayment = await paymentService.getTeacherPaymentById(id).catch(() => null);
+            if (existingTeacherPayment) {
+                // Update teacher payment
+                updatedPayment = await paymentService.updateTeacherPayment(id, updateData);
 
-        const payment = await paymentService.updatePayment(id, updateData);
+                // If status is Paid, generate invoice and attach reference
+                if (updatedPayment && (updatedPayment.Status === 'Paid')) {
+                    try {
+                        const referenceType = 'Teacher';
+                        const referenceId = updatedPayment.EmpID;
+                        const createdBy = req.user?.userId || null;
+                        const invoicePaymentData = {
+                            TotalAmount: updatedPayment.TotalAmount,
+                            Description: `Pago profesor #${updatedPayment.TeacherPaymentID}`
+                        };
+                        const invoice = await invoiceService.generateInvoice(referenceType, referenceId, invoicePaymentData, createdBy);
+                        // Attach invoice number to payment
+                        if (invoice?.InvoiceNumber) {
+                            await paymentService.updateTeacherPayment(updatedPayment.TeacherPaymentID, { TransactionReference: invoice.InvoiceNumber }).catch(() => null);
+                            // refresh updatedPayment
+                            updatedPayment = await paymentService.getTeacherPaymentById(id).catch(() => updatedPayment);
+                        }
+                    } catch (err) {
+                        console.warn('Error generating invoice after payment update:', err.message);
+                    }
+                }
+            } else {
+                // Not a teacher payment, update generic student payment
+                updatedPayment = await paymentService.updatePayment(id, updateData);
+            }
+        } catch (err) {
+            return res.status(500).json({ error: err.message });
+        }
 
         res.json({ 
             ok: true, 
-            payment,
+            payment: updatedPayment,
             message: 'Pago actualizado exitosamente'
         });
     } catch (error) {
