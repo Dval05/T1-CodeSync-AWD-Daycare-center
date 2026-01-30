@@ -36,7 +36,6 @@ const LOGICAL_DELETE_TABLES = [
 
 export const getAll = async (req, res) => {
     const { resource } = req.params;
-    // Usar supabaseAdmin para bypass de RLS (autenticación ya validada por authCheck)
     const supabase = supabaseAdmin;
 
     if (!PK_MAP[resource]) {
@@ -71,7 +70,6 @@ export const getAll = async (req, res) => {
 
 export const getById = async (req, res) => {
     const { resource, id } = req.params;
-    // Usar supabaseAdmin para bypass de RLS (autenticación ya validada por authCheck)
     const supabase = supabaseAdmin;
     const pk = PK_MAP[resource];
 
@@ -90,8 +88,33 @@ export const getById = async (req, res) => {
 export const create = async (req, res) => {
     const { resource } = req.params;
     
-    // Usar supabaseAdmin para bypass de RLS (autenticación ya validada por authCheck)
     const supabase = supabaseAdmin;
+
+    if (resource === 'attendance' && req.body.StudentID) {
+        const { data: lastAttendance } = await supabase
+            .from('attendance')
+            .select('AttendanceID, CreatedAt, Date')
+            .eq('StudentID', req.body.StudentID)
+            .order('CreatedAt', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (lastAttendance) {
+            const lastRecordTime = new Date(lastAttendance.CreatedAt);
+            const now = new Date();
+            const hoursDifference = (now - lastRecordTime) / (1000 * 60 * 60);
+
+            if (hoursDifference < 2) {
+                const minutesRemaining = Math.ceil((2 - hoursDifference) * 60);
+                return res.status(400).json({ 
+                    error: `No se puede registrar asistencia. El último registro fue hace ${Math.floor(hoursDifference * 60)} minutos. Debe esperar ${minutesRemaining} minutos más.`,
+                    code: 'ATTENDANCE_TOO_SOON',
+                    minutesRemaining,
+                    lastRecordTime: lastAttendance.CreatedAt
+                });
+            }
+        }
+    }
 
     const { data, error } = await supabase
         .from(resource)
@@ -109,7 +132,6 @@ export const update = async (req, res) => {
 
     if (!pk) return res.status(400).json({ error: `Recurso '${resource}' no configurado.` });
 
-    // Usar supabaseAdmin para bypass de RLS (autenticación ya validada por authCheck)
     const supabase = supabaseAdmin;
 
     const { data, error } = await supabase
@@ -125,7 +147,6 @@ export const update = async (req, res) => {
 
 export const remove = async (req, res) => {
     const { resource, id } = req.params;
-    // Usar supabaseAdmin para bypass de RLS (autenticación ya validada por authCheck)
     const supabase = supabaseAdmin;
     const pk = PK_MAP[resource];
 
