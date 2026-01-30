@@ -23,12 +23,17 @@ export default function Invoices() {
 
     const loadData = async () => {
         try {
-            const [invoicesRes, teachersRes] = await Promise.all([
+            const [invoicesRes, employeesRes] = await Promise.all([
                 crudApi.getAll('invoice'),
-                crudApi.getAll('teacher', { IsActive: 1 })
+                crudApi.getAll('employee', { IsActive: 1 })
             ]);
             setInvoices(invoicesRes.data || []);
-            setTeachers(teachersRes.data || []);
+            // Filter employees to teacher-like positions
+            const teachersList = (employeesRes.data || []).filter(e => {
+                const pos = (e.Position || '').toString().toLowerCase();
+                return /teacher|profesor|docente/.test(pos);
+            });
+            setTeachers(teachersList);
         } catch (error) {
             console.error("Error cargando datos:", error);
         } finally {
@@ -105,23 +110,30 @@ export default function Invoices() {
                 </div>
             ) : (
                 <div className="grid gap-4">
-                    {invoices.map(invoice => (
+                    {invoices.map(invoice => {
+                        const refId = invoice.ReferenceID;
+                        const refType = invoice.InvoiceType || invoice.InvoiceType;
+                        const teacher = teachers.find(t => Number(t.EmpID) === Number(refId));
+                        const title = invoice.InvoiceNumber || `#${invoice.InvoiceID}`;
+                        const date = invoice.IssueDate || invoice.IssueDate || invoice.CreatedAt;
+                        const amount = invoice.FinalAmount ?? invoice.TotalAmount;
+                        return (
                         <div key={invoice.InvoiceID} className="bg-white rounded-lg shadow p-4 border-l-4 border-green-600">
                             <div className="flex justify-between items-start">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                         <FileText className="text-green-600" size={20} />
-                                        <h3 className="font-bold text-lg">Factura #{invoice.InvoiceID}</h3>
+                                        <h3 className="font-bold text-lg">{title}</h3>
                                     </div>
                                     <p className="text-gray-600 mt-1">
-                                        Profesor ID: {invoice.TeacherID}
+                                        {refType === 'Teacher' ? `Profesor: ${teacher ? `${teacher.FirstName} ${teacher.LastName}` : refId}` : `Referencia: ${refId}`}
                                     </p>
                                     <div className="flex gap-4 mt-2 text-sm">
                                         <span className="text-gray-500">
-                                            Fecha: {new Date(invoice.InvoiceDate).toLocaleDateString('es-ES')}
+                                            Fecha: {date ? new Date(date).toLocaleDateString('es-ES') : ''}
                                         </span>
                                         <span className="text-gray-500">
-                                            Total: ${invoice.TotalAmount?.toFixed(2)}
+                                            Total: ${amount ? Number(amount).toFixed(2) : '0.00'}
                                         </span>
                                         <span className={`px-2 py-1 rounded ${
                                             invoice.Status === 'Paid' 
@@ -140,7 +152,8 @@ export default function Invoices() {
                                 </button>
                             </div>
                         </div>
-                    ))}
+                        )
+                    })}
                 </div>
             )}
 
