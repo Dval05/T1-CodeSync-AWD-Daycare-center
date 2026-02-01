@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 export default function Invoices() {
     const [invoices, setInvoices] = useState([]);
     const [teachers, setTeachers] = useState([]);
+    const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showGenerateModal, setShowGenerateModal] = useState(false);
     const [newInvoice, setNewInvoice] = useState({
@@ -24,17 +25,23 @@ export default function Invoices() {
 
     const loadData = async () => {
         try {
-            const [invoicesRes, employeesRes] = await Promise.all([
-                crudApi.getAll('invoice'),
-                crudApi.getAll('employee', { IsActive: 1 })
+            const [invoicesRes, employeesRes, studentsRes] = await Promise.all([
+                // Trae las facturas con los más recientes primero
+                crudApi.getAll('invoice', { orderBy: 'InvoiceID', asc: 'false' }),
+                // incluye inactivos y filtramos aquí por IsActive
+                crudApi.getAll('employee', { includeInactive: 'true' }),
+                crudApi.getAll('student', { includeInactive: 'true' })
             ]);
             setInvoices(invoicesRes.data || []);
-            // Filter employees to teacher-like positions
-            const teachersList = (employeesRes.data || []).filter(e => {
+            // Filtra empleados que parecen profesores
+            const teachersAll = (employeesRes.data || []).filter(e => {
                 const pos = (e.Position || '').toString().toLowerCase();
                 return /teacher|profesor|docente/.test(pos);
             });
+            const teachersList = teachersAll.filter(t => t.IsActive === 1 || t.IsActive === true || String(t.IsActive) === '1');
+            const studentsList = (studentsRes.data || []).filter(s => s.IsActive === 1 || s.IsActive === true || String(s.IsActive) === '1');
             setTeachers(teachersList);
+            setStudents(studentsList);
         } catch (error) {
             console.error("Error cargando datos:", error);
         } finally {
@@ -44,8 +51,8 @@ export default function Invoices() {
 
     const handleGenerateInvoice = async () => {
         try {
-            if (!newInvoice.studentId) {
-                toast.error('Selecciona un estudiante');
+            if (!newInvoice.studentId && !newInvoice.teacherId) {
+                toast.error('Selecciona un estudiante o un profesor');
                 return;
             }
             if (!Array.isArray(newInvoice.items) || newInvoice.items.length === 0) {
@@ -58,12 +65,16 @@ export default function Invoices() {
                 return;
             }
 
-            await businessApi.finance.generateInvoice(newInvoice);
+            const payload = newInvoice.studentId
+                ? { studentId: newInvoice.studentId, month: newInvoice.month, items: newInvoice.items }
+                : { teacherId: newInvoice.teacherId, month: newInvoice.month, items: newInvoice.items };
+            await businessApi.finance.generateInvoice(payload);
             toast.success('Factura guardada');
             setShowGenerateModal(false);
             loadData();
             setNewInvoice({
                 teacherId: '',
+                studentId: '',
                 month: new Date().toISOString().slice(0, 7),
                 items: [{ concept: 'Mensualidad', amount: 1000 }]
             });
@@ -147,11 +158,21 @@ export default function Invoices() {
                 <div className="grid gap-4">
                     {invoices.map(invoice => {
                         const refId = invoice.ReferenceID;
-                        const refType = invoice.InvoiceType || invoice.InvoiceType;
+                        const refType = invoice.InvoiceType;
                         const teacher = teachers.find(t => Number(t.EmpID) === Number(refId));
+                        const student = students.find(s => Number(s.StudentID) === Number(refId));
                         const title = invoice.InvoiceNumber || `#${invoice.InvoiceID}`;
-                        const date = invoice.IssueDate || invoice.IssueDate || invoice.CreatedAt;
+                        const date = invoice.IssueDate || invoice.CreatedAt;
                         const amount = invoice.FinalAmount ?? invoice.TotalAmount;
+                        const ownerLabel = (() => {
+                            if (refType === 'Teacher') {
+                                return `Profesor: ${teacher ? `${teacher.FirstName} ${teacher.LastName}` : refId}`;
+                            }
+                            if (refType === 'Student') {
+                                return `Estudiante: ${student ? `${student.FirstName} ${student.LastName}` : refId}`;
+                            }
+                            return `Referencia: ${refId}`;
+                        })();
                         return (
                         <div key={invoice.InvoiceID} className="bg-white rounded-lg shadow p-4 border-l-4 border-green-600">
                             <div className="flex justify-between items-start">
@@ -160,9 +181,7 @@ export default function Invoices() {
                                         <FileText className="text-green-600" size={20} />
                                         <h3 className="font-bold text-lg">{title}</h3>
                                     </div>
-                                    <p className="text-gray-600 mt-1">
-                                        {refType === 'Teacher' ? `Profesor: ${teacher ? `${teacher.FirstName} ${teacher.LastName}` : refId}` : `Referencia: ${refId}`}
-                                    </p>
+                                    <p className="text-gray-600 mt-1">{ownerLabel}</p>
                                     <div className="flex gap-4 mt-2 text-sm">
                                         <span className="text-gray-500">
                                             Fecha: {date ? new Date(date).toLocaleDateString('es-ES') : ''}
@@ -201,21 +220,49 @@ export default function Invoices() {
                         
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Profesor
-                                </label>
-                                <select
-                                    value={newInvoice.teacherId}
-                                    onChange={(e) => setNewInvoice({...newInvoice, teacherId: e.target.value})}
-                                    className="w-full border rounded-lg px-3 py-2"
-                                >
-                                    <option value="">Seleccionar profesor...</option>
-                                    {teachers.map(teacher => (
-                                        <option key={teacher.TeacherID} value={teacher.TeacherID}>
-                                            {teacher.FirstName} {teacher.LastName}
-                                        </option>
-                                    ))}
-                                </select>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Persona</label>
+                                {(() => {
+                                    const peopleOptions = [
+                                        ...teachers.map((t, idx) => ({
+                                            key: `teacher-${String(t.EmpID ?? idx)}`,
+                                            value: `teacher:${String(t.EmpID)}`,
+                                            label: `Profesor: ${t.FirstName} ${t.LastName}`
+                                        })),
+                                        ...students.map((s, idx) => ({
+                                            key: `student-${String(s.StudentID ?? idx)}`,
+                                            value: `student:${String(s.StudentID)}`,
+                                            label: `Estudiante: ${s.FirstName} ${s.LastName}`
+                                        }))
+                                    ];
+                                    const personValue = newInvoice.teacherId
+                                        ? `teacher:${newInvoice.teacherId}`
+                                        : (newInvoice.studentId ? `student:${newInvoice.studentId}` : "");
+                                    const onChangePerson = (ev) => {
+                                        const val = ev.target.value;
+                                        if (!val) {
+                                            setNewInvoice({ ...newInvoice, teacherId: '', studentId: '' });
+                                            return;
+                                        }
+                                        const [type, id] = val.split(":");
+                                        if (type === 'teacher') {
+                                            setNewInvoice({ ...newInvoice, teacherId: id, studentId: '' });
+                                        } else if (type === 'student') {
+                                            setNewInvoice({ ...newInvoice, studentId: id, teacherId: '' });
+                                        }
+                                    };
+                                    return (
+                                        <select
+                                            value={personValue}
+                                            onChange={onChangePerson}
+                                            className="w-full border rounded-lg px-3 py-2"
+                                        >
+                                            <option key="person-placeholder" value="">Seleccionar persona...</option>
+                                            {peopleOptions.map((opt) => (
+                                                <option key={opt.key} value={opt.value}>{opt.label}</option>
+                                            ))}
+                                        </select>
+                                    );
+                                })()}
                             </div>
 
                             <div>
@@ -286,7 +333,7 @@ export default function Invoices() {
                         <div className="flex gap-2 mt-6">
                             <button
                                 onClick={handleGenerateInvoice}
-                                disabled={!newInvoice.teacherId}
+                                disabled={!newInvoice.studentId && !newInvoice.teacherId}
                                 className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-300"
                             >
                                 Generar Factura

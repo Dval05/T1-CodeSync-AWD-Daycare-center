@@ -8,12 +8,14 @@ import { toast } from 'react-hot-toast';
 export default function Invoices() {
     const [invoices, setInvoices] = useState([]);
     const [teachers, setTeachers] = useState([]);
+    const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showGenerateModal, setShowGenerateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingInvoice, setEditingInvoice] = useState(null);
     const [newInvoice, setNewInvoice] = useState({
         teacherId: '',
+        studentId: '',
         month: new Date().toISOString().slice(0, 7),
         items: [
             { concept: 'Mensualidad', amount: 1000 }
@@ -33,9 +35,11 @@ export default function Invoices() {
 
     const loadData = async () => {
         try {
-            const [invoicesRes, teachersRes] = await Promise.all([
+            const [invoicesRes, teachersRes, studentsRes] = await Promise.all([
                 crudApi.getAll('invoice'),
-                crudApi.getAll('teacher', { IsActive: 1 })
+                // Evita problemas de tipo boolean/número en IsActive; traemos todo y filtramos aquí
+                crudApi.getAll('teacher', { includeInactive: 'true' }),
+                crudApi.getAll('student', { includeInactive: 'true' })
             ]);
             const raw = invoicesRes.data || [];
             const normalized = raw.map(inv => {
@@ -43,8 +47,11 @@ export default function Invoices() {
                 const display = /^[A-Za-z]{3}-/.test(num) ? `FAC-${num.slice(4)}` : num;
                 return { ...inv, DisplayInvoiceNumber: display };
             });
+            const teacherList = (teachersRes.data || []).filter(t => t.IsActive === 1 || t.IsActive === true || String(t.IsActive) === '1');
+            const studentList = (studentsRes.data || []).filter(s => s.IsActive === 1 || s.IsActive === true || String(s.IsActive) === '1');
             setInvoices(normalized);
-            setTeachers(teachersRes.data || []);
+            setTeachers(teacherList);
+            setStudents(studentList);
         } catch (error) {
             console.error("Error cargando datos:", error);
         } finally {
@@ -54,9 +61,9 @@ export default function Invoices() {
 
     const handleGenerateInvoice = async () => {
         try {
-            // Validación rápida en frontend
+            // El backend requiere estudiante
             if (!newInvoice.studentId) {
-                alert('Selecciona un estudiante');
+                toast.error('Selecciona un estudiante');
                 return;
             }
             if (!Array.isArray(newInvoice.items) || newInvoice.items.length === 0) {
@@ -69,12 +76,13 @@ export default function Invoices() {
                 return;
             }
 
-            await businessApi.finance.generateInvoice(newInvoice);
+            await businessApi.finance.generateInvoice({ studentId: newInvoice.studentId, month: newInvoice.month, items: newInvoice.items });
             toast.success('Factura guardada', { position: 'bottom-left' });
             setShowGenerateModal(false);
             loadData();
             setNewInvoice({
                 teacherId: '',
+                studentId: '',
                 month: new Date().toISOString().slice(0, 7),
                 items: [{ concept: 'Mensualidad', amount: 1000 }]
             });
@@ -287,21 +295,49 @@ export default function Invoices() {
                         
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Profesor
-                                </label>
-                                <select
-                                    value={newInvoice.teacherId}
-                                    onChange={(e) => setNewInvoice({...newInvoice, teacherId: e.target.value})}
-                                    className="w-full border rounded-lg px-3 py-2"
-                                >
-                                    <option key="placeholder" value="">Seleccionar profesor...</option>
-                                    {teachers.map(teacher => (
-                                        <option key={teacher.TeacherID} value={teacher.TeacherID}>
-                                            {teacher.FirstName} {teacher.LastName}
-                                        </option>
-                                    ))}
-                                </select>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Persona</label>
+                                {(() => {
+                                    const peopleOptions = [
+                                        ...teachers.map((t, idx) => ({
+                                            key: `teacher-${String(t.TeacherID ?? t.EmpID ?? idx)}`,
+                                            value: `teacher:${String(t.TeacherID ?? t.EmpID)}`,
+                                            label: `Profesor: ${t.FirstName} ${t.LastName}`
+                                        })),
+                                        ...students.map((s, idx) => ({
+                                            key: `student-${String(s.StudentID ?? idx)}`,
+                                            value: `student:${String(s.StudentID)}`,
+                                            label: `Estudiante: ${s.FirstName} ${s.LastName}`
+                                        }))
+                                    ];
+                                    const personValue = newInvoice.teacherId
+                                        ? `teacher:${newInvoice.teacherId}`
+                                        : (newInvoice.studentId ? `student:${newInvoice.studentId}` : "");
+                                    const onChangePerson = (ev) => {
+                                        const val = ev.target.value;
+                                        if (!val) {
+                                            setNewInvoice({ ...newInvoice, teacherId: '', studentId: '' });
+                                            return;
+                                        }
+                                        const [type, id] = val.split(":");
+                                        if (type === 'teacher') {
+                                            setNewInvoice({ ...newInvoice, teacherId: id, studentId: '' });
+                                        } else if (type === 'student') {
+                                            setNewInvoice({ ...newInvoice, studentId: id, teacherId: '' });
+                                        }
+                                    };
+                                    return (
+                                        <select
+                                            value={personValue}
+                                            onChange={onChangePerson}
+                                            className="w-full border rounded-lg px-3 py-2 mb-3"
+                                        >
+                                            <option key="person-placeholder" value="">Seleccionar persona...</option>
+                                            {peopleOptions.map((opt) => (
+                                                <option key={opt.key} value={opt.value}>{opt.label}</option>
+                                            ))}
+                                        </select>
+                                    );
+                                })()}
                             </div>
 
                             <div>
@@ -372,7 +408,7 @@ export default function Invoices() {
                         <div className="flex gap-2 mt-6">
                             <button
                                 onClick={handleGenerateInvoice}
-                                disabled={!newInvoice.teacherId}
+                                disabled={!newInvoice.studentId}
                                 className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-300"
                             >
                                 Generar Factura

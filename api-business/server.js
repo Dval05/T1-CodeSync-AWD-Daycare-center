@@ -61,23 +61,95 @@ import('./src/routes/index.js')
             res.json({ ok: true, count: 0 });
         });
 
-        // Minimal finance fallbacks (keep existing test endpoints and add simple ones if needed)
-        devRouter.post('/finance/invoice/generate', (req, res) => {
-            const { teacherId, studentId, items } = req.body || {};
-            const referenceType = teacherId ? 'Teacher' : 'Student';
-            const referenceId = teacherId || studentId || 'unknown';
-            const total = Array.isArray(items) ? items.reduce((s, it) => s + (Number(it.amount) || 0), 0) : 0;
-            return res.json({ ok: true, invoice: {
-                InvoiceID: `MOCK-${Date.now()}`,
-                InvoiceNumber: `INV-MOCK-${Date.now()}`,
-                InvoiceType: referenceType,
-                ReferenceID: referenceId,
-                IssueDate: new Date().toISOString().split('T')[0],
-                DueDate: null,
-                TotalAmount: total,
-                Status: 'Issued',
-                Description: JSON.stringify({ items: items || [] })
-            }});
+        // Finance fallbacks: persist invoices in CRUD DB with proper numbering
+        devRouter.post('/finance/invoice/generate', async (req, res) => {
+            try {
+                const { teacherId, studentId, month, items } = req.body || {};
+                const referenceType = teacherId ? 'Teacher' : 'Student';
+                const referenceId = teacherId || studentId;
+                if (!referenceId) return res.status(400).json({ error: 'studentId o teacherId es requerido' });
+                if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'items es requerido' });
+
+                const CRUD_BASE = process.env.API_CRUD_URL || process.env.VITE_API_CRUD_URL || 'http://localhost:3001/api';
+                const authHeader = req.headers.authorization || '';
+
+                // Build period YYMM from selected month or current date
+                const selDate = month ? new Date(`${month}-01T00:00:00`) : new Date();
+                const yy = String(selDate.getFullYear()).slice(-2);
+                const mm = String(selDate.getMonth() + 1).padStart(2, '0');
+                const period = `${yy}${mm}`;
+
+                // Fetch invoices to compute starting sequence for this period
+                let nextSeq = 1;
+                try {
+                    const { data: allInv } = await axios.get(`${CRUD_BASE}/invoice`, {
+                        headers: { Authorization: authHeader },
+                        params: { orderBy: 'InvoiceID', asc: 'false' }
+                    });
+                    const seqs = (allInv || [])
+                        .map(x => String(x.InvoiceNumber || ''))
+                        .filter(n => /^INV-\d{4}-\d{5}$/.test(n) && n.slice(4, 8) === period)
+                        .map(n => parseInt(n.slice(9), 10))
+                        .filter(v => !isNaN(v));
+                    if (seqs.length > 0) {
+                        nextSeq = Math.max(...seqs) + 1;
+                    }
+                } catch (e) {
+                    console.warn('DEV: no se pudo calcular secuencia, usando 1.', e.message);
+                }
+
+                const total = items.reduce((s, it) => s + (Number(it.amount) || 0), 0);
+                // IssueDate: use selected month if provided, fallback to today
+                const issueDate = month ? `${month}-01` : new Date().toISOString().split('T')[0];
+                const description = JSON.stringify({ items });
+
+                // Persist in CRUD
+                // Check existence by InvoiceNumber and increment until a free number is found
+                const maxChecks = 50;
+                for (let attempt = 1; attempt <= maxChecks; attempt++) {
+                    const invoiceNumber = `INV-${period}-${String(nextSeq).padStart(5, '0')}`;
+                    try {
+                        const { data: existsList } = await axios.get(`${CRUD_BASE}/invoice`, {
+                            headers: { Authorization: authHeader },
+                            params: { InvoiceNumber: invoiceNumber }
+                        });
+                        const exists = Array.isArray(existsList) && existsList.length > 0;
+                        if (exists) {
+                            nextSeq += 1; // number taken, try next
+                            continue;
+                        }
+                    } catch (checkErr) {
+                        console.warn('DEV: error comprobando existencia de InvoiceNumber:', checkErr.message);
+                    }
+
+                    // Persist using the free number; still guard against race with unique violation
+                    try {
+                        const { data: created } = await axios.post(`${CRUD_BASE}/invoice`, {
+                            InvoiceNumber: invoiceNumber,
+                            InvoiceType: referenceType,
+                            ReferenceID: referenceId,
+                            IssueDate: issueDate,
+                            DueDate: null,
+                            TotalAmount: total,
+                            FinalAmount: total,
+                            Status: 'Issued',
+                            Description: description
+                        }, { headers: { Authorization: authHeader } });
+                        return res.json({ ok: true, invoice: created });
+                    } catch (errPost) {
+                        const msg = String(errPost?.response?.data?.error || errPost.message || '').toLowerCase();
+                        const isDuplicate = msg.includes('duplicate') && msg.includes('unique') && msg.includes('invoicenumber');
+                        if (isDuplicate && attempt < maxChecks) {
+                            nextSeq += 1; // advance and retry
+                            continue;
+                        }
+                        throw errPost;
+                    }
+                }
+            } catch (err) {
+                console.error('DEV generate invoice error:', err.message);
+                return res.status(500).json({ error: 'No se pudo generar la factura en modo desarrollo.' });
+            }
         });
 
         devRouter.patch('/finance/invoice/:id', (req, res) => {
