@@ -6,6 +6,7 @@
 
 #### 1. **Nuevas Rutas Agregadas**
 - ✅ `/notifications` - Centro de notificaciones
+Sipuedeser
 
 #### 2. **Sidebar Actualizado**
 Se reorganizaron y agregaron todas las rutas en el menú de navegación:
