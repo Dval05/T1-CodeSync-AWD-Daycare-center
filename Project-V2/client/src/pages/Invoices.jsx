@@ -3,6 +3,7 @@ import Layout from '../components/layout/Layout';
 import { crudApi } from '../api/crud';
 import { businessApi } from '../api/business';
 import { FileText, Plus, Download, Mail, Edit2, XCircle } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function Invoices() {
     const [invoices, setInvoices] = useState([]);
@@ -57,7 +58,7 @@ export default function Invoices() {
             }
 
             await businessApi.finance.generateInvoice(newInvoice);
-            alert('Factura generada exitosamente');
+            toast.success('Factura guardada', { position: 'bottom-left' });
             setShowGenerateModal(false);
             loadData();
             setNewInvoice({

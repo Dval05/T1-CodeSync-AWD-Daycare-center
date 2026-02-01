@@ -3,6 +3,7 @@ import Layout from '../components/layout/Layout';
 import { crudApi } from '../api/crud';
 import { businessApi } from '../api/business';
 import { FileText, Plus, Download, DollarSign } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function Invoices() {
     const [invoices, setInvoices] = useState([]);
@@ -38,8 +39,22 @@ export default function Invoices() {
 
     const handleGenerateInvoice = async () => {
         try {
+            if (!newInvoice.studentId) {
+                toast.error('Selecciona un estudiante');
+                return;
+            }
+            if (!Array.isArray(newInvoice.items) || newInvoice.items.length === 0) {
+                toast.error('Agrega al menos un concepto');
+                return;
+            }
+            const invalid = newInvoice.items.some(it => !it.concept || Number(it.amount) <= 0);
+            if (invalid) {
+                toast.error('Verifica conceptos: nombre y monto > 0');
+                return;
+            }
+
             await businessApi.finance.generateInvoice(newInvoice);
-            alert('Factura generada exitosamente');
+            toast.success('Factura guardada');
             setShowGenerateModal(false);
             loadData();
             setNewInvoice({
@@ -49,7 +64,8 @@ export default function Invoices() {
             });
         } catch (error) {
             console.error("Error generando factura:", error);
-            alert('Error al generar factura');
+            const msg = error?.response?.data?.error || 'Error al generar factura';
+            toast.error(msg);
         }
     };
 
