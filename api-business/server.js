@@ -169,6 +169,28 @@ import('./src/routes/index.js')
                 });
                 const invoice = data; // genericController returns the row directly
 
+                // Fetch person details based on InvoiceType
+                let person = null;
+                let personRole = 'Referencia';
+                try {
+                    const authHeader = req.headers.authorization || '';
+                    if (invoice.InvoiceType === 'Teacher') {
+                        personRole = 'Profesor';
+                        const { data: emp } = await axios.get(`${CRUD_BASE}/employee/${invoice.ReferenceID}`, {
+                            headers: { Authorization: authHeader }
+                        });
+                        person = emp || null;
+                    } else if (invoice.InvoiceType === 'Student') {
+                        personRole = 'Estudiante';
+                        const { data: stu } = await axios.get(`${CRUD_BASE}/student/${invoice.ReferenceID}`, {
+                            headers: { Authorization: authHeader }
+                        });
+                        person = stu || null;
+                    }
+                } catch (e) {
+                    console.warn('DEV PDF: no se pudo obtener los datos de la persona:', e.message);
+                }
+
                 const doc = new PDFDocument({ size: 'A4', margin: 50 });
                 const chunks = [];
                 doc.on('data', (chunk) => chunks.push(chunk));
@@ -196,16 +218,31 @@ import('./src/routes/index.js')
                 doc.strokeColor('#aaa').moveTo(leftX, doc.y).lineTo(rightX, doc.y).stroke();
                 doc.moveDown(0.5);
 
-                const issue = invoice.IssueDate || '-';
                 const due = invoice.DueDate || '-';
-                const studentId = invoice.ReferenceID || '-';
-                const status = invoice.Status || 'Emitida';
+                const status = invoice.Status || 'Issued';
+                const personName = person ? `${person.FirstName || ''} ${person.LastName || ''}`.trim() : '';
+                const personId = invoice.ReferenceID || '-';
+                const statusMap = {
+                    Draft: 'Borrador',
+                    Issued: 'Emitida',
+                    Pending: 'Pendiente',
+                    Paid: 'Pagada',
+                    Overdue: 'Vencida',
+                    Canceled: 'Anulada'
+                };
+                const statusEs = statusMap[String(status)] || String(status);
 
                 doc.font('Helvetica').fontSize(11);
-                doc.text(`Fecha de emisión: ${issue}`);
+                // Quitar fecha de emisión (pedido del usuario)
                 doc.text(`Fecha de vencimiento: ${due}`);
-                doc.text(`Estudiante: ID ${studentId}`);
-                doc.text(`Estado: ${status}`);
+                if (invoice.InvoiceType === 'Teacher') {
+                    doc.text(`${personRole}: ${personName || ''}`.trim());
+                } else if (invoice.InvoiceType === 'Student') {
+                    doc.text(`${personRole}: ${personName || ''}`.trim());
+                } else {
+                    doc.text(`${personRole}`);
+                }
+                doc.text(`Estado: ${statusEs}`);
                 doc.moveDown(1.2);
 
                 doc.font('Helvetica-Bold').text('Detalle de Conceptos');
