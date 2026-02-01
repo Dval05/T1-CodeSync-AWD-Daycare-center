@@ -23,7 +23,8 @@ export default function Invoices() {
 
     const formatInvoiceNumber = (num, id) => {
         const printed = num ? String(num) : `#${id}`;
-        return printed.startsWith('INV-') ? `FAC-${printed.slice(4)}` : printed;
+        // If it starts with any 3-letter prefix followed by '-', replace with FAC-
+        return /^[A-Za-z]{3}-/.test(printed) ? `FAC-${printed.slice(4)}` : printed;
     };
 
     useEffect(() => {
@@ -36,7 +37,13 @@ export default function Invoices() {
                 crudApi.getAll('invoice'),
                 crudApi.getAll('teacher', { IsActive: 1 })
             ]);
-            setInvoices(invoicesRes.data || []);
+            const raw = invoicesRes.data || [];
+            const normalized = raw.map(inv => {
+                const num = inv.InvoiceNumber ? String(inv.InvoiceNumber) : `#${inv.InvoiceID}`;
+                const display = /^[A-Za-z]{3}-/.test(num) ? `FAC-${num.slice(4)}` : num;
+                return { ...inv, DisplayInvoiceNumber: display };
+            });
+            setInvoices(normalized);
             setTeachers(teachersRes.data || []);
         } catch (error) {
             console.error("Error cargando datos:", error);
@@ -214,7 +221,7 @@ export default function Invoices() {
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                         <FileText className="text-green-600" size={20} />
-                                        <h3 className="font-bold text-lg">Factura {formatInvoiceNumber(invoice.InvoiceNumber, invoice.InvoiceID)}</h3>
+                                        <h3 className="font-bold text-lg">Factura {invoice.DisplayInvoiceNumber || formatInvoiceNumber(invoice.InvoiceNumber, invoice.InvoiceID)}</h3>
                                     </div>
                                     <p className="text-gray-600 mt-1">Referencia: {invoice.ReferenceID ?? invoice.TeacherID ?? '-'}</p>
                                     <div className="flex gap-4 mt-2 text-sm">
@@ -288,7 +295,7 @@ export default function Invoices() {
                                     onChange={(e) => setNewInvoice({...newInvoice, teacherId: e.target.value})}
                                     className="w-full border rounded-lg px-3 py-2"
                                 >
-                                    <option value="">Seleccionar profesor...</option>
+                                    <option key="placeholder" value="">Seleccionar profesor...</option>
                                     {teachers.map(teacher => (
                                         <option key={teacher.TeacherID} value={teacher.TeacherID}>
                                             {teacher.FirstName} {teacher.LastName}
@@ -385,7 +392,7 @@ export default function Invoices() {
             {showEditModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
                     <div className="bg-white rounded-lg p-6 w-full max-w-2xl m-4">
-                        <h3 className="text-xl font-bold mb-4">Editar Factura {formatInvoiceNumber(editingInvoice?.InvoiceNumber, editingInvoice?.InvoiceID)}</h3>
+                        <h3 className="text-xl font-bold mb-4">Editar Factura {editingInvoice?.DisplayInvoiceNumber || formatInvoiceNumber(editingInvoice?.InvoiceNumber, editingInvoice?.InvoiceID)}</h3>
                         <div className="space-y-4">
                             <div className="flex justify-between items-center mb-2">
                                 <label className="block text-sm font-medium text-gray-700">Conceptos</label>
