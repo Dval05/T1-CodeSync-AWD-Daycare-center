@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import PDFDocument from 'pdfkit';
+import axios from 'axios';
 // routes will be loaded dynamically to avoid hard-failing when DB envs
 // are missing during local development.
 
@@ -87,29 +88,129 @@ import('./src/routes/index.js')
             res.json({ ok: true });
         });
 
-        devRouter.get('/finance/invoice/:id/pdf', (req, res) => {
-            const doc = new PDFDocument({ size: 'A4', margin: 50 });
-            const chunks = [];
-            doc.on('data', (chunk) => chunks.push(chunk));
-            doc.on('end', () => {
-                const pdfBuffer = Buffer.concat(chunks);
-                res.setHeader('Content-Type', 'application/pdf');
-                res.setHeader('Content-Disposition', `attachment; filename="invoice-${req.params.id}.pdf"`);
-                res.send(pdfBuffer);
-            });
+        devRouter.get('/finance/invoice/:id/pdf', async (req, res) => {
+            // Generate a real invoice PDF by fetching data from API-CRUD
+            const CRUD_BASE = process.env.API_CRUD_URL || process.env.VITE_API_CRUD_URL || 'http://localhost:3001/api';
+            try {
+                const { data } = await axios.get(`${CRUD_BASE}/invoice/${req.params.id}`, {
+                    headers: { Authorization: req.headers.authorization || '' }
+                });
+                const invoice = data; // genericController returns the row directly
 
-            // Simple mock invoice content
-            doc.fontSize(18).text('Factura (Mock)', { align: 'center' });
-            doc.moveDown();
-            doc.fontSize(12).text(`Invoice ID: ${req.params.id}`);
-            doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`);
-            doc.moveDown();
-            doc.text('Detalle:', { underline: true });
-            doc.text('- Este es un PDF de prueba generado en modo desarrollo.');
-            doc.text('- Reemplaza estos endpoints configurando SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY.');
-            doc.moveDown();
-            doc.text('Total: $0.00', { align: 'right' });
-            doc.end();
+                const doc = new PDFDocument({ size: 'A4', margin: 50 });
+                const chunks = [];
+                doc.on('data', (chunk) => chunks.push(chunk));
+                doc.on('end', () => {
+                    const pdfBuffer = Buffer.concat(chunks);
+                    res.setHeader('Content-Type', 'application/pdf');
+                    res.setHeader('Content-Disposition', `attachment; filename="invoice-${invoice.InvoiceNumber || req.params.id}.pdf"`);
+                    res.send(pdfBuffer);
+                });
+
+                const currency = (n) => `$${Number(n || 0).toFixed(2)}`;
+                const pageWidth = doc.page.width;
+                const margin = 50;
+                const contentWidth = pageWidth - margin * 2;
+                const leftX = margin;
+                const rightX = margin + contentWidth;
+
+                doc.font('Helvetica-Bold').fontSize(20).text('Factura', { align: 'center' });
+                doc.moveDown(0.5);
+                doc.font('Helvetica').fontSize(11).text(`Factura #: ${invoice.InvoiceNumber || req.params.id}`, { align: 'center' });
+                doc.moveDown(1.2);
+
+                doc.font('Helvetica-Bold').fontSize(12).text('Información');
+                doc.moveDown(0.2);
+                doc.strokeColor('#aaa').moveTo(leftX, doc.y).lineTo(rightX, doc.y).stroke();
+                doc.moveDown(0.5);
+
+                const issue = invoice.IssueDate || '-';
+                const due = invoice.DueDate || '-';
+                const studentId = invoice.ReferenceID || '-';
+                const status = invoice.Status || 'Emitida';
+
+                doc.font('Helvetica').fontSize(11);
+                doc.text(`Fecha de emisión: ${issue}`);
+                doc.text(`Fecha de vencimiento: ${due}`);
+                doc.text(`Estudiante: ID ${studentId}`);
+                doc.text(`Estado: ${status}`);
+                doc.moveDown(1.2);
+
+                doc.font('Helvetica-Bold').text('Detalle de Conceptos');
+                doc.moveDown(0.2);
+                doc.strokeColor('#aaa').moveTo(leftX, doc.y).lineTo(rightX, doc.y).stroke();
+                doc.moveDown(0.5);
+
+                let items = [];
+                try {
+                    const parsed = invoice.Description ? JSON.parse(invoice.Description) : {};
+                    items = Array.isArray(parsed.items) ? parsed.items : [];
+                } catch {}
+
+                const conceptColWidth = contentWidth - 140;
+                const amountColWidth = 140;
+                doc.font('Helvetica-Bold').fontSize(10);
+                doc.text('Concepto', leftX, doc.y, { width: conceptColWidth });
+                doc.text('Monto', leftX + conceptColWidth, doc.y, { width: amountColWidth, align: 'right' });
+                doc.moveDown(0.2);
+                doc.strokeColor('#aaa').moveTo(leftX, doc.y).lineTo(rightX, doc.y).stroke();
+
+                doc.font('Helvetica').fontSize(10);
+                if (items.length === 0) {
+                    doc.moveDown(0.5);
+                    doc.text('Sin conceptos registrados.');
+                } else {
+                    items.forEach((it) => {
+                        const concept = it.concept || 'Concepto';
+                        const amount = currency(it.amount);
+                        doc.moveDown(0.3);
+                        const rowTop = doc.y;
+                        doc.text(concept, leftX, rowTop, { width: conceptColWidth });
+                        doc.text(amount, leftX + conceptColWidth, rowTop, { width: amountColWidth, align: 'right' });
+                    });
+                    doc.moveDown(0.3);
+                    doc.strokeColor('#ddd').moveTo(leftX, doc.y).lineTo(rightX, doc.y).stroke();
+                }
+
+                const subtotal = items.reduce((s, it) => s + (Number(it.amount) || 0), 0);
+                const taxes = Number(invoice.TaxAmount || 0);
+                const discounts = Number(invoice.DiscountAmount || 0);
+                const finalFromInvoice = Number(invoice.FinalAmount || invoice.TotalAmount || 0);
+                const total = finalFromInvoice || Math.max(0, subtotal + taxes - discounts);
+
+                doc.moveDown(1);
+                doc.font('Helvetica-Bold').fontSize(12).text('Resumen de Pago', leftX + conceptColWidth, doc.y);
+                doc.moveDown(0.2);
+                const summaryStartY = doc.y;
+                doc.strokeColor('#aaa').moveTo(leftX + conceptColWidth, summaryStartY).lineTo(rightX, summaryStartY).stroke();
+                doc.moveDown(0.5);
+
+                doc.font('Helvetica').fontSize(11);
+                const summaryWidth = amountColWidth;
+                const labelWidth = conceptColWidth;
+                const labelX = leftX + conceptColWidth - 10;
+                const valueX = leftX + conceptColWidth;
+                const summaryRow = (label, value) => {
+                    const y = doc.y;
+                    doc.text(label, labelX, y, { width: labelWidth, align: 'right' });
+                    doc.text(value, valueX, y, { width: summaryWidth, align: 'right' });
+                    doc.moveDown(0.2);
+                };
+                summaryRow('Subtotal:', currency(subtotal));
+                summaryRow('Impuestos:', currency(taxes));
+                summaryRow('Descuentos:', currency(discounts));
+                doc.moveDown(0.2);
+                doc.font('Helvetica-Bold');
+                summaryRow('Total a pagar:', currency(total));
+                doc.font('Helvetica');
+
+                doc.moveDown(1.5);
+                doc.fontSize(8).fillColor('#666').text(`Generado el ${new Date().toLocaleString('es-ES')}`, { align: 'right' });
+                doc.end();
+            } catch (err) {
+                console.error('PDF fallback error:', err.message);
+                res.status(500).json({ error: 'No se pudo generar el PDF en modo desarrollo.' });
+            }
         });
 
         devRouter.post('/finance/invoice/:id/email', (req, res) => {
