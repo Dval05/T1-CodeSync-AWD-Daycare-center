@@ -8,6 +8,18 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('sb-access-token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
+    // During local development, add a dev user header so UI calls pass requireAuth
+    try {
+        if (import.meta.env.DEV && !config.headers['x-dev-user']) {
+            const saved = localStorage.getItem('user-profile');
+            if (saved) {
+                const profile = JSON.parse(saved);
+                if (profile?.UserID) config.headers['x-dev-user'] = String(profile.UserID);
+            } else {
+                config.headers['x-dev-user'] = '1';
+            }
+        }
+    } catch (e) {}
     return config;
 });
 

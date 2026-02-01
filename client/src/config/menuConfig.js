@@ -80,13 +80,13 @@ export const MENU_CONFIG = [
         id: 'financial',
         label: 'Finanzas',
         icon: DollarSign,
-        permissions: ['student_payment.view', 'invoice.view'],
+        permissions: ['teacher_payment.view', 'invoice.view'],
         children: [
             {
                 label: 'Pagos',
                 path: '/payments',
                 icon: DollarSign,
-                permissions: ['student_payment.view']
+                permissions: []
             },
             {
                 label: 'Facturas',
@@ -120,7 +120,7 @@ export const MENU_CONFIG = [
         id: 'system',
         label: 'Sistema',
         icon: Settings,
-        permissions: ['user.view', 'role.view', 'permission.view', 'notification.view'],
+        permissions: ['user.view', 'role.view', 'permission.view'],
         children: [
             {
                 label: 'Usuarios',
@@ -138,7 +138,7 @@ export const MENU_CONFIG = [
                 label: 'Notificaciones',
                 path: '/notifications',
                 icon: Bell,
-                permissions: ['notification.view']
+                permissions: []
             }
         ]
     },

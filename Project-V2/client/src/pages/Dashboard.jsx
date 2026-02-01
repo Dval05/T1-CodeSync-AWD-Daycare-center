@@ -20,7 +20,7 @@ export default function Dashboard() {
                 const [studentsRes, attendanceRes, paymentsRes] = await Promise.all([
                     crudApi.getAll('student', { IsActive: 1 }), // Estudiantes Activos
                     crudApi.getAll('attendance', { Date: today, Status: 'Present' }), // Asistencia Hoy
-                    crudApi.getAll('student_payment', { Status: 'Pending' }) // Pagos Pendientes
+                    crudApi.getAll('teacher_payment', { Status: 'Pending' }) // Pagos Pendientes
                 ]);
 
                 setStats({

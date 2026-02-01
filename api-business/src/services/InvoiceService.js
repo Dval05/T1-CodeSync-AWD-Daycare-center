@@ -1,13 +1,14 @@
 import supabase from '../config/supabase.js';
 
 export class InvoiceService {
-    async generateInvoice(studentId, paymentData, createdBy) {
+    // referenceType: 'Student' | 'Teacher'
+    async generateInvoice(referenceType, referenceId, paymentData, createdBy) {
         const invoiceNumber = await this.generateInvoiceNumber();
         
         const invoiceData = {
             InvoiceNumber: invoiceNumber,
-            InvoiceType: 'Student',
-            ReferenceID: studentId,
+            InvoiceType: referenceType,
+            ReferenceID: referenceId,
             IssueDate: new Date().toISOString().split('T')[0],
             DueDate: paymentData.DueDate,
             TotalAmount: paymentData.TotalAmount,

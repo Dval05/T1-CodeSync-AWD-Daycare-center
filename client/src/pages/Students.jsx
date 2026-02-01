@@ -4,7 +4,8 @@ import { StudentModal } from '../components/modals/StudentModal';
 import { crudApi } from '../api/crud';
 import { businessApi } from '../api/business';
 import { toast } from 'react-hot-toast';
-import { User, DollarSign, X, TrendingUp } from 'lucide-react';
+import { User, DollarSign, X, TrendingUp, Camera } from 'lucide-react';
+import { supabase } from '../config/supabase';
 import { ActionButton } from '../components/permissions/ActionButton';
 
 export default function Students() {
@@ -91,6 +92,72 @@ export default function Students() {
         setStudentDetails(null);
     };
 
+    const handleUploadStudentPhoto = async (file, student) => {
+        if (!file.type.startsWith('image/')) {
+            toast.error('Selecciona una imagen válida');
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('La imagen debe ser menor a 5MB');
+            return;
+        }
+
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${student.StudentID}_${Date.now()}.${fileExt}`;
+            const filePath = `student-photos/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+            let photoURL = null;
+
+            if (uploadError) {
+                // fallback to base64
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64Image = reader.result;
+                    await crudApi.update('student', student.StudentID, { ProfilePhotoURL: base64Image });
+                    setStudents(prev => prev.map(s => s.StudentID === student.StudentID ? { ...s, ProfilePhotoURL: base64Image } : s));
+                    toast.success('Foto subida (base64)');
+                };
+                reader.readAsDataURL(file);
+                return;
+            }
+
+            const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+            photoURL = publicUrlData.publicUrl;
+
+            await crudApi.update('student', student.StudentID, { ProfilePhotoURL: photoURL });
+            setStudents(prev => prev.map(s => s.StudentID === student.StudentID ? { ...s, ProfilePhotoURL: photoURL } : s));
+            toast.success('Foto de estudiante actualizada');
+
+        } catch (error) {
+            console.error('Error subiendo foto estudiante:', error);
+            toast.error('Error al subir la foto');
+        }
+    };
+
+    const handlePreviewAndUpload = (file, student, inputEl) => {
+        if (!file) return;
+
+        // Mostrar preview inmediato en frontend (base64)
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const dataUrl = reader.result;
+            setStudents(prev => prev.map(s => s.StudentID === student.StudentID ? { ...s, ProfilePhotoURL: dataUrl } : s));
+        };
+        reader.readAsDataURL(file);
+
+        // limpiar input para permitir re-subir la misma imagen si se desea
+        try { if (inputEl) inputEl.value = ''; } catch (e) {}
+
+        // No subir a Supabase: sólo mostrar preview en frontend según solicitud
+        // Si en el futuro quieres subir, llama a handleUploadStudentPhoto
+    };
+
     return (
         <Layout>
             <div className="flex justify-between items-center mb-6">
@@ -108,8 +175,27 @@ export default function Students() {
                 {students.map(stu => (
                     <div key={stu.StudentID} className="bg-white p-6 rounded-lg shadow hover:shadow-md transition">
                         <div className="flex items-center gap-4">
-                            <div className="bg-blue-100 p-3 rounded-full text-blue-600">
-                                <User size={24} />
+                            <div className="relative group">
+                                <label className="inline-block bg-blue-100 p-2 rounded text-blue-600 w-10 h-10 flex items-center justify-center overflow-hidden cursor-pointer">
+                                    {stu.ProfilePhotoURL ? (
+                                        <img src={stu.ProfilePhotoURL} alt="foto" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User size={20} />
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const file = e.target.files && e.target.files[0];
+                                            if (!file) return;
+                                            handlePreviewAndUpload(file, stu, e.target);
+                                        }}
+                                    />
+                                </label>
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition bg-black bg-opacity-20 rounded pointer-events-none group-hover:opacity-100">
+                                    <Camera size={14} className="text-white" />
+                                </div>
                             </div>
                             <div className="flex-1">
                                 <h3 className="font-bold text-gray-800">{stu.FirstName} {stu.LastName}</h3>

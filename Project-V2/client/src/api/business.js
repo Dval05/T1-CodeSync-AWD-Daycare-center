@@ -30,6 +30,7 @@ export const businessApi = {
     },
     finance: {
         studentBalance: (id) => api.get(`/finance/student/${id}/balance`),
+        teacherBalance: (id) => api.get(`/finance/teacher/${id}/balance`),
         generateInvoice: (data) => api.post('/finance/invoice/generate', data),
         updateInvoice: (id, data) => api.patch(`/finance/invoice/${id}`, data),
         cancelInvoice: (id, data) => api.post(`/finance/invoice/${id}/cancel`, data),

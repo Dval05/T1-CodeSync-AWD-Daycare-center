@@ -24,25 +24,113 @@ export default function Attendance() {
     const [dashboardStats, setDashboardStats] = useState(null);
     const [showCharts, setShowCharts] = useState(false);
     const [editingRecord, setEditingRecord] = useState(null);
+    const [lastAttendanceCheck, setLastAttendanceCheck] = useState({});
+    const [checkInTime, setCheckInTime] = useState({});
+    const [checkOutTime, setCheckOutTime] = useState({});
+    const [showTimeModal, setShowTimeModal] = useState(false);
+    const [currentEditingTime, setCurrentEditingTime] = useState({ studentId: null, type: null, value: '' });
 
     useEffect(() => {
         loadList();
         loadGrades();
     }, []);
 
+    useEffect(() => {
+        if (students.length > 0) {
+            checkLastAttendance();
+        }
+    }, [students, date]);
+
+    const checkLastAttendance = async () => {
+        try {
+            const checks = {};
+            const initialCheckIn = {};
+            
+            for (const student of students) {
+                const { data } = await crudApi.getAll('attendance', {
+                    StudentID: student.StudentID,
+                    orderBy: 'CreatedAt',
+                    asc: 'false'
+                });
+
+                if (data && data.length > 0) {
+                    const lastRecord = data[0];
+                    const lastRecordTime = new Date(lastRecord.CreatedAt);
+                    const now = new Date();
+                    const hoursDifference = (now - lastRecordTime) / (1000 * 60 * 60);
+
+                    checks[student.StudentID] = {
+                        canRegister: hoursDifference >= 2,
+                        hoursSinceLastRecord: hoursDifference,
+                        lastRecordDate: lastRecord.Date,
+                        lastRecordTime: lastRecord.CreatedAt,
+                        minutesRemaining: hoursDifference < 2 ? Math.ceil((2 - hoursDifference) * 60) : 0
+                    };
+
+                    // Usar la hora de entrada del último registro
+                    // Prioridad: 1) CheckInTime si existe, 2) Hora del CreatedAt, 3) Hora actual
+                    if (lastRecord.CheckInTime) {
+                        initialCheckIn[student.StudentID] = lastRecord.CheckInTime;
+                    } else if (lastRecord.CreatedAt) {
+                        // Extraer solo la hora del CreatedAt en zona horaria de Ecuador (UTC-5)
+                        const createdAtDate = new Date(lastRecord.CreatedAt);
+                        initialCheckIn[student.StudentID] = createdAtDate.toLocaleTimeString('es-EC', { 
+                            timeZone: 'America/Guayaquil', 
+                            hour: '2-digit', 
+                            minute: '2-digit',
+                            hour12: false 
+                        });
+                    } else {
+                        // Hora actual en zona horaria de Ecuador
+                        const nowEcuador = new Date().toLocaleTimeString('es-EC', { 
+                            timeZone: 'America/Guayaquil', 
+                            hour: '2-digit', 
+                            minute: '2-digit',
+                            hour12: false 
+                        });
+                        initialCheckIn[student.StudentID] = nowEcuador;
+                    }
+                } else {
+                    checks[student.StudentID] = {
+                        canRegister: true,
+                        hoursSinceLastRecord: null,
+                        lastRecordDate: null,
+                        lastRecordTime: null,
+                        minutesRemaining: 0
+                    };
+                    // Si no hay registros previos, usar hora actual de Ecuador
+                    initialCheckIn[student.StudentID] = new Date().toLocaleTimeString('es-EC', { 
+                        timeZone: 'America/Guayaquil', 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: false 
+                    });
+                }
+            }
+
+            setLastAttendanceCheck(checks);
+            setCheckInTime(initialCheckIn);
+        } catch (error) {
+            console.error('Error verificando últimas asistencias:', error);
+        }
+    };
+
     const loadList = async () => {
         const { data } = await crudApi.getAll('student', { IsActive: 1 });
         setStudents(data);
         setAllStudents(data);
-        // Inicializar todos como Presentes por defecto
         const initialStatus = {};
         const initialLate = {};
+        const initialCheckOut = {};
+        
         data.forEach(s => {
             initialStatus[s.StudentID] = 'Present';
             initialLate[s.StudentID] = 0;
+            initialCheckOut[s.StudentID] = '';
         });
         setAttendance(initialStatus);
         setLateStatus(initialLate);
+        setCheckOutTime(initialCheckOut);
     };
 
     const loadGrades = async () => {
@@ -68,18 +156,100 @@ export default function Attendance() {
         }));
     };
 
+    const handleTimeClick = (studentId, type) => {
+        const currentValue = type === 'checkIn' ? checkInTime[studentId] : checkOutTime[studentId];
+        setCurrentEditingTime({ studentId, type, value: currentValue || '' });
+        setShowTimeModal(true);
+    };
+
+    const handleTimeSave = () => {
+        const { studentId, type, value } = currentEditingTime;
+        if (type === 'checkIn') {
+            setCheckInTime(prev => ({ ...prev, [studentId]: value }));
+        } else {
+            setCheckOutTime(prev => ({ ...prev, [studentId]: value }));
+        }
+        setShowTimeModal(false);
+        setCurrentEditingTime({ studentId: null, type: null, value: '' });
+    };
+
+    const handleSetCheckOutNow = (studentId) => {
+        const now = new Date().toLocaleTimeString('es-EC', { 
+            timeZone: 'America/Guayaquil', 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+        });
+        setCheckOutTime(prev => ({ ...prev, [studentId]: now }));
+    };
+
+    const formatTimeElapsed = (milliseconds) => {
+        const totalMinutes = Math.floor(milliseconds / (1000 * 60));
+        const totalHours = Math.floor(totalMinutes / 60);
+        const days = Math.floor(totalHours / 24);
+        const hours = totalHours % 24;
+        const minutes = totalMinutes % 60;
+
+        const parts = [];
+        if (days > 0) parts.push(`${days} día${days !== 1 ? 's' : ''}`);
+        if (hours > 0) parts.push(`${hours} hora${hours !== 1 ? 's' : ''}`);
+        if (minutes > 0) parts.push(`${minutes} minuto${minutes !== 1 ? 's' : ''}`);
+
+        return parts.length > 0 ? parts.join(' ') : '0 minutos';
+    };
+
     const handleSave = async () => {
         try {
-            const promises = students.map(stu => {
-                return crudApi.create('attendance', {
-                    StudentID: stu.StudentID,
-                    Date: date,
-                    Status: attendance[stu.StudentID] || 'Present',
-                    IsLate: lateStatus[stu.StudentID] || 0
-                });
-            });
-            await Promise.all(promises);
-            toast.success('Asistencia guardada correctamente');
+            const errors = [];
+            const successCount = { count: 0 };
+            
+            for (const stu of students) {
+                try {
+                    const attendanceData = {
+                        StudentID: stu.StudentID,
+                        Date: date,
+                        Status: attendance[stu.StudentID] || 'Present',
+                        IsLate: lateStatus[stu.StudentID] || 0,
+                        CheckInTime: checkInTime[stu.StudentID] || null
+                    };
+
+                    // Solo incluir CheckOutTime si tiene valor
+                    if (checkOutTime[stu.StudentID]) {
+                        attendanceData.CheckOutTime = checkOutTime[stu.StudentID];
+                    }
+
+                    await crudApi.create('attendance', attendanceData);
+                    successCount.count++;
+                } catch (error) {
+                    const studentName = `${stu.FirstName} ${stu.LastName}`;
+                    
+                    if (error.response?.data?.code === 'ATTENDANCE_TOO_SOON') {
+                        const minutesRemaining = error.response?.data?.minutesRemaining || 0;
+                        const timeRemaining = formatTimeElapsed(minutesRemaining * 60 * 1000);
+                        errors.push({
+                            student: studentName,
+                            message: `Faltan ${timeRemaining} para el siguiente registro`
+                        });
+                    } else {
+                        errors.push({
+                            student: studentName,
+                            message: error.response?.data?.error || error.message
+                        });
+                    }
+                }
+            }
+
+            if (successCount.count > 0) {
+                toast.success(`${successCount.count} asistencia(s) guardada(s) correctamente`);
+            }
+
+            if (errors.length > 0) {
+                toast.error(
+                    'No se puede registrar asistencia de los estudiantes',
+                    { duration: 5000 }
+                );
+            }
+
             loadList();
         } catch (error) {
             console.error('Error guardando asistencia:', error);
@@ -93,7 +263,6 @@ export default function Attendance() {
             setDashboardStats(null);
             setShowCharts(false);
             
-            // Construir parámetros de filtro
             const params = {
                 from: dateFrom,
                 to: dateTo
@@ -101,7 +270,6 @@ export default function Attendance() {
             if (filterStudent) params.studentId = filterStudent;
             if (filterGrade) params.gradeId = filterGrade;
             
-            // Obtener datos de estadísticas (sin PDF)
             const response = await businessApi.reports.attendance(params);
             setDashboardStats(response.data);
             toast.success('Búsqueda realizada correctamente');
@@ -124,12 +292,10 @@ export default function Attendance() {
         try {
             setLoadingReport(true);
             
-            // Construir parámetros de filtro
             let params = `from=${dateFrom}&to=${dateTo}`;
             if (filterStudent) params += `&studentId=${filterStudent}`;
             if (filterGrade) params += `&gradeId=${filterGrade}`;
             
-            // Descargar PDF
             const response = await businessApi.get(`/reports/attendance?${params}&format=pdf`, {
                 responseType: 'blob'
             });
@@ -151,7 +317,10 @@ export default function Attendance() {
             setLoadingReport(false);
         }
     };
+
     const handleEditRecord = (record) => {
+
+    const editRecord = (record) => {
         setEditingRecord({
             AttendanceID: record.AttendanceID,
             Status: record.Status,
@@ -198,7 +367,6 @@ export default function Attendance() {
                 });
 
                 const ws = XLSX.utils.aoa_to_sheet(aoa);
-                // Apply thin black border to all cells
                 const range = ws['!ref'];
                 if (range) {
                     const [start, end] = range.split(':');
@@ -213,7 +381,6 @@ export default function Attendance() {
                             const cellAddress = { c: C, r: R };
                             const cellRef = XLSX.utils.encode_cell(cellAddress);
                             const cell = ws[cellRef] || (ws[cellRef] = { t: 's', v: '' });
-                            // set border style
                             if (!cell.s) cell.s = {};
                             cell.s.border = {
                                 top: thin,
@@ -302,44 +469,104 @@ export default function Attendance() {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estudiante</th>
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Último Registro</th>
                                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Estado</th>
                                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">¿Retardo?</th>
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Hora Retiro</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {students.map(stu => (
-                                    <tr key={stu.StudentID}>
-                                        <td className="px-6 py-4">{stu.FirstName} {stu.LastName}</td>
-                                        <td className="px-6 py-4 text-center">
-                                            <button 
-                                                onClick={() => handleToggle(stu.StudentID)}
-                                                className={`px-4 py-1 rounded-full text-sm font-semibold ${
-                                                    attendance[stu.StudentID] === 'Present' 
-                                                    ? 'bg-green-100 text-green-800' 
-                                                    : 'bg-red-100 text-red-800'
-                                                }`}
-                                            >
-                                                {attendance[stu.StudentID] === 'Present' ? 'Presente' : 'Ausente'}
-                                            </button>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <label className="inline-flex items-center cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={lateStatus[stu.StudentID] === 1}
-                                                    onChange={() => handleToggleLate(stu.StudentID)}
-                                                    disabled={attendance[stu.StudentID] !== 'Present'}
-                                                    className="w-5 h-5 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500 disabled:opacity-50"
-                                                />
-                                                <span className={`ml-2 text-sm font-medium ${
-                                                    lateStatus[stu.StudentID] === 1 ? 'text-yellow-600' : 'text-gray-400'
-                                                }`}>
-                                                    {lateStatus[stu.StudentID] === 1 ? 'Sí' : 'No'}
-                                                </span>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {students.map(stu => {
+                                    const check = lastAttendanceCheck[stu.StudentID];
+                                    const canRegister = check?.canRegister !== false;
+                                    const showWarning = !canRegister;
+                                    
+                                    return (
+                                        <tr key={stu.StudentID} className={showWarning ? 'bg-yellow-50' : ''}>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    {showWarning && (
+                                                        <span className="text-yellow-600 font-bold" title="Debe esperar antes de registrar"></span>
+                                                    )}
+                                                    <span>{stu.FirstName} {stu.LastName}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-center text-sm">
+                                                {check?.lastRecordTime ? (
+                                                    <div className={showWarning ? 'text-yellow-700 font-semibold' : 'text-gray-600'}>
+                                                        <div className="text-xs text-gray-500 mb-1">
+                                                            {new Date(check.lastRecordTime).toLocaleDateString('es-ES')}
+                                                        </div>
+                                                        {showWarning && (
+                                                            <div className="text-xs text-red-600 font-bold mt-1">
+                                                                Faltan {formatTimeElapsed((2 * 60 * 60 * 1000) - (new Date() - new Date(check.lastRecordTime)))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-400">Sin registros</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <button 
+                                                    onClick={() => handleToggle(stu.StudentID)}
+                                                    disabled={showWarning}
+                                                    className={`px-4 py-1 rounded-full text-sm font-semibold ${
+                                                        showWarning 
+                                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                                                            : attendance[stu.StudentID] === 'Present' 
+                                                                ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                                                : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                                    }`}
+                                                >
+                                                    {attendance[stu.StudentID] === 'Present' ? 'Presente' : 'Ausente'}
+                                                </button>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <label className="inline-flex items-center cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={lateStatus[stu.StudentID] === 1}
+                                                        onChange={() => handleToggleLate(stu.StudentID)}
+                                                        disabled={attendance[stu.StudentID] !== 'Present' || showWarning}
+                                                        className="w-5 h-5 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500 disabled:opacity-50"
+                                                    />
+                                                    <span className={`ml-2 text-sm font-medium ${
+                                                        lateStatus[stu.StudentID] === 1 ? 'text-yellow-600' : 'text-gray-400'
+                                                    }`}>
+                                                        {lateStatus[stu.StudentID] === 1 ? 'Sí' : 'No'}
+                                                    </span>
+                                                </label>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={() => handleTimeClick(stu.StudentID, 'checkOut')}
+                                                        disabled={attendance[stu.StudentID] !== 'Present'}
+                                                        className={`px-3 py-1 text-sm font-semibold rounded ${
+                                                            attendance[stu.StudentID] !== 'Present'
+                                                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                                : checkOutTime[stu.StudentID]
+                                                                    ? 'bg-purple-100 text-purple-800 hover:bg-purple-200'
+                                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                        }`}
+                                                    >
+                                                        {checkOutTime[stu.StudentID] || 'Establecer'}
+                                                    </button>
+                                                    {attendance[stu.StudentID] === 'Present' && (
+                                                        <button
+                                                            onClick={() => handleSetCheckOutNow(stu.StudentID)}
+                                                            className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200"
+                                                            title="Establecer hora actual"
+                                                        >
+                                                            Ahora
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -352,13 +579,13 @@ export default function Attendance() {
                 </>
             )}
 
-            {/* TAB: REPORTES */}
+            {}
             {activeTab === 'report' && (
                 <>
                     <div className="bg-white rounded-lg shadow p-6 mb-6">
                         <h3 className="text-xl font-bold text-gray-800 mb-4">Generar Reporte de Asistencias</h3>
                         
-                        {/* FILTROS */}
+                        {}
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Desde:</label>
@@ -418,7 +645,7 @@ export default function Attendance() {
                         </div>
                     </div>
 
-                    {/* DASHBOARD CON ESTADÍSTICAS */}
+                    {}
                     {dashboardStats && (
                         <>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -449,7 +676,7 @@ export default function Attendance() {
                                 </div>
                             </div>
 
-                            {/* TABLA DE REGISTROS */}
+                            {}
                             <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
                                 <div className="px-6 py-4 bg-gray-50 border-b">
                                     <h3 className="text-lg font-bold text-gray-800">Detalle de Registros</h3>
@@ -502,7 +729,7 @@ export default function Attendance() {
                                 </div>
                             </div>
 
-                            {/* BOTÓN GENERAR PDF */}
+                            {}
                             <div className="flex justify-end">
                                 <button 
                                     onClick={handleGeneratePDF}
@@ -524,12 +751,12 @@ export default function Attendance() {
                 </>
             )}
 
-            {/* TAB: GRÁFICAS */}
+            {}
             {activeTab === 'charts' && (
                 <>
                     <div className="bg-white rounded-lg shadow p-6 mb-6">
                         <h3 className="text-xl font-bold text-gray-800 mb-4">Generar gráficas de asistencia</h3>
-                        {/* FILTROS (mismos controles que en reportes) */}
+                        {}
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Desde:</label>
@@ -650,6 +877,48 @@ export default function Attendance() {
                     )}
                 </>
             )}
+
+            {/* Modal para editar hora */}
+            {showTimeModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl p-6 w-96">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4">
+                            {currentEditingTime.type === 'checkIn' ? 'Hora de Entrada' : 'Hora de Retiro'}
+                        </h3>
+                        
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Seleccione la hora
+                            </label>
+                            <input
+                                type="time"
+                                value={currentEditingTime.value}
+                                onChange={(e) => setCurrentEditingTime({...currentEditingTime, value: e.target.value})}
+                                className="w-full border rounded-lg px-3 py-2 text-lg"
+                            />
+                        </div>
+
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => {
+                                    setShowTimeModal(false);
+                                    setCurrentEditingTime({ studentId: null, type: null, value: '' });
+                                }}
+                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleTimeSave}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            >
+                                Guardar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </Layout>
     );
+}
 }

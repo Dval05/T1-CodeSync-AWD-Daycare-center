@@ -7,11 +7,11 @@ import { toast } from 'react-hot-toast';
 
 export default function Invoices() {
     const [invoices, setInvoices] = useState([]);
-    const [students, setStudents] = useState([]);
+    const [teachers, setTeachers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showGenerateModal, setShowGenerateModal] = useState(false);
     const [newInvoice, setNewInvoice] = useState({
-        studentId: '',
+        teacherId: '',
         month: new Date().toISOString().slice(0, 7),
         items: [
             { concept: 'Mensualidad', amount: 1000 }
@@ -24,12 +24,17 @@ export default function Invoices() {
 
     const loadData = async () => {
         try {
-            const [invoicesRes, studentsRes] = await Promise.all([
+            const [invoicesRes, employeesRes] = await Promise.all([
                 crudApi.getAll('invoice'),
-                crudApi.getAll('student', { IsActive: 1 })
+                crudApi.getAll('employee', { IsActive: 1 })
             ]);
             setInvoices(invoicesRes.data || []);
-            setStudents(studentsRes.data || []);
+            // Filter employees to teacher-like positions
+            const teachersList = (employeesRes.data || []).filter(e => {
+                const pos = (e.Position || '').toString().toLowerCase();
+                return /teacher|profesor|docente/.test(pos);
+            });
+            setTeachers(teachersList);
         } catch (error) {
             console.error("Error cargando datos:", error);
         } finally {
@@ -58,7 +63,7 @@ export default function Invoices() {
             setShowGenerateModal(false);
             loadData();
             setNewInvoice({
-                studentId: '',
+                teacherId: '',
                 month: new Date().toISOString().slice(0, 7),
                 items: [{ concept: 'Mensualidad', amount: 1000 }]
             });
@@ -140,23 +145,30 @@ export default function Invoices() {
                 </div>
             ) : (
                 <div className="grid gap-4">
-                    {invoices.map(invoice => (
+                    {invoices.map(invoice => {
+                        const refId = invoice.ReferenceID;
+                        const refType = invoice.InvoiceType || invoice.InvoiceType;
+                        const teacher = teachers.find(t => Number(t.EmpID) === Number(refId));
+                        const title = invoice.InvoiceNumber || `#${invoice.InvoiceID}`;
+                        const date = invoice.IssueDate || invoice.IssueDate || invoice.CreatedAt;
+                        const amount = invoice.FinalAmount ?? invoice.TotalAmount;
+                        return (
                         <div key={invoice.InvoiceID} className="bg-white rounded-lg shadow p-4 border-l-4 border-green-600">
                             <div className="flex justify-between items-start">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                         <FileText className="text-green-600" size={20} />
-                                        <h3 className="font-bold text-lg">Factura #{invoice.InvoiceID}</h3>
+                                        <h3 className="font-bold text-lg">{title}</h3>
                                     </div>
                                     <p className="text-gray-600 mt-1">
-                                        Estudiante ID: {invoice.StudentID}
+                                        {refType === 'Teacher' ? `Profesor: ${teacher ? `${teacher.FirstName} ${teacher.LastName}` : refId}` : `Referencia: ${refId}`}
                                     </p>
                                     <div className="flex gap-4 mt-2 text-sm">
                                         <span className="text-gray-500">
-                                            Fecha: {new Date(invoice.InvoiceDate).toLocaleDateString('es-ES')}
+                                            Fecha: {date ? new Date(date).toLocaleDateString('es-ES') : ''}
                                         </span>
                                         <span className="text-gray-500">
-                                            Total: ${invoice.TotalAmount?.toFixed(2)}
+                                            Total: ${amount ? Number(amount).toFixed(2) : '0.00'}
                                         </span>
                                         <span className={`px-2 py-1 rounded ${
                                             invoice.Status === 'Paid' 
@@ -176,7 +188,8 @@ export default function Invoices() {
                                 </button>
                             </div>
                         </div>
-                    ))}
+                        )
+                    })}
                 </div>
             )}
 
@@ -189,17 +202,17 @@ export default function Invoices() {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Estudiante
+                                    Profesor
                                 </label>
                                 <select
-                                    value={newInvoice.studentId}
-                                    onChange={(e) => setNewInvoice({...newInvoice, studentId: e.target.value})}
+                                    value={newInvoice.teacherId}
+                                    onChange={(e) => setNewInvoice({...newInvoice, teacherId: e.target.value})}
                                     className="w-full border rounded-lg px-3 py-2"
                                 >
-                                    <option value="">Seleccionar estudiante...</option>
-                                    {students.map(student => (
-                                        <option key={student.StudentID} value={student.StudentID}>
-                                            {student.FirstName} {student.LastName}
+                                    <option value="">Seleccionar profesor...</option>
+                                    {teachers.map(teacher => (
+                                        <option key={teacher.TeacherID} value={teacher.TeacherID}>
+                                            {teacher.FirstName} {teacher.LastName}
                                         </option>
                                     ))}
                                 </select>
@@ -273,7 +286,7 @@ export default function Invoices() {
                         <div className="flex gap-2 mt-6">
                             <button
                                 onClick={handleGenerateInvoice}
-                                disabled={!newInvoice.studentId}
+                                disabled={!newInvoice.teacherId}
                                 className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-300"
                             >
                                 Generar Factura
