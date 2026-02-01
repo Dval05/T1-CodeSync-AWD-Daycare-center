@@ -91,6 +91,25 @@ export default function Invoices() {
 
     const totalAmount = newInvoice.items.reduce((sum, item) => sum + (item.amount || 0), 0);
 
+    const downloadPdf = async (invoice) => {
+        try {
+            const { data } = await businessApi.finance.getInvoicePdf(invoice.InvoiceID);
+            const url = window.URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `invoice-${invoice.InvoiceNumber || invoice.InvoiceID}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            toast.success('PDF generado');
+        } catch (error) {
+            console.error('Error generando PDF:', error);
+            const msg = error?.response?.data?.error || 'Error al generar PDF';
+            toast.error(msg);
+        }
+    };
+
     if (loading) {
         return (
             <Layout>
@@ -151,6 +170,7 @@ export default function Invoices() {
                                 <button
                                     className="text-blue-600 hover:text-blue-700"
                                     title="Descargar PDF"
+                                    onClick={() => downloadPdf(invoice)}
                                 >
                                     <Download size={20} />
                                 </button>
