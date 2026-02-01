@@ -21,6 +21,11 @@ export default function Invoices() {
     });
     const [editItems, setEditItems] = useState([]);
 
+    const formatInvoiceNumber = (num, id) => {
+        const printed = num ? String(num) : `#${id}`;
+        return printed.startsWith('INV-') ? `FAC-${printed.slice(4)}` : printed;
+    };
+
     useEffect(() => {
         loadData();
     }, []);
@@ -151,7 +156,8 @@ export default function Invoices() {
             const url = window.URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
             const link = document.createElement('a');
             link.href = url;
-            link.download = `invoice-${invoice.InvoiceNumber || invoice.InvoiceID}.pdf`;
+            const num = formatInvoiceNumber(invoice.InvoiceNumber, invoice.InvoiceID);
+            link.download = `invoice-${num}.pdf`;
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -208,15 +214,9 @@ export default function Invoices() {
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                         <FileText className="text-green-600" size={20} />
-                                        <h3 className="font-bold text-lg">Factura {invoice.InvoiceNumber || `#${invoice.InvoiceID}`}</h3>
+                                        <h3 className="font-bold text-lg">Factura {formatInvoiceNumber(invoice.InvoiceNumber, invoice.InvoiceID)}</h3>
                                     </div>
-                                    <p className="text-gray-600 mt-1">
-<<<<<<< HEAD
-                                        Estudiante ID: {invoice.ReferenceID}
-=======
-                                        Profesor ID: {invoice.TeacherID}
->>>>>>> d9d760276aa75b7cef58f536b36576605bf879ac
-                                    </p>
+                                    <p className="text-gray-600 mt-1">Referencia: {invoice.ReferenceID ?? invoice.TeacherID ?? '-'}</p>
                                     <div className="flex gap-4 mt-2 text-sm">
                                         <span className="text-gray-500">
                                             Fecha: {invoice.IssueDate ? new Date(invoice.IssueDate).toLocaleDateString('es-ES') : '-'}
@@ -385,7 +385,7 @@ export default function Invoices() {
             {showEditModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
                     <div className="bg-white rounded-lg p-6 w-full max-w-2xl m-4">
-                        <h3 className="text-xl font-bold mb-4">Editar Factura {editingInvoice?.InvoiceNumber || `#${editingInvoice?.InvoiceID}`}</h3>
+                        <h3 className="text-xl font-bold mb-4">Editar Factura {formatInvoiceNumber(editingInvoice?.InvoiceNumber, editingInvoice?.InvoiceID)}</h3>
                         <div className="space-y-4">
                             <div className="flex justify-between items-center mb-2">
                                 <label className="block text-sm font-medium text-gray-700">Conceptos</label>
