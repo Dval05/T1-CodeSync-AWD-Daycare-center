@@ -31,6 +31,10 @@ export const businessApi = {
     finance: {
         studentBalance: (id) => api.get(`/finance/student/${id}/balance`),
         generateInvoice: (data) => api.post('/finance/invoice/generate', data),
+        updateInvoice: (id, data) => api.patch(`/finance/invoice/${id}`, data),
+        cancelInvoice: (id, data) => api.post(`/finance/invoice/${id}/cancel`, data),
+        getInvoicePdf: (id) => api.get(`/finance/invoice/${id}/pdf`, { responseType: 'blob' }),
+        sendInvoiceEmail: (id) => api.post(`/finance/invoice/${id}/email`),
         registerPayment: (data) => api.post('/finance/payment', data),
     },
     employees: {

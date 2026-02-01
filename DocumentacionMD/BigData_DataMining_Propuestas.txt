@@ -1,0 +1,136 @@
+Big Data y Data Mining — Definiciones y Propuestas (Proyecto Daycare)
+
+[ESPAÑOL]
+
+1) ¿Qué es Big Data?
+- Big Data se refiere al manejo y análisis de conjuntos de datos con gran volumen, velocidad y variedad (las “3V”), que exceden las capacidades de los sistemas tradicionales.
+- Incluye la captura continua de eventos, almacenamiento escalable (data lake/warehouse), procesamiento distribuido/streaming (ETL/ELT) y visualización de resultados.
+- Objetivo: convertir datos operativos y de producto en información útil para decisiones, predicción y optimización.
+
+2) ¿Qué es Data Mining?
+- Data Mining (Minería de Datos) es el proceso de descubrir patrones, relaciones y anomalías en los datos, usando técnicas estadísticas y de aprendizaje automático.
+- Técnicas comunes: clasificación, regresión, clustering, reglas de asociación, detección de anomalías, reducción de dimensionalidad.
+- Objetivo: extraer conocimiento accionable para apoyar decisiones y generar modelos predictivos.
+
+3) Propuesta Big Data para el proyecto (centro infantil)
+- Objetivo: construir una plataforma analítica operativa y estratégica con métricas clave para asistencia, capacidad, pagos y comunicación con familias.
+- Datos a capturar: 
+  * Asistencia (check-in/out, puntualidad, ausentismo).
+  * Aulas/capacidad (cupos, ocupación, horarios de alta demanda).
+  * Finanzas (pagos, morosidad, facturación, descuentos).
+  * Comunicación (notificaciones enviadas/abiertas, canales, tiempos de respuesta).
+  * Incidentes/observaciones (salud, comportamiento, seguimientos).
+  * Uso de la app/web (eventos de UI, tiempos de carga, errores).
+- Arquitectura (sin implementación, vendor-neutral):
+  * Ingesta de eventos desde el backend/web (logs estructurados, triggers de BD).
+  * Almacenamiento: data lake (S3-compatible) + warehouse (Postgres/analítico).
+  * Procesamiento: ETL/ELT en jobs programados (limpieza, agregaciones, historial).
+  * BI: dashboards (KPIs y alertas) para dirección y personal.
+- KPIs sugeridos:
+  * Tasa de asistencia diaria y semanal; puntualidad por aula.
+  * Capacidad y ocupación; demanda por franja horaria.
+  * Ingresos vs. morosidad; tiempo promedio de pago.
+  * Eficacia de comunicaciones (apertura/click/tiempo de respuesta).
+  * Incidentes por tipo y frecuencia; tiempo de resolución.
+- Beneficios:
+  * Planificación de personal y aulas basada en datos.
+  * Detección temprana de anomalías (ausentismo pico, caídas de uso).
+  * Mejora continua de la experiencia de familias (comunicaciones eficaces).
+- Consideraciones:
+  * Privacidad y cumplimiento (consentimiento, minimización, retención).
+  * Seguridad (encriptación, control de accesos, registro de auditoría).
+  * Gobernanza (catálogo de datos, calidad, linaje).
+  * Costos y escalabilidad (almacenamiento, ejecución de jobs, BI).
+
+4) Propuesta Data Mining para el proyecto
+- Objetivo: desarrollar modelos para predecir ausentismo y segmentar familias, optimizando comunicación, staffing y apoyo educativo.
+- Conjunto de datos:
+  * Historial de asistencia por niño (fecha, aula, hora, puntualidad, ausentismo).
+  * Atributos: edad, aula, calendario escolar, clima (si disponible), eventos.
+  * Finanzas: pagos y morosidad (correlaciones con asistencia/engagement).
+  * Comunicación: apertura de notificaciones, tiempo de respuesta.
+  * Incidentes/observaciones y su resolución.
+- Metodología propuesta:
+  * Preparación: limpieza, imputación, normalización, features (tendencias, estacionalidad, ratios).
+  * Modelos:
+    - Clasificación para riesgo de ausentismo (Regresión logística, Árboles, Random Forest, XGBoost).
+    - Clustering de familias por patrones de asistencia/engagement (K-Means, DBSCAN).
+    - Reglas de asociación para co-ocurrencias (horarios, incidencias, pagos).
+    - Detección de anomalías (Isolation Forest) en variaciones súbitas.
+  * Validación: partición temporal, validación cruzada, métricas (Accuracy, Recall, F1, AUC).
+  * Interpretabilidad: importancia de variables, SHAP, reglas comprensibles.
+- Entregables:
+  * Score de riesgo de ausentismo por niño/aula (para alertas y apoyo).
+  * Segmentos de familias con recomendaciones de comunicación personalizada.
+  * Reglas/insights accionables (p.ej., franjas y días con mayor tasa de ausentismo).
+- Consideraciones éticas:
+  * Evitar sesgos (edad, condiciones socioeconómicas); transparencia y explicabilidad.
+  * Umbrales y acciones responsables (evitar estigmatización; enfoque de apoyo).
+
+
+[ENGLISH]
+
+1) What is Big Data?
+- Big Data refers to handling and analyzing data with high volume, velocity, and variety, exceeding traditional systems’ capacity.
+- It includes continuous event capture, scalable storage (data lake/warehouse), distributed/stream processing (ETL/ELT), and visualization.
+- Goal: turn operational/product data into useful insights for decision-making, prediction, and optimization.
+
+2) What is Data Mining?
+- Data Mining is the process of discovering patterns, relationships, and anomalies in data, using statistical and machine-learning techniques.
+- Common techniques: classification, regression, clustering, association rules, anomaly detection, dimensionality reduction.
+- Goal: extract actionable knowledge to support decisions and create predictive models.
+
+3) Big Data proposal for the daycare project
+- Objective: build an operational and strategic analytics platform with key metrics for attendance, capacity, payments, and family communications.
+- Data to capture:
+  * Attendance (check-in/out, timeliness, absenteeism).
+  * Classrooms/capacity (slots, occupancy, peak demand by time).
+  * Finance (payments, delinquency, billing, discounts).
+  * Communications (messages sent/opened, channels, response times).
+  * Incidents/observations (health, behavior, follow-ups).
+  * App/web usage (UI events, load times, errors).
+- Architecture (non-implementational, vendor-neutral):
+  * Event ingestion from backend/web (structured logs, DB triggers).
+  * Storage: data lake (S3-compatible) + warehouse (Postgres/analytical).
+  * Processing: scheduled ETL/ELT jobs (cleaning, aggregates, history).
+  * BI: dashboards (KPIs and alerts) for management and staff.
+- Suggested KPIs:
+  * Daily/weekly attendance rates; on-time arrival by classroom.
+  * Capacity and occupancy; demand by time window.
+  * Revenue vs. delinquency; average payment time.
+  * Communication effectiveness (open/click/response time).
+  * Incidents by type/frequency; resolution time.
+- Benefits:
+  * Data-driven planning for staff and classrooms.
+  * Early anomaly detection (attendance spikes, usage drop-offs).
+  * Continuous improvement of family experience (effective communications).
+- Considerations:
+  * Privacy and compliance (consent, minimization, retention).
+  * Security (encryption, access control, audit logging).
+  * Governance (data catalog, quality, lineage).
+  * Cost and scalability (storage, job execution, BI).
+
+4) Data Mining proposal for the project
+- Objective: develop models to predict absenteeism and segment families, improving communications, staffing, and educational support.
+- Dataset:
+  * Attendance history per child (date, class, time, timeliness, absence).
+  * Attributes: age, classroom, school calendar, weather (if available), events.
+  * Finance: payments and delinquency (correlations with attendance/engagement).
+  * Communications: message open rates, response times.
+  * Incidents/observations and their resolution.
+- Proposed methodology:
+  * Preparation: cleaning, imputation, normalization, features (trends, seasonality, ratios).
+  * Models:
+    - Classification for absenteeism risk (Logistic Regression, Decision Trees, Random Forest, XGBoost).
+    - Family clustering by attendance/engagement patterns (K-Means, DBSCAN).
+    - Association rules for co-occurrences (time slots, incidents, payments).
+    - Anomaly detection (Isolation Forest) for sudden variations.
+  * Validation: temporal splits, cross-validation, metrics (Accuracy, Recall, F1, AUC).
+  * Interpretability: feature importance, SHAP, human-readable rules.
+- Deliverables:
+  * Absenteeism risk score per child/classroom (for alerts and support).
+  * Family segments with personalized communication recommendations.
+  * Actionable rules/insights (e.g., time windows/days with higher absenteeism).
+- Ethical considerations:
+  * Avoid bias (age, socioeconomic conditions); transparency and explainability.
+  * Responsible thresholds and actions (avoid stigmatization; support-focused).

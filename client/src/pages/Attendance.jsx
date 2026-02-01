@@ -151,7 +151,7 @@ export default function Attendance() {
             setLoadingReport(false);
         }
     };
-ditRecord = (record) => {
+    const handleEditRecord = (record) => {
         setEditingRecord({
             AttendanceID: record.AttendanceID,
             Status: record.Status,

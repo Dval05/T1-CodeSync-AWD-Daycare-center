@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { crudApi } from '../api/crud';
 import { businessApi } from '../api/business';
-import { FileText, Plus, Download, DollarSign } from 'lucide-react';
+import { FileText, Plus, Download, Mail, Edit2, XCircle } from 'lucide-react';
 
 export default function Invoices() {
     const [invoices, setInvoices] = useState([]);
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showGenerateModal, setShowGenerateModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingInvoice, setEditingInvoice] = useState(null);
     const [newInvoice, setNewInvoice] = useState({
         studentId: '',
         month: new Date().toISOString().slice(0, 7),
@@ -16,6 +18,7 @@ export default function Invoices() {
             { concept: 'Mensualidad', amount: 1000 }
         ]
     });
+    const [editItems, setEditItems] = useState([]);
 
     useEffect(() => {
         loadData();
@@ -38,6 +41,21 @@ export default function Invoices() {
 
     const handleGenerateInvoice = async () => {
         try {
+            // Validación rápida en frontend
+            if (!newInvoice.studentId) {
+                alert('Selecciona un estudiante');
+                return;
+            }
+            if (!Array.isArray(newInvoice.items) || newInvoice.items.length === 0) {
+                alert('Agrega al menos un concepto');
+                return;
+            }
+            const invalid = newInvoice.items.some(it => !it.concept || Number(it.amount) <= 0);
+            if (invalid) {
+                alert('Verifica conceptos: deben tener nombre y monto > 0');
+                return;
+            }
+
             await businessApi.finance.generateInvoice(newInvoice);
             alert('Factura generada exitosamente');
             setShowGenerateModal(false);
@@ -49,7 +67,8 @@ export default function Invoices() {
             });
         } catch (error) {
             console.error("Error generando factura:", error);
-            alert('Error al generar factura');
+            const msg = error?.response?.data?.error || 'Error al generar factura';
+            alert(msg);
         }
     };
 
@@ -74,6 +93,83 @@ export default function Invoices() {
     };
 
     const totalAmount = newInvoice.items.reduce((sum, item) => sum + (item.amount || 0), 0);
+
+    const parseItems = (invoice) => {
+        try {
+            const json = invoice.Description ? JSON.parse(invoice.Description) : {};
+            return Array.isArray(json.items) ? json.items : [];
+        } catch {
+            return [];
+        }
+    };
+
+    const openEdit = (invoice) => {
+        setEditingInvoice(invoice);
+        setEditItems(parseItems(invoice));
+        setShowEditModal(true);
+    };
+
+    const addEditItem = () => setEditItems((prev) => [...prev, { concept: '', amount: 0 }]);
+    const updateEditItem = (index, field, value) => {
+        const next = [...editItems];
+        next[index][field] = field === 'amount' ? parseFloat(value) : value;
+        setEditItems(next);
+    };
+    const removeEditItem = (index) => setEditItems((prev) => prev.filter((_, i) => i !== index));
+
+    const saveEdit = async () => {
+        try {
+            await businessApi.finance.updateInvoice(editingInvoice.InvoiceID, { items: editItems });
+            setShowEditModal(false);
+            setEditingInvoice(null);
+            setEditItems([]);
+            loadData();
+            alert('Factura actualizada');
+        } catch (e) {
+            console.error(e);
+            alert('Error al actualizar factura');
+        }
+    };
+
+    const cancelInvoice = async (invoice) => {
+        if (!confirm('¿Anular esta factura?')) return;
+        const reason = prompt('Motivo de anulación (opcional):', '') || '';
+        try {
+            await businessApi.finance.cancelInvoice(invoice.InvoiceID, { reason });
+            loadData();
+            alert('Factura anulada');
+        } catch (e) {
+            console.error(e);
+            alert('No se pudo anular la factura');
+        }
+    };
+
+    const downloadPdf = async (invoice) => {
+        try {
+            const { data } = await businessApi.finance.getInvoicePdf(invoice.InvoiceID);
+            const url = window.URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `invoice-${invoice.InvoiceNumber || invoice.InvoiceID}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error(e);
+            alert('Error al generar PDF');
+        }
+    };
+
+    const sendEmail = async (invoice) => {
+        try {
+            await businessApi.finance.sendInvoiceEmail(invoice.InvoiceID);
+            alert('Factura enviada por email');
+        } catch (e) {
+            console.error(e);
+            alert('No se pudo enviar el email');
+        }
+    };
 
     if (loading) {
         return (
@@ -111,33 +207,60 @@ export default function Invoices() {
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                         <FileText className="text-green-600" size={20} />
-                                        <h3 className="font-bold text-lg">Factura #{invoice.InvoiceID}</h3>
+                                        <h3 className="font-bold text-lg">Factura {invoice.InvoiceNumber || `#${invoice.InvoiceID}`}</h3>
                                     </div>
                                     <p className="text-gray-600 mt-1">
-                                        Estudiante ID: {invoice.StudentID}
+                                        Estudiante ID: {invoice.ReferenceID}
                                     </p>
                                     <div className="flex gap-4 mt-2 text-sm">
                                         <span className="text-gray-500">
-                                            Fecha: {new Date(invoice.InvoiceDate).toLocaleDateString('es-ES')}
+                                            Fecha: {invoice.IssueDate ? new Date(invoice.IssueDate).toLocaleDateString('es-ES') : '-'}
                                         </span>
                                         <span className="text-gray-500">
                                             Total: ${invoice.TotalAmount?.toFixed(2)}
                                         </span>
                                         <span className={`px-2 py-1 rounded ${
-                                            invoice.Status === 'Paid' 
-                                                ? 'bg-green-100 text-green-800' 
-                                                : 'bg-yellow-100 text-yellow-800'
+                                            invoice.Status === 'Paid' ? 'bg-green-100 text-green-800'
+                                            : invoice.Status === 'Canceled' ? 'bg-red-100 text-red-800'
+                                            : invoice.Status === 'Overdue' ? 'bg-orange-100 text-orange-800'
+                                            : 'bg-yellow-100 text-yellow-800'
                                         }`}>
                                             {invoice.Status}
                                         </span>
                                     </div>
                                 </div>
-                                <button
-                                    className="text-blue-600 hover:text-blue-700"
-                                    title="Descargar PDF"
-                                >
-                                    <Download size={20} />
-                                </button>
+                                <div className="flex gap-3">
+                                    <button
+                                        className="text-blue-600 hover:text-blue-700"
+                                        title="Descargar PDF"
+                                        onClick={() => downloadPdf(invoice)}
+                                    >
+                                        <Download size={20} />
+                                    </button>
+                                    <button
+                                        className="text-blue-600 hover:text-blue-700"
+                                        title="Enviar por email"
+                                        onClick={() => sendEmail(invoice)}
+                                    >
+                                        <Mail size={20} />
+                                    </button>
+                                    <button
+                                        className="text-amber-600 hover:text-amber-700 disabled:text-gray-400"
+                                        title="Editar"
+                                        disabled={invoice.Status === 'Paid' || invoice.Status === 'Canceled'}
+                                        onClick={() => openEdit(invoice)}
+                                    >
+                                        <Edit2 size={20} />
+                                    </button>
+                                    <button
+                                        className="text-red-600 hover:text-red-700 disabled:text-gray-400"
+                                        title="Anular"
+                                        disabled={invoice.Status === 'Paid' || invoice.Status === 'Canceled'}
+                                        onClick={() => cancelInvoice(invoice)}
+                                    >
+                                        <XCircle size={20} />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -248,6 +371,48 @@ export default function Invoices() {
                             >
                                 Cancelar
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal para Editar Factura */}
+            {showEditModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-2xl m-4">
+                        <h3 className="text-xl font-bold mb-4">Editar Factura {editingInvoice?.InvoiceNumber || `#${editingInvoice?.InvoiceID}`}</h3>
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="block text-sm font-medium text-gray-700">Conceptos</label>
+                                <button onClick={addEditItem} className="text-blue-600 hover:text-blue-700 text-sm">+ Agregar concepto</button>
+                            </div>
+                            <div className="space-y-2">
+                                {editItems.map((item, index) => (
+                                    <div key={index} className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={item.concept}
+                                            onChange={(e) => updateEditItem(index, 'concept', e.target.value)}
+                                            placeholder="Concepto"
+                                            className="flex-1 border rounded-lg px-3 py-2"
+                                        />
+                                        <input
+                                            type="number"
+                                            value={item.amount}
+                                            onChange={(e) => updateEditItem(index, 'amount', e.target.value)}
+                                            placeholder="Monto"
+                                            className="w-32 border rounded-lg px-3 py-2"
+                                        />
+                                        {editItems.length > 1 && (
+                                            <button onClick={() => removeEditItem(index)} className="text-red-600 hover:text-red-700 px-2">✕</button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex gap-2 mt-6">
+                            <button onClick={saveEdit} className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Guardar Cambios</button>
+                            <button onClick={() => { setShowEditModal(false); setEditingInvoice(null); }} className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">Cancelar</button>
                         </div>
                     </div>
                 </div>
