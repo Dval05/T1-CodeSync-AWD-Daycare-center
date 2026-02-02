@@ -62,6 +62,11 @@ export const businessApi = {
 
         updatePayment: (id, data) => api.patch(`/finance/payment/${id}`, data),
 
+        deletePayment: (id) => api.delete(`/finance/payment/${id}`),
+        listPayments: (params) => api.get('/finance/payments', { params }),
+        getPaymentPdf: (id) => api.get(`/finance/payment/${id}/pdf`, { responseType: 'blob' }),
+        emailPaymentReceipt: (id) => api.post(`/finance/payment/${id}/email`),
+
     },
     employees: {
         schedules: () => api.get('/employees/schedules'),
