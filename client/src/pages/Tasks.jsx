@@ -153,6 +153,14 @@ export default function Tasks() {
                 <div className="flex items-center gap-2">
                     {getStatusIcon(task.Status)}
                     <span className="text-sm">{task.Status || 'Pending'}</span>
+                    <div className="ml-auto flex gap-1">
+                        <button onClick={async () => {
+                            try { await businessApi.employees.updateTaskStatus(task.TaskID, { status: 'In Progress' }); toast.success('Tarea en progreso'); loadData(); } catch (e) { toast.error('No se pudo actualizar'); }
+                        }} className="text-xs px-2 py-1 bg-gray-100 rounded">En progreso</button>
+                        <button onClick={async () => {
+                            try { await businessApi.employees.updateTaskStatus(task.TaskID, { status: 'Completed', completedDate: new Date().toISOString().split('T')[0] }); toast.success('Tarea completada'); loadData(); } catch (e) { toast.error('No se pudo completar'); }
+                        }} className="text-xs px-2 py-1 bg-green-100 rounded">Completar</button>
+                    </div>
                 </div>
             )
         }
@@ -209,7 +217,6 @@ export default function Tasks() {
                                     Título de la Tarea *
                                 </label>
                                 <input
-                                    type="text"
                                     placeholder="Ej: Preparar material didáctico"
                                     className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     value={newTask.title}

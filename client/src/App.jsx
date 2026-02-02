@@ -27,7 +27,8 @@ import { toast } from 'react-hot-toast';
 // Importa el resto de tus páginas aquí...
 
 const ProtectedRoute = ({ children }) => {
-    const { user, loading, sessionExpired } = useAuth();
+    const auth = useAuth() || {};
+    const { user, loading, sessionExpired } = auth;
     
     if (loading) return <div>Cargando...</div>;
     
@@ -40,7 +41,8 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const AppContent = () => {
-    const { mustChangePassword, profile, onPasswordChanged, user, logoutDueToInactivity } = useAuth();
+    const auth = useAuth() || {};
+    const { mustChangePassword, profile, onPasswordChanged, user, logoutDueToInactivity } = auth;
     const navigate = useNavigate();
 
     // Configurar el timeout de inactividad (5 minutos)

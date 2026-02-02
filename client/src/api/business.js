@@ -72,6 +72,7 @@ export const businessApi = {
         schedules: () => api.get('/employees/schedules'),
         assignTask: (data) => api.post('/employees/tasks/assign', data),
         getTasks: (id) => api.get(`/employees/${id}/tasks`),
+        updateTaskStatus: (taskId, data) => api.put(`/employees/tasks/${taskId}`, data),
     },
     guardians: {
         students: (id) => api.get(`/guardians/${id}/students`),
