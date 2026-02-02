@@ -66,6 +66,8 @@ export const businessApi = {
         listPayments: (params) => api.get('/finance/payments', { params }),
         getPaymentPdf: (id) => api.get(`/finance/payment/${id}/pdf`, { responseType: 'blob' }),
         emailPaymentReceipt: (id) => api.post(`/finance/payment/${id}/email`),
+        teacherPaymentsCsv: (id, params) => api.get(`/finance/teacher/${id}/payments/csv`, { params, responseType: 'blob' }),
+        teacherPayrollPdf: (id, params) => api.get(`/finance/teacher/${id}/payroll/pdf`, { params, responseType: 'blob' }),
 
     },
     employees: {

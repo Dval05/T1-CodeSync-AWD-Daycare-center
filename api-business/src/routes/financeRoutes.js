@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getStudentBalance, getTeacherBalance } from '../controllers/financeController.js';
+import { getStudentBalance, getTeacherBalance, exportTeacherPaymentsCsv, getTeacherPayrollPdf } from '../controllers/financeController.js';
 import { generateInvoice, registerPayment, updatePayment, deletePayment, listPayments, getPaymentPdf, emailPaymentReceipt } from '../controllers/paymentController.js';
 import { getInvoicePdf } from '../controllers/invoiceController.js';
 import { requireAuth, requirePermission } from '../middleware/authMiddleware.js';
@@ -8,6 +8,8 @@ const router = Router();
 
 router.get('/student/:id/balance', requireAuth, requirePermission('Pagos', 'view'), getStudentBalance);
 router.get('/teacher/:id/balance', requireAuth, requirePermission('Pagos', 'view'), getTeacherBalance);
+router.get('/teacher/:id/payments/csv', requireAuth, requirePermission('Pagos', 'view'), exportTeacherPaymentsCsv);
+router.get('/teacher/:id/payroll/pdf', requireAuth, requirePermission('Pagos', 'view'), getTeacherPayrollPdf);
 router.post('/invoice/generate', requireAuth, requirePermission('Pagos', 'edit'), generateInvoice);
 router.post('/payment', requireAuth, requirePermission('Pagos', 'edit'), registerPayment);
 router.patch('/payment/:id', requireAuth, requirePermission('Pagos', 'edit'), updatePayment);

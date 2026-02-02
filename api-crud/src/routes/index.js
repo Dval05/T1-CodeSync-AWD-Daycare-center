@@ -3,6 +3,7 @@ import { getAll, getById, create, update, remove } from '../controllers/genericC
 import { createUser, updateUser, login, changePassword, resetPasswordToID } from '../controllers/userController.js';
 import { getRolePermissions } from '../controllers/accessController.js';
 import { authCheck } from '../middleware/authCheck.js';
+import { validateResource } from '../middleware/validation.js';
 
 const router = express.Router();
 
@@ -27,8 +28,8 @@ router.get('/access/role/:id/permissions', authCheck, getRolePermissions);
 // Rutas genéricas
 router.get('/:resource', authCheck, getAll);
 router.get('/:resource/:id', authCheck, getById);
-router.post('/:resource', authCheck, create);
-router.put('/:resource/:id', authCheck, update);
+router.post('/:resource', authCheck, validateResource(), create);
+router.put('/:resource/:id', authCheck, validateResource(), update);
 router.delete('/:resource/:id', authCheck, remove);
 
 export default router;

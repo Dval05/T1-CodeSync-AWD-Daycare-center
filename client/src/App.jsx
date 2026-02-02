@@ -12,6 +12,7 @@ import Students from './pages/Students';
 import Grades from './pages/Grades';
 import Guardians from './pages/Guardians';
 import Payments from './pages/Payments';
+import EmployeePayments from './pages/EmployeePayments';
 import Profile from './pages/Profile';
 import Staff from './pages/Staff';
 import Tasks from './pages/Tasks';
@@ -70,6 +71,7 @@ const AppContent = () => {
                 <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
                 <Route path="/grades" element={<ProtectedRoute><Grades /></ProtectedRoute>} />
                 <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+                <Route path="/employee-payments" element={<ProtectedRoute><EmployeePayments /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
                 <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
