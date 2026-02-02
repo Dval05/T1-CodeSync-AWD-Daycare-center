@@ -57,10 +57,13 @@ export default function Attendance() {
                     const lastRecord = data[0];
                     const lastRecordTime = new Date(lastRecord.CreatedAt);
                     const now = new Date();
-                    const hoursDifference = (now - lastRecordTime) / (1000 * 60 * 60);
+                    // Clamp negative differences to 0 to avoid future timestamp issues
+                    let diffMs = now - lastRecordTime;
+                    if (diffMs < 0) diffMs = 0;
+                    const hoursDifference = diffMs / (1000 * 60 * 60);
 
                     checks[student.StudentID] = {
-                        canRegister: hoursDifference >= 2,
+                        canRegister: true,
                         hoursSinceLastRecord: hoursDifference,
                         lastRecordDate: lastRecord.Date,
                         lastRecordTime: lastRecord.CreatedAt,
@@ -319,8 +322,6 @@ export default function Attendance() {
     };
 
     const handleEditRecord = (record) => {
-
-    const editRecord = (record) => {
         setEditingRecord({
             AttendanceID: record.AttendanceID,
             Status: record.Status,
@@ -478,11 +479,11 @@ export default function Attendance() {
                             <tbody className="divide-y divide-gray-200">
                                 {students.map(stu => {
                                     const check = lastAttendanceCheck[stu.StudentID];
-                                    const canRegister = check?.canRegister !== false;
-                                    const showWarning = !canRegister;
+                                    const canRegister = true;
+                                    const showWarning = false;
                                     
                                     return (
-                                        <tr key={stu.StudentID} className={showWarning ? 'bg-yellow-50' : ''}>
+                                        <tr key={stu.StudentID}>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
                                                     {showWarning && (
@@ -499,7 +500,7 @@ export default function Attendance() {
                                                         </div>
                                                         {showWarning && (
                                                             <div className="text-xs text-red-600 font-bold mt-1">
-                                                                Faltan {formatTimeElapsed((2 * 60 * 60 * 1000) - (new Date() - new Date(check.lastRecordTime)))}
+                                                                Faltan {formatTimeElapsed((check?.minutesRemaining || 0) * 60 * 1000)}
                                                             </div>
                                                         )}
                                                     </div>
@@ -510,13 +511,10 @@ export default function Attendance() {
                                             <td className="px-6 py-4 text-center">
                                                 <button 
                                                     onClick={() => handleToggle(stu.StudentID)}
-                                                    disabled={showWarning}
                                                     className={`px-4 py-1 rounded-full text-sm font-semibold ${
-                                                        showWarning 
-                                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                                                            : attendance[stu.StudentID] === 'Present' 
-                                                                ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                                                                : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                                        attendance[stu.StudentID] === 'Present' 
+                                                            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                                            : 'bg-red-100 text-red-800 hover:bg-red-200'
                                                     }`}
                                                 >
                                                     {attendance[stu.StudentID] === 'Present' ? 'Presente' : 'Ausente'}
@@ -528,7 +526,7 @@ export default function Attendance() {
                                                         type="checkbox"
                                                         checked={lateStatus[stu.StudentID] === 1}
                                                         onChange={() => handleToggleLate(stu.StudentID)}
-                                                        disabled={attendance[stu.StudentID] !== 'Present' || showWarning}
+                                                        disabled={attendance[stu.StudentID] !== 'Present'}
                                                         className="w-5 h-5 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500 disabled:opacity-50"
                                                     />
                                                     <span className={`ml-2 text-sm font-medium ${
@@ -920,5 +918,4 @@ export default function Attendance() {
             )}
         </Layout>
     );
-}
 }
