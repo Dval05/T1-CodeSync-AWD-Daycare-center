@@ -57,7 +57,7 @@ export default function Attendance() {
                     const lastRecord = data[0];
                     const lastRecordTime = new Date(lastRecord.CreatedAt);
                     const now = new Date();
-                    // Clamp negative differences to 0 to avoid future timestamp issues
+                    
                     let diffMs = now - lastRecordTime;
                     if (diffMs < 0) diffMs = 0;
                     const hoursDifference = diffMs / (1000 * 60 * 60);
@@ -70,12 +70,12 @@ export default function Attendance() {
                         minutesRemaining: hoursDifference < 2 ? Math.ceil((2 - hoursDifference) * 60) : 0
                     };
 
-                    // Usar la hora de entrada del último registro
-                    // Prioridad: 1) CheckInTime si existe, 2) Hora del CreatedAt, 3) Hora actual
+                    
+                    
                     if (lastRecord.CheckInTime) {
                         initialCheckIn[student.StudentID] = lastRecord.CheckInTime;
                     } else if (lastRecord.CreatedAt) {
-                        // Extraer solo la hora del CreatedAt en zona horaria de Ecuador (UTC-5)
+                        
                         const createdAtDate = new Date(lastRecord.CreatedAt);
                         initialCheckIn[student.StudentID] = createdAtDate.toLocaleTimeString('es-EC', { 
                             timeZone: 'America/Guayaquil', 
@@ -84,7 +84,7 @@ export default function Attendance() {
                             hour12: false 
                         });
                     } else {
-                        // Hora actual en zona horaria de Ecuador
+                        
                         const nowEcuador = new Date().toLocaleTimeString('es-EC', { 
                             timeZone: 'America/Guayaquil', 
                             hour: '2-digit', 
@@ -101,7 +101,7 @@ export default function Attendance() {
                         lastRecordTime: null,
                         minutesRemaining: 0
                     };
-                    // Si no hay registros previos, usar hora actual de Ecuador
+                    
                     initialCheckIn[student.StudentID] = new Date().toLocaleTimeString('es-EC', { 
                         timeZone: 'America/Guayaquil', 
                         hour: '2-digit', 
@@ -216,7 +216,7 @@ export default function Attendance() {
                         CheckInTime: checkInTime[stu.StudentID] || null
                     };
 
-                    // Solo incluir CheckOutTime si tiene valor
+                    
                     if (checkOutTime[stu.StudentID]) {
                         attendanceData.CheckOutTime = checkOutTime[stu.StudentID];
                     }
@@ -452,7 +452,7 @@ export default function Attendance() {
                 </div>
             </div>
 
-            {/* TAB: REGISTRAR ASISTENCIA */}
+            {}
             {activeTab === 'register' && (
                 <>
                     <div className="mb-6 flex justify-between items-center">
@@ -866,7 +866,7 @@ export default function Attendance() {
                 </div>
             )}
 
-                    {/* GRÁFICAS */}
+                    {}
                     {showCharts && dashboardStats && (
                         <div className="bg-white rounded-lg shadow p-6 mb-6">
                             <h4 className="text-lg font-bold text-gray-800 mb-4">Gráficas de Asistencia</h4>
@@ -876,7 +876,7 @@ export default function Attendance() {
                 </>
             )}
 
-            {/* Modal para editar hora */}
+            {}
             {showTimeModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-xl p-6 w-96">

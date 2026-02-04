@@ -40,8 +40,8 @@ export function calculateStudyTime(enrollmentDateInput) {
   if (!enrollmentDate) throw new Error('Invalid enrollment date');
 
   const today = startOfTodayUTC();
-  // Validar futuro (opcional, comentado si quieres permitir fechas futuras)
-  // if (enrollmentDate > today) throw new Error('Enrollment date is in the future');
+  
+  
 
   const period = diffYMD(enrollmentDate, today);
   const totalDays = Math.floor((today.getTime() - enrollmentDate.getTime()) / MS_PER_DAY);

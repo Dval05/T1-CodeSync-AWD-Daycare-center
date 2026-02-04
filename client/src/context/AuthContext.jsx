@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const lastActivity = localStorage.getItem('lastActivity');
-        const sessionTimeout = 5 * 60 * 1000; // 5 min
+        const sessionTimeout = 5 * 60 * 1000; 
         
         if (lastActivity) {
             const timeSinceLastActivity = Date.now() - parseInt(lastActivity);
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
             return;
         }
 
-        // Prevenir procesamiento múltiple
+        
         const currentUserId = localStorage.getItem('current-user-id');
         if (currentUserId === session.user.id && permissionsLoaded && sessionProcessingRef.current) {
             console.log('AuthContext: Sesión ya procesada, saltando');
@@ -90,14 +90,14 @@ export const AuthProvider = ({ children }) => {
             return;
         }
         
-        // Marcar como procesando
+        
         sessionProcessingRef.current = true;
         localStorage.setItem('current-user-id', session.user.id);
 
         try {
             const token = session.access_token;
             localStorage.setItem('sb-access-token', token);
-            localStorage.setItem('lastActivity', Date.now().toString()); // Registrar actividad
+            localStorage.setItem('lastActivity', Date.now().toString()); 
             setUser(session.user);
             setSessionExpired(false);         
 
@@ -219,7 +219,7 @@ export const AuthProvider = ({ children }) => {
 
                 localStorage.setItem('sb-access-token', token);
                 localStorage.setItem('user-profile', JSON.stringify(userData));
-                localStorage.setItem('lastActivity', Date.now().toString()); // Registrar actividad
+                localStorage.setItem('lastActivity', Date.now().toString()); 
                 
                 setUser({ email: userData.Email });
                 setProfile(userData);

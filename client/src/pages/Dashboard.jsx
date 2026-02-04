@@ -17,9 +17,9 @@ export default function Dashboard() {
                 const today = new Date().toISOString().split('T')[0];
 
                 const [studentsRes, attendanceRes, paymentsRes] = await Promise.all([
-                    crudApi.getAll('student', { IsActive: 1 }), // Estudiantes Activos
-                    crudApi.getAll('attendance', { Date: today, Status: 'Present' }), // Asistencia Hoy
-                    crudApi.getAll('teacher_payment', { Status: 'Pending' }) // Pagos Pendientes
+                    crudApi.getAll('student', { IsActive: 1 }), 
+                    crudApi.getAll('attendance', { Date: today, Status: 'Present' }), 
+                    crudApi.getAll('teacher_payment', { Status: 'Pending' }) 
                 ]);
 
                 setStats({
@@ -62,19 +62,19 @@ export default function Dashboard() {
                     title="Estudiantes Activos" 
                     value={stats.students} 
                     icon={Users} 
-                    color="#3B82F6" // Blue
+                    color="#3B82F6" 
                 />
                 <StatCard 
                     title="Asistencia Hoy" 
                     value={stats.attendance} 
                     icon={UserCheck} 
-                    color="#10B981" // Green
+                    color="#10B981" 
                 />
                 <StatCard 
                     title="Pagos Pendientes" 
                     value={stats.payments} 
                     icon={DollarSign} 
-                    color="#F59E0B" // Amber
+                    color="#F59E0B" 
                 />
             </div>
 

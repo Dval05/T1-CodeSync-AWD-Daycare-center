@@ -107,7 +107,7 @@ export default function ChangePasswordModal({ user, onSuccess }) {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Contraseña Actual */}
+                    {}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Contraseña Actual (tu cédula)
@@ -136,7 +136,7 @@ export default function ChangePasswordModal({ user, onSuccess }) {
                         )}
                     </div>
 
-                    {/* Nueva Contraseña */}
+                    {}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Nueva Contraseña
@@ -165,7 +165,7 @@ export default function ChangePasswordModal({ user, onSuccess }) {
                         )}
                     </div>
 
-                    {/* Confirmar Contraseña */}
+                    {}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Confirmar Nueva Contraseña

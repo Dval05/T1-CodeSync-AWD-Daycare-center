@@ -11,14 +11,14 @@ export default function Audit() {
     const [selectedStudent, setSelectedStudent] = useState('');
     const [selectedEmployee, setSelectedEmployee] = useState('');
     const [loading, setLoading] = useState(false);
-    const [mode, setMode] = useState('students'); // 'students' | 'teachers'
+    const [mode, setMode] = useState('students'); 
 
-    // pendingUploads: supports both student and teacher categories
+    
     const [pendingUploads, setPendingUploads] = useState({ attendance: [], payments: [], reports: [], activities: [] });
-    // confirmed tables stored in localStorage
+    
     const [tables, setTables] = useState({});
-    const [viewing, setViewing] = useState(null); // studentId being viewed
-    const [editing, setEditing] = useState(null); // studentId being edited
+    const [viewing, setViewing] = useState(null); 
+    const [editing, setEditing] = useState(null); 
 
     useEffect(() => {
         loadStudents();
@@ -40,9 +40,9 @@ export default function Audit() {
         const out = {};
         Object.entries(obj).forEach(([key, tbl]) => {
             const t = { ...tbl };
-            // default to students if mode not set
+            
             if (!t.mode) t.mode = 'students';
-            // ensure displayName
+            
             if (!t.displayName && t.studentName) t.displayName = t.studentName;
             if (!t.categories) t.categories = {};
             if (t.mode === 'students') {
@@ -58,7 +58,7 @@ export default function Audit() {
         return out;
     };
 
-    // clear selections/view when switching modes
+    
     useEffect(() => {
         setSelectedStudent('');
         setSelectedEmployee('');
@@ -92,7 +92,7 @@ export default function Audit() {
 
     const handleFilesSelected = (category, fileList) => {
         const files = Array.from(fileList);
-        // read files as data URLs
+        
         const readers = files.map(f => new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = (e) => resolve({ name: f.name, type: f.type, dataUrl: e.target.result });
@@ -109,7 +109,7 @@ export default function Audit() {
     };
 
     const handleConfirmUpload = (category) => {
-        // determine id and name based on mode
+        
         const id = mode === 'students' ? selectedStudent : selectedEmployee;
         if (!id) { toast.error(mode === 'students' ? 'Selecciona un estudiante primero' : 'Selecciona un empleado primero'); return; }
 
@@ -118,7 +118,7 @@ export default function Audit() {
 
         const key = `${mode}:${id}`;
 
-        // default categories per mode
+        
         const defaultCategories = mode === 'students'
             ? { attendance: [], payments: [], reports: [] }
             : { activities: [], payments: [] };
@@ -137,7 +137,7 @@ export default function Audit() {
     };
 
     const handleCompletarTabla = () => {
-        // reload section: clear selection and show list (tables state already updated)
+        
         setSelectedStudent('');
         setViewing(null);
         setEditing(null);
@@ -213,7 +213,7 @@ export default function Audit() {
                     </div>
                 </div>
 
-                {/* TABLE UI: 3 columns */}
+                {}
                 <div className="overflow-x-auto mb-4">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
@@ -316,7 +316,7 @@ export default function Audit() {
                 </div>
             </div>
 
-            {/* List existing audit tables */}
+            {}
             <div className="bg-white rounded-lg shadow p-6">
                 <h4 className="text-lg font-bold mb-4">Tablas de Auditoría</h4>
                 {Object.keys(tables).length === 0 && <p className="text-sm text-gray-500">No hay tablas creadas aún.</p>}
@@ -332,7 +332,7 @@ export default function Audit() {
                         </div>
                     ))}
 
-                {/* Viewing area */}
+                {}
                 {viewing && tables[viewing] && (
                     <div className="mt-4">
                         <h5 className="font-semibold">Tabla: Auditoría_{tables[viewing].displayName || tables[viewing].studentName}</h5>
@@ -410,7 +410,7 @@ export default function Audit() {
                     </div>
                 )}
 
-                {/* Editing area: allow appending files to existing table */}
+                {}
                 {editing && tables[editing] && (
                     <div className="mt-4">
                         <h5 className="font-semibold">Editar Tabla: Auditoría_{tables[editing].displayName || tables[editing].studentName}</h5>

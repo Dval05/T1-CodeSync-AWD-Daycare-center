@@ -1,10 +1,10 @@
 import { useEffect, useRef, useCallback } from 'react';
 
-/**
- * Hook para detectar inactividad del usuario
- * @param {number} timeout - Tiempo de inactividad en milisegundos (default: 5 minutos)
- * @param {function} onTimeout - Callback que se ejecuta cuando hay timeout
- */
+
+
+
+
+
 export const useInactivityTimeout = (timeout = 5 * 60 * 1000, onTimeout) => {
     const timeoutRef = useRef(null);
     const lastActivityRef = useRef(Date.now());

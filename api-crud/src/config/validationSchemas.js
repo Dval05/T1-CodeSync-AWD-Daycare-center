@@ -1,5 +1,5 @@
-// Esquemas de validación por recurso (dinámicos)
-// Usar campos: required, type ('string'|'number'|'boolean'|'date'), range {min,max}, format ('iso-date'...)
+
+
 
 export const schemas = {
   user: {
@@ -30,7 +30,7 @@ export const schemas = {
   },
   teacher_payment: {
     EmpID: { required: true, type: 'number' },
-    Period: { required: true, type: 'string' }, // YYYY-MM
+    Period: { required: true, type: 'string' }, 
     PaymentDate: { type: 'date', format: 'iso-date' },
     Amount: { required: true, type: 'number', range: { min: 0 } },
     Notes: { type: 'string' },

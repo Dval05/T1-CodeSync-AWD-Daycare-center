@@ -4,11 +4,11 @@ const api = axios.create({
     baseURL: import.meta.env.VITE_API_CRUD_URL
 });
 
-// Interceptor para inyectar el token automáticamente
+
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('sb-access-token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
-    // During local development, add a dev user header so UI calls pass requireAuth
+    
     try {
         if (import.meta.env.DEV && !config.headers['x-dev-user']) {
             const saved = localStorage.getItem('user-profile');
@@ -24,7 +24,7 @@ api.interceptors.request.use((config) => {
 });
 
 export const crudApi = {
-    // GET /api/student?GradeID=1
+    
     getAll: (resource, params) => api.get(`/${resource}`, { params }),
     getById: (resource, id) => api.get(`/${resource}/${id}`),
     create: (resource, data) => api.post(`/${resource}`, data),

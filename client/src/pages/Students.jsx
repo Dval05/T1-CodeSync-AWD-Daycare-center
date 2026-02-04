@@ -115,7 +115,7 @@ export default function Students() {
             let photoURL = null;
 
             if (uploadError) {
-                // fallback to base64
+                
                 const reader = new FileReader();
                 reader.onloadend = async () => {
                     const base64Image = reader.result;
@@ -143,7 +143,7 @@ export default function Students() {
     const handlePreviewAndUpload = (file, student, inputEl) => {
         if (!file) return;
 
-        // Mostrar preview inmediato en frontend (base64)
+        
         const reader = new FileReader();
         reader.onloadend = () => {
             const dataUrl = reader.result;
@@ -151,7 +151,7 @@ export default function Students() {
         };
         reader.readAsDataURL(file);
 
-        // limpiar input para permitir re-subir la misma imagen si se desea
+        
         try { if (inputEl) inputEl.value = ''; } catch (e) {}
 
         // No subir a Supabase: sólo mostrar preview en frontend según solicitud

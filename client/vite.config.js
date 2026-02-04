@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
     port: 5173,
   },
-  // --- AGREGA ESTO ---
+  
   optimizeDeps: {
     include: ['@supabase/supabase-js', 'tslib'],
   },

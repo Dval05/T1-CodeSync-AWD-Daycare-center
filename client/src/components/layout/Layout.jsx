@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
-import Header from './Header'; // Usamos el componente Header dedicado
+import Header from './Header'; 
 import { Toaster } from 'react-hot-toast';
 
 export default function Layout({ children }) {

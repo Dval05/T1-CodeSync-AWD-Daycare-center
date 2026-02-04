@@ -25,15 +25,12 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
-// Importa el resto de tus páginas aquí...
-
 const ProtectedRoute = ({ children }) => {
     const auth = useAuth() || {};
     const { user, loading, sessionExpired } = auth;
     
     if (loading) return <div>Cargando...</div>;
     
-    // Si la sesión expiró, redirigir al login
     if (sessionExpired || !user) {
         return <Navigate to="/" replace />;
     }
@@ -46,7 +43,6 @@ const AppContent = () => {
     const { mustChangePassword, profile, onPasswordChanged, user, logoutDueToInactivity } = auth;
     const navigate = useNavigate();
 
-    // Configurar el timeout de inactividad (5 minutos)
     useInactivityTimeout(5 * 60 * 1000, () => {
         if (user) {
             toast.error('Tu sesión ha expirado por inactividad', {
@@ -63,7 +59,6 @@ const AppContent = () => {
             <Routes>
                 <Route path="/" element={<Login />} />
                 
-                {/* Rutas Protegidas */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/audit" element={<ProtectedRoute><Audit /></ProtectedRoute>} />
                 <Route path="/activities" element={<ProtectedRoute><Activities /></ProtectedRoute>} />
@@ -82,10 +77,8 @@ const AppContent = () => {
                 <Route path="/staff" element={<ProtectedRoute><Staff /></ProtectedRoute>} />
                 <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-                {/* Agrega aquí Students, Grades, etc. */}
             </Routes>
 
-            {/* Modal de cambio de contraseña obligatorio */}
             {mustChangePassword && profile && (
                 <ChangePasswordModal 
                     user={profile} 

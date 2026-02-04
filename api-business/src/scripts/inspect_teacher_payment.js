@@ -2,7 +2,7 @@ import supabase from '../config/supabase.js';
 
 async function inspect() {
     try {
-        // First try: information_schema (might be blocked by PostgREST settings)
+        
         let res = await supabase
             .from('information_schema.columns')
             .select('column_name,data_type,is_nullable,ordinal_position')
@@ -12,7 +12,7 @@ async function inspect() {
 
         if (res.error) {
             console.warn('information_schema query failed, falling back to sampling rows:', res.error.message);
-            // Fallback: try to select a single row from the table and infer keys
+            
             const { data: sample, error: sampleErr } = await supabase
                 .from('teacher_payment')
                 .select('*')

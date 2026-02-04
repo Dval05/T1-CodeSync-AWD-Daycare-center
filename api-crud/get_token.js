@@ -11,21 +11,21 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- CONFIGURA AQUÍ TU USUARIO DE PRUEBA ---
+
 const EMAIL = 'andrade.dval@gmail.com';
-const PASSWORD = 'admin123'; // Mínimo 6 caracteres
-// -------------------------------------------
+const PASSWORD = 'admin123'; 
+
 
 async function getAccessToken() {
     console.log(`🔄 Intentando autenticar a: ${EMAIL}...`);
 
-    // 1. Intentar Iniciar Sesión
+    
     let { data, error } = await supabase.auth.signInWithPassword({
         email: EMAIL,
         password: PASSWORD
     });
 
-    // 2. Si falla porque no existe, intentar Registrarlo
+    
     if (error && error.message.includes('Invalid login credentials')) {
         console.log("⚠️ Usuario no encontrado. Intentando registrarlo...");
         

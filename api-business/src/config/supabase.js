@@ -10,7 +10,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
     throw new Error('Faltan variables de entorno SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY');
 }
 
-// Cliente con permisos de administración totales
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
         autoRefreshToken: false,

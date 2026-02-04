@@ -173,7 +173,7 @@ export default function Staff() {
                     </button>
                         </div>
 
-                        {/* Lista de Personal */}
+                        {}
                         <div className="bg-white rounded-lg shadow p-6">
                             <h3 className="text-xl font-bold text-gray-800 mb-4">Directorio</h3>
                             {staff.length === 0 ? (
@@ -217,7 +217,7 @@ export default function Staff() {
                 )}
             </div>
 
-            {/* Modal Asignar Tarea */}
+            {}
             {showTaskModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg w-full max-w-md">

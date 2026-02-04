@@ -5,7 +5,7 @@ export const fastIntake = async (req, res) => {
     const { student, guardian } = req.body;
     
     try {
-        // 1. Estudiante
+        
         const { data: newStudent, error: sErr } = await supabase
             .from('student')
             .insert({ ...student, IsActive: 1 })
@@ -13,9 +13,9 @@ export const fastIntake = async (req, res) => {
             .single();
         if (sErr) throw new Error(`Estudiante: ${sErr.message}`);
 
-        // 2. Guardián
+        
         if (guardian) {
-            // Verificar si existe por documento
+            
             const { data: existG } = await supabase.from('guardian').select('GuardianID').eq('DocumentNumber', guardian.DocumentNumber).maybeSingle();
             let guardianId = existG?.GuardianID;
 
@@ -29,7 +29,7 @@ export const fastIntake = async (req, res) => {
                 guardianId = newG.GuardianID;
             }
 
-            // Vincular
+            
             await supabase.from('student_guardian').insert({
                 StudentID: newStudent.StudentID,
                 GuardianID: guardianId,

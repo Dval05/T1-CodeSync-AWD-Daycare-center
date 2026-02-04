@@ -25,7 +25,7 @@ export default function Activities() {
             setEmployees(emps.data || []);
             setGrades(grs.data || []);
 
-            // Try business feed first, then fallback to CRUD
+            
             try {
                 const feed = await businessApi.activities.myFeed();
                 setActivities(feed.data || []);
@@ -79,7 +79,7 @@ export default function Activities() {
                     Category: form.Category || null,
                 };
                 await crudApi.update('activity', editing.ActivityID, payload);
-                // Upload media if provided
+                
                 if (file) await uploadMedia(editing.ActivityID, file);
                 toast.success('Actividad actualizada');
             } else {

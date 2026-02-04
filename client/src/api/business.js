@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
         }
     } catch (e) {
     }
-    // During local development, add a dev user header so UI calls pass requireAuth
+    
     try {
         if (import.meta.env.DEV && !config.headers['x-dev-user']) {
             const saved = localStorage.getItem('user-profile');
@@ -26,7 +26,7 @@ api.interceptors.request.use((config) => {
                 const profile = JSON.parse(saved);
                 if (profile?.UserID) config.headers['x-dev-user'] = String(profile.UserID);
             } else {
-                // Default dev user id
+                
                 config.headers['x-dev-user'] = '1';
             }
         }

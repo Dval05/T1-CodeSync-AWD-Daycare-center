@@ -7,14 +7,14 @@ import axios from 'axios';
 import { ActionButton } from '../components/permissions/ActionButton';
 
 export default function Roles() {
-    // Estado de datos
+    
     const [roles, setRoles] = useState([]);
     const [permissions, setPermissions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expandedRoleId, setExpandedRoleId] = useState(null);
     const [rolePermsMap, setRolePermsMap] = useState({});
 
-    // Estado del formulario
+    
     const [roleName, setRoleName] = useState('');
     const [description, setDescription] = useState('');
     const [selectedPerms, setSelectedPerms] = useState(new Set()); 
@@ -31,7 +31,7 @@ export default function Roles() {
     const loadData = async () => {
         try {
             const [rolesRes, permsRes] = await Promise.all([
-                crudApi.getAll('role'), // Traemos todos los roles
+                crudApi.getAll('role'), 
                 crudApi.getAll('permission')
             ]);
             setRoles(rolesRes.data);
@@ -44,7 +44,7 @@ export default function Roles() {
         }
     };
 
-    // Manejar selección de checkbox (Toggle)
+    
     const togglePermission = (id) => {
         const newSet = new Set(selectedPerms);
         if (newSet.has(id)) {
@@ -55,7 +55,7 @@ export default function Roles() {
         setSelectedPerms(newSet);
     };
 
-    // Crear Rol + Asignar Permisos
+    
     const handleCreateRole = async (e) => {
         e.preventDefault();
         if (!roleName.trim()) return toast.error('El nombre del rol es obligatorio');
@@ -63,7 +63,7 @@ export default function Roles() {
 
         setIsSubmitting(true);
         try {
-            // 1. Crear el Rol
+            
             const rolePayload = {
                 RoleName: roleName,
                 Description: description,
@@ -71,11 +71,11 @@ export default function Roles() {
             };
             const roleResponse = await crudApi.create('role', rolePayload);
             
-            // Supabase a veces devuelve un array, aseguramos obtener el objeto
+            
             const createdRole = Array.isArray(roleResponse.data) ? roleResponse.data[0] : roleResponse.data;
             const newRoleId = createdRole.RoleID;
 
-            // 2. Crear las relaciones en 'role_permission'
+            
             const permissionPromises = Array.from(selectedPerms).map(permId => {
                 return crudApi.create('role_permission', {
                     RoleID: newRoleId,
@@ -87,7 +87,7 @@ export default function Roles() {
 
             toast.success('Rol creado exitosamente');
             
-            // Limpiar y recargar
+            
             setRoleName('');
             setDescription('');
             setSelectedPerms(new Set());
@@ -112,7 +112,7 @@ export default function Roles() {
         }
     };
     
-    // Iniciar edición: cargar rol y permisos actuales
+    
     const startEditRole = async (role) => {
         try {
             setIsEditing(true);
@@ -150,13 +150,13 @@ export default function Roles() {
             // 1) Actualizar metadatos del rol
             await crudApi.update('role', editingRole.RoleID, { RoleName: roleName, Description: description });
 
-            // 2) Calcular diff de permisos
+            
             const originalSet = new Set(originalAssignments.map(a => a.PermissionID));
             const selectedSet = new Set(selectedPerms);
 
-            // Añadir: en selected pero no en original
+            
             const toAdd = Array.from(selectedSet).filter(pid => !originalSet.has(pid));
-            // Quitar: en original pero no en selected
+            
             const toRemove = Array.from(originalSet).filter(pid => !selectedSet.has(pid));
 
             const addPromises = toAdd.map(pid => crudApi.create('role_permission', { RoleID: editingRole.RoleID, PermissionID: pid }));
@@ -202,7 +202,7 @@ export default function Roles() {
         <Layout>
             <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
                 
-                {/* COLUMNA IZQUIERDA: Formulario de Creación */}
+                {}
                 <div className="lg:w-2/3 bg-white rounded-lg shadow-lg flex flex-col">
                     <div className="p-6 border-b border-gray-100 bg-gray-50 rounded-t-lg">
                         <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
@@ -249,7 +249,7 @@ export default function Roles() {
                                 </div>
                             </div>
 
-                            {/* Selector de Permisos */}
+                            {}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-3 flex justify-between">
                                     <span>Seleccionar Permisos</span>
@@ -278,7 +278,7 @@ export default function Roles() {
                                                     }
                                                 </div>
                                                 <div className="flex-1">
-                                                    {/* CORRECCIÓN AQUÍ: Usamos los nombres reales de la BD */}
+                                                    {}
                                                     <h4 className={`text-sm font-semibold ${isSelected ? 'text-blue-800' : 'text-gray-700'}`}>
                                                         {perm.PermissionName}
                                                     </h4>
@@ -318,7 +318,7 @@ export default function Roles() {
                     </div>
                 </div>
 
-                {/* COLUMNA DERECHA: Lista de Roles */}
+                {}
                 <div className="lg:w-1/3 bg-white rounded-lg shadow-lg flex flex-col">
                     <div className="p-6 border-b border-gray-100 bg-gray-50 rounded-t-lg">
                         <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
@@ -338,7 +338,7 @@ export default function Roles() {
                                             <p className="text-xs text-gray-500 mt-1">{role.Description}</p>
                                         </div>
                                         <div className="flex gap-2">
-                                            {/* Editar permisos: visible si tiene role.update */}
+                                            {}
                                             <ActionButton
                                                 resource="role"
                                                 action="update"
@@ -349,7 +349,7 @@ export default function Roles() {
                                                 title="Editar permisos"
                                                 onClick={() => startEditRole(role)}
                                             />
-                                            {/* Ver/Ocultar lista de permisos asignados */}
+                                            {}
                                             <ActionButton
                                                 resource="role"
                                                 action="view"
@@ -360,7 +360,7 @@ export default function Roles() {
                                                 title={expandedRoleId === role.RoleID ? 'Ocultar' : 'Ver permisos'}
                                                 onClick={() => toggleViewPermissions(role.RoleID)}
                                             />
-                                            {/* Eliminar rol */}
+                                            {}
                                             <ActionButton
                                                 resource="role"
                                                 action="delete"

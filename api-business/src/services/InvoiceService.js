@@ -1,7 +1,7 @@
 import supabase from '../config/supabase.js';
 
 export class InvoiceService {
-    // referenceType: 'Student' | 'Teacher'
+    
     async generateInvoice(referenceType, referenceId, paymentData, createdBy) {
         const invoiceNumber = await this.generateInvoiceNumber();
         

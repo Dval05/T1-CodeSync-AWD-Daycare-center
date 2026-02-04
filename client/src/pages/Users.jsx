@@ -7,9 +7,9 @@ import Modal from '../components/common/Modal';
 export default function Users() {
     const [users, setUsers] = useState([]);
     const [roles, setRoles] = useState([]);
-    const [userRoles, setUserRoles] = useState({}); // Roles asignados por usuario
+    const [userRoles, setUserRoles] = useState({}); 
     const [loading, setLoading] = useState(true);
-    const [userFilter, setUserFilter] = useState('all'); // 'all' | 'active' | 'inactive' | 'role:<id>'
+    const [userFilter, setUserFilter] = useState('all'); 
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState(null); 
@@ -28,7 +28,7 @@ export default function Users() {
             setUsers(usersRes.data);
             setRoles(rolesRes.data);
             
-            // Organizar roles por usuario
+            
             const rolesMap = {};
             userRolesRes.data.forEach(ur => {
                 if (!rolesMap[ur.UserID]) {
@@ -47,7 +47,7 @@ export default function Users() {
     const handleAssignRole = async (userId, roleId) => {
         if (!roleId) return;
         
-        // Verificar si el usuario ya tiene este rol
+        
         const currentUserRoles = userRoles[userId] || [];
         if (currentUserRoles.includes(parseInt(roleId))) {
             toast.error('El usuario ya tiene este rol asignado');
@@ -57,7 +57,7 @@ export default function Users() {
         try {
             await crudApi.create('user_role', { UserID: userId, RoleID: parseInt(roleId) });
             toast.success('Rol asignado correctamente');
-            loadData(); // Recargar para actualizar los roles
+            loadData(); 
         } catch (error) {
             console.error('Error asignando rol:', error);
             toast.error(error.response?.data?.error || 'Error al asignar rol');
@@ -66,7 +66,7 @@ export default function Users() {
 
     const handleRemoveRole = async (userId, roleId) => {
         try {
-            // Buscar el registro user_role específico para eliminarlo
+            
             const { data: userRoleRecords } = await crudApi.getAll('user_role', { 
                 UserID: userId, 
                 RoleID: roleId 
@@ -76,7 +76,7 @@ export default function Users() {
                 const recordId = userRoleRecords[0].UserRoleID;
                 await crudApi.remove('user_role', recordId);
                 toast.success('Rol removido correctamente');
-                loadData(); // Recargar para actualizar los roles
+                loadData(); 
             }
         } catch (error) {
             console.error('Error removiendo rol:', error);
@@ -107,7 +107,7 @@ export default function Users() {
                 await crudApi.update('user', editingUser.UserID, data);
                 toast.success('Usuario actualizado');
             } else {
-                // Al crear, el backend automáticamente usará la cédula como contraseña
+                
                 await crudApi.create('user', data);
                 toast.success('Usuario creado. Contraseña inicial: su cédula');
             }
@@ -219,7 +219,7 @@ export default function Users() {
                                     {}
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <div className="flex flex-col gap-2">
-                                            {/* Roles actuales */}
+                                            {}
                                             {userRoles[user.UserID] && userRoles[user.UserID].length > 0 ? (
                                                 <div className="flex flex-wrap gap-1">
                                                     {userRoles[user.UserID].map(roleId => {
@@ -243,7 +243,7 @@ export default function Users() {
                                                 <span className="text-gray-400 italic text-xs">Sin roles asignados</span>
                                             )}
                                             
-                                            {/* Selector para agregar más roles */}
+                                            {}
                                             <div className="flex items-center gap-2">
                                                 <select 
                                                     className="border border-gray-300 rounded p-1 text-xs focus:ring-blue-500 focus:border-blue-500 outline-none w-full"

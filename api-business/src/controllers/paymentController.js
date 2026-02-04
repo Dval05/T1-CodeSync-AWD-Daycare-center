@@ -8,7 +8,7 @@ export const generateInvoice = async (req, res) => {
     try {
         const { studentId, teacherId, paymentData, items, month } = req.body;
 
-        // Build paymentData if items/month provided
+        
         let payload = paymentData;
         if (!payload && Array.isArray(items)) {
             const subtotal = items.reduce((sum, it) => sum + (Number(it.amount) || 0), 0);
@@ -80,15 +80,15 @@ export const updatePayment = async (req, res) => {
     try {
         const { id } = req.params;
         const updateData = req.body;
-        // Determine if the id belongs to a teacher payment first
+        
         let updatedPayment = null;
         try {
             const existingTeacherPayment = await paymentService.getTeacherPaymentById(id).catch(() => null);
             if (existingTeacherPayment) {
-                // Update teacher payment
+                
                 updatedPayment = await paymentService.updateTeacherPayment(id, updateData);
 
-                // If status is Paid, generate invoice and attach reference
+                
                 if (updatedPayment && (updatedPayment.Status === 'Paid')) {
                     try {
                         const referenceType = 'Teacher';
@@ -99,10 +99,10 @@ export const updatePayment = async (req, res) => {
                             Description: `Pago profesor #${updatedPayment.TeacherPaymentID}`
                         };
                         const invoice = await invoiceService.generateInvoice(referenceType, referenceId, invoicePaymentData, createdBy);
-                        // Attach invoice number to payment
+                        
                         if (invoice?.InvoiceNumber) {
                             await paymentService.updateTeacherPayment(updatedPayment.TeacherPaymentID, { TransactionReference: invoice.InvoiceNumber }).catch(() => null);
-                            // refresh updatedPayment
+                            
                             updatedPayment = await paymentService.getTeacherPaymentById(id).catch(() => updatedPayment);
                         }
                     } catch (err) {
@@ -110,7 +110,7 @@ export const updatePayment = async (req, res) => {
                     }
                 }
             } else {
-                // Not a teacher payment, update generic student payment
+                
                 updatedPayment = await paymentService.updatePayment(id, updateData);
             }
         } catch (err) {
@@ -147,11 +147,11 @@ export const getPaymentsByStudent = async (req, res) => {
     }
 };
 
-// New endpoints
+
 export const deletePayment = async (req, res) => {
     try {
         const { id } = req.params;
-        // Try delete from student_payment first
+        
         let deleted = null;
         try {
             const existing = await paymentService.getPaymentById(id).catch(() => null);
@@ -202,7 +202,7 @@ export const listPayments = async (req, res) => {
         if (from) query = query.gte('PaymentDate', from);
         if (to) query = query.lte('PaymentDate', to);
         if (search) {
-            // Search in reference fields
+            
             query = query.or(`InvoiceNumber.ilike.%${search}%,TransactionReference.ilike.%${search}%`);
         }
 
@@ -220,7 +220,7 @@ export const getPaymentPdf = async (req, res) => {
         const supabase = (await import('../config/supabase.js')).default;
         const { PDFGenerator } = await import('../utils/PDFGenerator.js');
 
-        // Try student payment first
+        
         let payment = await paymentService.getPaymentById(id).catch(() => null);
         let isTeacher = false;
         if (!payment) {
@@ -254,7 +254,7 @@ export const getPaymentPdf = async (req, res) => {
         ];
         docGen.addSection('Detalle', lines);
 
-        // Attach notes if any
+        
         if (payment.Notes) docGen.addSection('Notas', payment.Notes);
 
         docGen.addFooter(`Generado el ${new Date().toLocaleString('es-ES')}`);
@@ -267,8 +267,8 @@ export const getPaymentPdf = async (req, res) => {
 export const emailPaymentReceipt = async (req, res) => {
     try {
         const { id } = req.params;
-        // Placeholder: integrate with NotificationService or mailing later
-        // For now, return OK and indicate that email would be sent
+        
+        
         res.json({ ok: true, message: `Recibo de pago ${id} preparado para envío por email` });
     } catch (error) {
         res.status(500).json({ error: error.message });

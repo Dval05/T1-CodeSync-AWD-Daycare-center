@@ -2,7 +2,7 @@ import supabase from '../config/supabase.js';
 
 export const getSchedules = async (req, res) => {
     try {
-        // Prefer real schedules table if present; fallback to mock
+        
         try {
             const { data } = await supabase
                 .from('employee_schedule')
@@ -25,7 +25,7 @@ export const createSchedule = async (req, res) => {
     try {
         const { EmpID, Name, StartTime, EndTime, Days, DateFrom, DateTo } = req.body || {};
         if (!Name || !StartTime || !EndTime) return res.status(400).json({ error: 'Name, StartTime y EndTime son requeridos' });
-        // Detect conflicts (same EmpID overlapping time windows on same days)
+        
         const conflicts = await detectConflicts(EmpID, StartTime, EndTime, Days, DateFrom, DateTo);
         if (conflicts.length > 0) {
             return res.status(409).json({ error: 'Conflicto de horario', conflicts });
@@ -35,7 +35,7 @@ export const createSchedule = async (req, res) => {
         if (error) throw error;
         res.json({ ok: true, schedule: data });
     } catch (error) {
-        // If table missing, return graceful info
+        
         if ((error?.message || '').toLowerCase().includes('relation') && (error?.message || '').toLowerCase().includes('does not exist')) {
             return res.status(501).json({ error: 'Tabla employee_schedule no existe. Cree la tabla para habilitar CRUD.' });
         }
@@ -64,7 +64,7 @@ export const updateSchedule = async (req, res) => {
 export const deleteSchedule = async (req, res) => {
     try {
         const { id } = req.params;
-        // Soft delete by IsActive if column exists
+        
         let { data, error } = await supabase.from('employee_schedule').update({ IsActive: 0 }).eq('ScheduleID', id).select().single();
         if (error && (error?.message || '').toLowerCase().includes('column "isactive"')) {
             // Fallback hard delete
@@ -141,8 +141,8 @@ async function detectConflicts(EmpID, StartTime, EndTime, Days, DateFrom, DateTo
         return items.filter(i => {
             if (excludeId && (i.ScheduleID === Number(excludeId))) return false;
             const ist = toMinutes(i.StartTime), iet = toMinutes(i.EndTime);
-            const overlap = st < iet && et > ist; // simple time overlap
-            // days intersection
+            const overlap = st < iet && et > ist; 
+            
             const daysA = new Set((Array.isArray(Days) ? Days : []).map(d => String(d).slice(0,3).toLowerCase()));
             const daysB = new Set((Array.isArray(i.Days) ? i.Days : []).map(d => String(d).slice(0,3).toLowerCase()));
             const dayIntersect = daysA.size === 0 || [...daysA].some(d => daysB.has(d));
@@ -156,7 +156,7 @@ function toMinutes(t) {
 }
 
 function buildCalendar(items, from, to) {
-    // Map schedules across provided range (if any) by day-of-week only
+    
     const map = {};
     items.forEach(i => {
         const days = Array.isArray(i.Days) ? i.Days : [];
@@ -166,7 +166,7 @@ function buildCalendar(items, from, to) {
             map[key].push({ EmpID: i.EmpID, Name: i.Name, StartTime: i.StartTime, EndTime: i.EndTime });
         });
     });
-    return map; // { mon: [{...}], tue: [...] }
+    return map; 
 }
 
 
@@ -221,7 +221,7 @@ export const assignTask = async (req, res) => {
             throw new Error(`Error al crear tarea: ${taskError.message}`);
         }
 
-        // Try automatic notification to employee's user
+        
         try {
             const { NotificationService } = await import('../services/NotificationService.js');
             const ns = new NotificationService();

@@ -15,17 +15,17 @@ router.get('/health', (req, res) => {
     });
 });
 
-// Rutas especiales para usuarios (sin authCheck en login)
+
 router.post('/auth/login', login);
 router.post('/auth/change-password', changePassword);
 router.post('/auth/reset-password-to-id', authCheck, resetPasswordToID);
-router.post('/user', authCheck, createUser); // Crear usuario con cédula
-router.put('/user/:id', authCheck, updateUser); // Actualizar usuario con hash
+router.post('/user', authCheck, createUser); 
+router.put('/user/:id', authCheck, updateUser); 
 
-// Endpoints de acceso avanzados
+
 router.get('/access/role/:id/permissions', authCheck, getRolePermissions);
 
-// Rutas genéricas
+
 router.get('/:resource', authCheck, getAll);
 router.get('/:resource/:id', authCheck, getById);
 router.post('/:resource', authCheck, validateResource(), create);

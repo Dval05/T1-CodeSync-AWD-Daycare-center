@@ -1,7 +1,7 @@
 import supabase from '../config/supabase.js';
 
 export const getStudentBalance = async (req, res) => {
-    const { id } = req.params; // StudentID
+    const { id } = req.params; 
     
     if (req.user.guardianId) {
         const { data: link } = await supabase.from('student_guardian')
@@ -18,7 +18,7 @@ export const getStudentBalance = async (req, res) => {
             .from('student_payment')
             .select('TotalAmount, PaidAmount')
             .eq('StudentID', id)
-           // .neq('Status', 'Canceled');
+           
 
         if (error) throw error;
 
@@ -34,7 +34,7 @@ export const getStudentBalance = async (req, res) => {
 };
 
 export const getTeacherBalance = async (req, res) => {
-    const { id } = req.params; // TeacherID
+    const { id } = req.params; 
 
     try {
         const { data: payments, error } = await supabase
@@ -56,7 +56,7 @@ export const getTeacherBalance = async (req, res) => {
 
 export const exportTeacherPaymentsCsv = async (req, res) => {
     try {
-        const { id } = req.params; // EmpID
+        const { id } = req.params; 
         const { from, to, status, month } = req.query;
         let q = supabase
             .from('teacher_payment')
@@ -96,7 +96,7 @@ export const exportTeacherPaymentsCsv = async (req, res) => {
 
 export const getTeacherPayrollPdf = async (req, res) => {
     try {
-        const { id } = req.params; // EmpID
+        const { id } = req.params; 
         const { month, from, to } = req.query;
         let q = supabase
             .from('teacher_payment')

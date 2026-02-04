@@ -151,7 +151,7 @@
         const handleSubmit = async (e) => {
             e.preventDefault();
             try {
-                // Si el email cambió, actualizar en Supabase Auth también
+                
                 if (formData.Email !== profile.Email && user?.email) {
                     const { error: emailError } = await supabase.auth.updateUser({
                         email: formData.Email
@@ -165,7 +165,7 @@
                     toast.info('Se ha enviado un correo de verificación a ' + formData.Email);
                 }
                 
-                // Preparar datos para enviar (sin ProfilePhotoURL si no se usa)
+                
                 const updateData = {
                     FirstName: formData.FirstName,
                     LastName: formData.LastName,
@@ -174,17 +174,17 @@
                     Address: formData.Address
                 };
                 
-                // Solo incluir ProfilePhotoURL si existe y tiene valor
+                
                 if (formData.ProfilePhotoURL) {
                     updateData.ProfilePhotoURL = formData.ProfilePhotoURL;
                 }
                 
                 const response = await crudApi.update('user', profile.UserID, updateData);
                 
-                // Actualizar el contexto global del perfil
+                
                 updateProfile(updateData);
                 
-                // Actualizar también el formData local
+                
                 setFormData({
                     FirstName: updateData.FirstName || '',
                     LastName: updateData.LastName || '',
@@ -197,7 +197,7 @@
                 toast.success('✅ Perfil actualizado exitosamente');
                 setIsEditing(false);
                 
-                // Si cambió el email, pedir verificación
+                
                 if (formData.Email !== profile.Email) {
                     toast.info('Por favor, verifica tu nuevo email y vuelve a iniciar sesión');
                 }

@@ -15,7 +15,7 @@ export default function Intake() {
                     FirstName: data.stuFirst,
                     LastName: data.stuLast,
                     BirthDate: data.stuBirth,
-                    // GradeID se puede agregar aquí
+                    
                 },
                 guardian: withGuardian ? {
                     FirstName: data.guaFirst,
@@ -41,7 +41,7 @@ export default function Intake() {
                 <h2 className="text-2xl font-bold mb-6 text-gray-800">Alta Rápida</h2>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     
-                    {/* Estudiante */}
+                    {}
                     <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
                         <h3 className="font-semibold text-blue-700 mb-4">Datos del Estudiante</h3>
                         <div className="grid grid-cols-2 gap-4">
@@ -51,7 +51,7 @@ export default function Intake() {
                         </div>
                     </div>
 
-                    {/* Guardián */}
+                    {}
                     <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
                         <label className="flex items-center gap-2 font-semibold text-purple-700 mb-4">
                             <input type="checkbox" {...register("withGuardian")} />

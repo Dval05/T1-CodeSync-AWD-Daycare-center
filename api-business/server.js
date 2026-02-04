@@ -3,8 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import PDFDocument from 'pdfkit';
 import axios from 'axios';
-// routes will be loaded dynamically to avoid hard-failing when DB envs
-// are missing during local development.
+
+
 
 dotenv.config();
 
@@ -14,8 +14,8 @@ const PORT = process.env.PORT || 3002;
 app.use(cors());
 app.use(express.json());
 
-// Try loading routes dynamically; if they fail (e.g. missing DB envs), continue
-// and expose dev-only mock endpoints below so local testing is still possible.
+
+
 import('./src/routes/index.js')
     .then(mod => {
         app.use('/api', mod.default);
@@ -26,7 +26,7 @@ import('./src/routes/index.js')
 
         const devRouter = express.Router();
 
-        // Notifications fallback (shape compatible with client expectations)
+        
         devRouter.get('/notifications/unread-count', (req, res) => {
             res.json({ ok: true, count: 0 });
         });
@@ -61,7 +61,7 @@ import('./src/routes/index.js')
             res.json({ ok: true, count: 0 });
         });
 
-        // Finance fallbacks: persist invoices in CRUD DB with proper numbering
+        
         devRouter.post('/finance/invoice/generate', async (req, res) => {
             try {
                 const { teacherId, studentId, month, items } = req.body || {};
@@ -79,7 +79,7 @@ import('./src/routes/index.js')
                 const mm = String(selDate.getMonth() + 1).padStart(2, '0');
                 const period = `${yy}${mm}`;
 
-                // Fetch invoices to compute starting sequence for this period
+                
                 let nextSeq = 1;
                 try {
                     const { data: allInv } = await axios.get(`${CRUD_BASE}/invoice`, {
@@ -103,8 +103,8 @@ import('./src/routes/index.js')
                 const issueDate = month ? `${month}-01` : new Date().toISOString().split('T')[0];
                 const description = JSON.stringify({ items });
 
-                // Persist in CRUD
-                // Check existence by InvoiceNumber and increment until a free number is found
+                
+                
                 const maxChecks = 50;
                 for (let attempt = 1; attempt <= maxChecks; attempt++) {
                     const invoiceNumber = `INV-${period}-${String(nextSeq).padStart(5, '0')}`;
@@ -115,14 +115,14 @@ import('./src/routes/index.js')
                         });
                         const exists = Array.isArray(existsList) && existsList.length > 0;
                         if (exists) {
-                            nextSeq += 1; // number taken, try next
+                            nextSeq += 1; 
                             continue;
                         }
                     } catch (checkErr) {
                         console.warn('DEV: error comprobando existencia de InvoiceNumber:', checkErr.message);
                     }
 
-                    // Persist using the free number; still guard against race with unique violation
+                    
                     try {
                         const { data: created } = await axios.post(`${CRUD_BASE}/invoice`, {
                             InvoiceNumber: invoiceNumber,
@@ -140,7 +140,7 @@ import('./src/routes/index.js')
                         const msg = String(errPost?.response?.data?.error || errPost.message || '').toLowerCase();
                         const isDuplicate = msg.includes('duplicate') && msg.includes('unique') && msg.includes('invoicenumber');
                         if (isDuplicate && attempt < maxChecks) {
-                            nextSeq += 1; // advance and retry
+                            nextSeq += 1; 
                             continue;
                         }
                         throw errPost;
@@ -161,7 +161,7 @@ import('./src/routes/index.js')
         });
 
         devRouter.get('/finance/invoice/:id/pdf', async (req, res) => {
-            // Generate a real invoice PDF by fetching data from API-CRUD
+            
             const CRUD_BASE = process.env.API_CRUD_URL || process.env.VITE_API_CRUD_URL || 'http://localhost:3001/api';
             try {
                 const { data } = await axios.get(`${CRUD_BASE}/invoice/${req.params.id}`, {
@@ -233,7 +233,7 @@ import('./src/routes/index.js')
                 const statusEs = statusMap[String(status)] || String(status);
 
                 doc.font('Helvetica').fontSize(11);
-                // Quitar fecha de emisión (pedido del usuario)
+                
                 doc.text(`Fecha de vencimiento: ${due}`);
                 if (invoice.InvoiceType === 'Teacher') {
                     doc.text(`${personRole}: ${personName || ''}`.trim());
@@ -333,10 +333,10 @@ import('./src/routes/index.js')
         app.use('/api', devRouter);
     });
 
-// Health endpoint
+
 app.get('/health', (req, res) => res.json({ status: 'API Business OK', time: new Date() }));
 
-// Dev-only mock endpoints to allow local testing when DB envs are missing
+
 if (process.env.NODE_ENV !== 'production') {
     app.post('/api/finance/invoice/generate-test', (req, res) => {
         const { teacherId, studentId, paymentData } = req.body || {};

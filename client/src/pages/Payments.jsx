@@ -43,7 +43,7 @@ export default function Payments() {
             }
         };
         load();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        
     }, [referenceType]);
 
     const getStatusColor = (status) => {

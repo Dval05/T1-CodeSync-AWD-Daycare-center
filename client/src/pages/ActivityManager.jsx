@@ -7,7 +7,7 @@ import { Link as LinkIcon, Image, Youtube } from 'lucide-react';
 
 export default function ActivityManager() {
     const [activities, setActivities] = useState([]);
-    const [view, setView] = useState('list'); // 'list' | 'media'
+    const [view, setView] = useState('list'); 
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [mediaList, setMediaList] = useState([]);
 

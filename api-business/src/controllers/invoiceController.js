@@ -11,7 +11,7 @@ export const getInvoicePdf = async (req, res) => {
 
         const invoice = await invoiceService.getInvoiceById(id);
 
-        // Obtener datos del estudiante
+        
         const studentId = invoice.ReferenceID || invoice.StudentID;
         let student = null;
         if (studentId) {
@@ -23,17 +23,17 @@ export const getInvoicePdf = async (req, res) => {
             student = s;
         }
 
-        // Preparar PDF
+        
         const generator = new PDFGenerator();
         const doc = generator.createDocument();
         const fileName = `factura-${invoice.InvoiceNumber || invoice.InvoiceID}.pdf`;
         generator.setResponseHeaders(res, fileName);
         doc.pipe(res);
 
-        // Encabezado
+        
         generator.addTitle('Factura', `Factura #: ${invoice.InvoiceNumber || invoice.InvoiceID}`);
 
-        // Información general
+        
         const issueDate = invoice.IssueDate || invoice.InvoiceDate || '-';
         const dueDate = invoice.DueDate || '-';
         const studentLabel = student
@@ -47,7 +47,7 @@ export const getInvoicePdf = async (req, res) => {
             `Estado: ${mapStatus(status)}`,
         ]);
 
-        // Items del pago
+        
         let items = [];
         try {
             if (invoice.Description) {
@@ -60,7 +60,7 @@ export const getInvoicePdf = async (req, res) => {
                 }
             }
         } catch (_) {
-            // Ignorar errores de parseo
+            
         }
 
         if (items.length > 0) {

@@ -1,5 +1,12 @@
 {
   "dependencies": {
     "bcrypt": "^6.0.0"
+  },
+  "devDependencies": {
+    "fast-glob": "^3.3.2",
+    "strip-comments": "^2.0.1"
+  },
+  "scripts": {
+    "strip:comments": "node scripts/strip-code-comments.mjs"
   }
 }

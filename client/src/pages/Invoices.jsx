@@ -26,14 +26,14 @@ export default function Invoices() {
     const loadData = async () => {
         try {
             const [invoicesRes, employeesRes, studentsRes] = await Promise.all([
-                // Trae las facturas con los más recientes primero
+                
                 crudApi.getAll('invoice', { orderBy: 'InvoiceID', asc: 'false' }),
-                // incluye inactivos y filtramos aquí por IsActive
+                
                 crudApi.getAll('employee', { includeInactive: 'true' }),
                 crudApi.getAll('student', { includeInactive: 'true' })
             ]);
             setInvoices(invoicesRes.data || []);
-            // Filtra empleados que parecen profesores
+            
             const teachersAll = (employeesRes.data || []).filter(e => {
                 const pos = (e.Position || '').toString().toLowerCase();
                 return /teacher|profesor|docente/.test(pos);
@@ -212,7 +212,7 @@ export default function Invoices() {
                 </div>
             )}
 
-            {/* Modal para Generar Factura */}
+            {}
             {showGenerateModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
                     <div className="bg-white rounded-lg p-6 w-full max-w-2xl m-4">

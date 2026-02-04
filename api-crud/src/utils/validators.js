@@ -1,4 +1,4 @@
-// Utilidades de validación básicas
+
 export const isString = (v) => typeof v === 'string' && v.trim().length >= 0;
 export const isNumber = (v) => typeof v === 'number' && !isNaN(v);
 export const isBoolean = (v) => typeof v === 'boolean' || v === 0 || v === 1;
@@ -13,8 +13,8 @@ export const inRange = (v, { min, max }) => {
   return true;
 };
 
-// Validador de cédula ecuatoriana
-// Reglas: 10 dígitos, provincia 01-24, tercer dígito <6, checksum módulo 10
+
+
 export const validateCedulaEcuatoriana = (cedula) => {
   const s = String(cedula || '').trim();
   if (!/^\d{10}$/.test(s)) return false;

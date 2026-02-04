@@ -3,17 +3,17 @@ import { Plus, Edit, Trash2, Eye, Download, Upload } from 'lucide-react';
 import { PermissionGate } from './PermissionGate';
 import { AdminGate } from './AdminGate';
 
-/**
- * Botón de acción con control de permisos
- * @param {Object} props
- * @param {string} props.resource - Nombre del recurso (ej: 'student', 'invoice')
- * @param {string} props.action - Acción (create, update, delete, view, export, import)
- * @param {Function} props.onClick - Función al hacer clic
- * @param {string} props.label - Texto del botón
- * @param {string} props.variant - Estilo del botón (primary, danger, success, secondary)
- * @param {boolean} props.disabled - Si el botón está deshabilitado
- * @param {React.ReactNode} props.icon - Ícono personalizado
- */
+
+
+
+
+
+
+
+
+
+
+
 export const ActionButton = ({
     resource,
     action,
@@ -83,15 +83,15 @@ export const ActionButton = ({
     );
 };
 
-/**
- * Grupo de botones CRUD estándar
- * @param {Object} props
- * @param {string} props.resource - Nombre del recurso
- * @param {Function} props.onNew - Callback para crear nuevo
- * @param {Function} props.onEdit - Callback para editar
- * @param {Function} props.onDelete - Callback para eliminar
- * @param {boolean} props.hasSelection - Si hay un elemento seleccionado
- */
+
+
+
+
+
+
+
+
+
 export const CrudButtons = ({
     resource,
     onNew,
@@ -134,12 +134,12 @@ export const CrudButtons = ({
     );
 };
 
-/**
- * Botón simple con control de permisos (sin estilo predefinido)
- * @param {Object} props
- * @param {string|string[]} props.permission - Permiso(s) requerido(s)
- * @param {React.ReactNode} props.children - Contenido del botón
- */
+
+
+
+
+
+
 export const PermissionButton = ({ permission, children, ...rest }) => {
     return (
         <PermissionGate permission={permission}>

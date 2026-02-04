@@ -90,7 +90,7 @@ export default function EmployeePayments() {
 
     useEffect(() => {
         if (selectedTeacher) loadPayments();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        
     }, [selectedTeacher]);
 
     const getStatusColor = (status) => {

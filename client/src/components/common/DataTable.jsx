@@ -59,7 +59,7 @@ export default function DataTable({
                 </div>
             </div>
 
-            {/* Tabla */}
+            {}
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
@@ -104,7 +104,7 @@ export default function DataTable({
                 </table>
             </div>
 
-            {/* Footer / Paginación */}
+            {}
             <div className="p-4 border-t border-gray-100 flex justify-between items-center bg-gray-50/30">
                 <span className="text-xs text-gray-500">
                     Mostrando {paginatedData.length} de {filteredData.length} registros

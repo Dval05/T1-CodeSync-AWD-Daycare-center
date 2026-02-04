@@ -94,7 +94,7 @@ export class PaymentService {
         return data;
     }
 
-    // Teacher payment methods
+    
     async registerTeacherPayment(teacherId, paymentData, processedBy) {
         const canonical = this.buildTeacherPayload(teacherId, paymentData, processedBy);
 
@@ -109,7 +109,7 @@ export class PaymentService {
     }
 
     buildTeacherPayload(teacherId, paymentData, processedBy) {
-        // Construct canonical payload expected by the teacher_payment table
+        
         const today = new Date();
         const paymentDate = paymentData.PaymentDate || today.toISOString().split('T')[0];
         const paymentPeriod = paymentData.PaymentPeriod || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
@@ -124,7 +124,7 @@ export class PaymentService {
             ? Number(paymentData.TotalAmount)
             : totalFromParts;
 
-        // Teacher payments table does not track PaidAmount; default to provided status or Pending
+        
         const status = paymentData.Status || 'Pending';
 
         return {
@@ -137,7 +137,7 @@ export class PaymentService {
             Overtime: overtime,
             Deductions: deductions,
             TotalAmount: totalAmount,
-            // Note: `PaidAmount` column is not present in some schemas; omit it.
+            
             PaymentDate: paymentDate,
             PaymentMethod: paymentData.PaymentMethod || 'Transfer',
             Status: paymentData.Status || status,

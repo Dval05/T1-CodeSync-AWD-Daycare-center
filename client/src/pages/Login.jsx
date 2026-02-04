@@ -58,13 +58,13 @@ export default function Login() {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100 overflow-hidden relative">
-            {/* Animación de Fondo (Tus Blobs) */}
+            {}
             <div className="absolute w-full max-w-md m-4">
                 <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
                 <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
                 <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
                 
-                {/* Tarjeta de Login */}
+                {}
                 <div className="relative bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-gray-200">
                     <div className="text-center mb-8">
                         <div className="inline-flex items-center justify-center">
