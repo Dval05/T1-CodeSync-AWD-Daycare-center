@@ -7,7 +7,7 @@ export const StudentModal = ({ isOpen, onClose, onSave, student = null }) => {
     const [grades, setGrades] = useState([]);
     const [includeGuardian, setIncludeGuardian] = useState(false);
     
-    const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    const { register, handleSubmit, formState: { errors }, reset, watch } = useForm({
         defaultValues: student ? {
             FirstName: student.FirstName,
             LastName: student.LastName,
@@ -26,6 +26,28 @@ export const StudentModal = ({ isOpen, onClose, onSave, student = null }) => {
     });
 
     useEffect(() => {
+        if (isOpen && student) {
+            reset({
+                FirstName: student.FirstName || '',
+                LastName: student.LastName || '',
+                BirthDate: student.BirthDate?.split('T')[0] || '',
+                DocumentNumber: student.DocumentNumber || '',
+                GradeID: student.GradeID ? student.GradeID.toString() : '',
+                IsActive: !!student.IsActive
+            });
+        } else if (isOpen && !student) {
+            reset({
+                FirstName: '',
+                LastName: '',
+                BirthDate: '',
+                DocumentNumber: '',
+                GradeID: '',
+                IsActive: true
+            });
+        }
+    }, [isOpen, student, reset]);
+
+    useEffect(() => {
         loadGrades();
     }, []);
 
@@ -41,11 +63,11 @@ export const StudentModal = ({ isOpen, onClose, onSave, student = null }) => {
     const onSubmit = async (data) => {
         const payload = {
             student: {
-                FirstName: data.FirstName,
-                LastName: data.LastName,
+                FirstName: data.FirstName?.trim(),
+                LastName: data.LastName?.trim(),
                 BirthDate: data.BirthDate,
-                DocumentNumber: data.DocumentNumber,
-                GradeID: data.GradeID,
+                DocumentNumber: data.DocumentNumber?.trim() || null,
+                GradeID: data.GradeID ? parseInt(data.GradeID, 10) : null,
                 IsActive: data.IsActive ? 1 : 0
             },
             guardian: includeGuardian ? {
@@ -110,7 +132,8 @@ export const StudentModal = ({ isOpen, onClose, onSave, student = null }) => {
                             <input
                                 type="text"
                                 {...register('DocumentNumber')}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                disabled={!!student}
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
                                 placeholder="0123456789"
                             />
                         </div>
@@ -136,7 +159,7 @@ export const StudentModal = ({ isOpen, onClose, onSave, student = null }) => {
                             >
                                 <option value="">Seleccionar curso</option>
                                 {grades.map(grade => (
-                                    <option key={grade.GradeID} value={grade.GradeID}>
+                                    <option key={grade.GradeID} value={grade.GradeID.toString()}>
                                         {grade.GradeName}
                                     </option>
                                 ))}

@@ -1,14 +1,6 @@
 import React from 'react';
 import { usePermissions } from '../../hooks/usePermissions';
 
-
-
-
-
-
-
-
-
 export const PermissionGate = ({ 
     permission, 
     requireAll = false, 

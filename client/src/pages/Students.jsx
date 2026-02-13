@@ -15,6 +15,9 @@ export default function Students() {
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingStudent, setEditingStudent] = useState(null);
+    const [gradesMap, setGradesMap] = useState({});
+    const [grades, setGrades] = useState([]);
+    const [selectedGradeFilter, setSelectedGradeFilter] = useState('');
 
     useEffect(() => {
         loadStudents();
@@ -22,12 +25,27 @@ export default function Students() {
 
     const loadStudents = async () => {
         try {
+            // Cargar cursos (grades) primero
+            const { data: gradesData } = await crudApi.getAll('grade');
+            const gradesById = {};
+            gradesData.forEach(grade => {
+                gradesById[grade.GradeID] = grade.GradeName;
+            });
+            setGradesMap(gradesById);
+            setGrades(gradesData);
+
+            // Luego cargar estudiantes
             const { data } = await crudApi.getAll('student', { IsActive: 1 });
             setStudents(data);
         } catch (error) {
             toast.error('Error cargando estudiantes');
         }
     };
+
+    // Filtrar estudiantes por curso
+    const filteredStudents = selectedGradeFilter 
+        ? students.filter(stu => stu.GradeID === parseInt(selectedGradeFilter, 10))
+        : students;
 
     const handleCreate = () => {
         setEditingStudent(null);
@@ -171,8 +189,27 @@ export default function Students() {
                 />
             </div>
 
+            {/* Filtro por grupo/curso */}
+            <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Filtrar por Grupo/Curso
+                </label>
+                <select
+                    value={selectedGradeFilter}
+                    onChange={(e) => setSelectedGradeFilter(e.target.value)}
+                    className="w-full md:w-72 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                    <option value="">Todos los cursos</option>
+                    {grades.map(grade => (
+                        <option key={grade.GradeID} value={grade.GradeID.toString()}>
+                            {grade.GradeName}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {students.map(stu => (
+                {filteredStudents.map(stu => (
                     <div key={stu.StudentID} className="bg-white p-6 rounded-lg shadow hover:shadow-md transition">
                         <div className="flex items-center gap-4">
                             <div className="relative group">
@@ -202,6 +239,9 @@ export default function Students() {
                                 <p className="text-sm text-gray-500">ID: {stu.StudentID}</p>
                                 {stu.DocumentNumber && (
                                     <p className="text-sm text-gray-500">CI: {stu.DocumentNumber}</p>
+                                )}
+                                {stu.GradeID && gradesMap[stu.GradeID] && (
+                                    <p className="text-sm text-blue-600 font-medium">📚 {gradesMap[stu.GradeID]}</p>
                                 )}
                             </div>
                         </div>

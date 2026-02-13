@@ -3,17 +3,6 @@ import { Plus, Edit, Trash2, Eye, Download, Upload } from 'lucide-react';
 import { PermissionGate } from './PermissionGate';
 import { AdminGate } from './AdminGate';
 
-
-
-
-
-
-
-
-
-
-
-
 export const ActionButton = ({
     resource,
     action,
